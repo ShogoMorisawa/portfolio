@@ -11,6 +11,7 @@ import {
 } from "@react-three/drei";
 import { Physics, RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { Suspense, useRef } from "react";
+import Gorillia from "./components/Gorillia";
 
 const keyboardMap = [
   { name: "forward", keys: ["ArrowUp", "w", "W"] },
@@ -113,23 +114,13 @@ function CoColiliaModel() {
   return (
     <RigidBody
       ref={rigidBody}
-      position={[0, 5, 0]}
+      position={[0, 20, 0]}
       colliders="hull"
       restitution={0.5}
       linearDamping={0.5}
       angularDamping={0.5}
     >
       <primitive object={scene} scale={1} />
-    </RigidBody>
-  );
-}
-
-function Floor() {
-  return (
-    <RigidBody type="fixed" position={[0, -2, 0]}>
-      <Box args={[20, 1, 20]}>
-        <meshStandardMaterial color="gray" />
-      </Box>
     </RigidBody>
   );
 }
@@ -149,8 +140,8 @@ export default function Home() {
               <CoColiliaModel />
             </Suspense>
 
-            {/* 床 */}
-            <Floor />
+            {/* ゴーリリア */}
+            <Gorillia />
           </Physics>
 
           {/* コントロールの設定 */}
