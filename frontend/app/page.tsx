@@ -5,7 +5,6 @@ import {
   OrbitControls,
   useGLTF,
   Environment,
-  Box,
   useKeyboardControls,
   KeyboardControls,
 } from "@react-three/drei";
