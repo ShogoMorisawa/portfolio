@@ -1,14 +1,9 @@
 "use client";
 
 import * as THREE from "three";
-import React, { useRef, useState, Component, ReactNode } from "react";
+import React, { useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import {
-  useGLTF,
-  useKeyboardControls,
-  Environment,
-  useTexture,
-} from "@react-three/drei";
+import { useGLTF, useKeyboardControls, Environment } from "@react-three/drei";
 
 // ============================================
 // 型定義
@@ -68,23 +63,6 @@ const GAME_CONFIG = {
     FOG_NEAR: 20,
     FOG_FAR: 50,
     ENVIRONMENT_PRESET: "city" as const,
-  },
-  // 装飾オブジェクト設定
-  DECORATIONS: {
-    TREE_1: {
-      POSITION: [5, 0.5, -5] as [number, number, number],
-      RADIUS: 1,
-      HEIGHT: 4,
-      SEGMENTS: 8,
-      COLOR: "#27AE60",
-    },
-    TREE_2: {
-      POSITION: [-4, 0.5, 3] as [number, number, number],
-      RADIUS: 1.5,
-      HEIGHT: 3,
-      SEGMENTS: 8,
-      COLOR: "#27AE60",
-    },
   },
 } as const;
 
@@ -229,111 +207,27 @@ const Player = () => {
 };
 
 // ============================================
-// 島コンポーネント（テクスチャ付き）
+// 新しい島コンポーネント (Blenderモデル読み込み版)
 // ============================================
-const IslandWithTexture = () => {
-  // 砂テクスチャの読み込み
-  // コールバック関数でテクスチャの設定を適用
-  const sandTexture = useTexture(
-    GAME_CONFIG.TERRAIN.SAND_TEXTURE_PATH,
-    (texture) => {
-      // テクスチャの繰り返し設定（これがないと巨大な画像が1枚伸びて貼られる）
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(
-        GAME_CONFIG.TERRAIN.SAND_TEXTURE_REPEAT[0],
-        GAME_CONFIG.TERRAIN.SAND_TEXTURE_REPEAT[1]
-      );
-    }
-  );
+const IslandModel = () => {
+  // publicフォルダに置いたファイル名を指定
+  const { scene } = useGLTF("/island.glb");
 
-  return (
-    <mesh
-      position={GAME_CONFIG.TERRAIN.ISLAND_POSITION}
-      receiveShadow
-      name={GAME_CONFIG.PHYSICS.GROUND_OBJECT_NAME}
-    >
-      <cylinderGeometry
-        args={[
-          GAME_CONFIG.TERRAIN.ISLAND_RADIUS,
-          GAME_CONFIG.TERRAIN.ISLAND_RADIUS,
-          GAME_CONFIG.TERRAIN.ISLAND_HEIGHT,
-          GAME_CONFIG.TERRAIN.ISLAND_SEGMENTS,
-        ]}
-      />
-      <meshStandardMaterial color="#F4D03F" map={sandTexture} roughness={1} />
-    </mesh>
-  );
-};
+  // シーン内のオブジェクト設定
+  React.useLayoutEffect(() => {
+    scene.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
 
-// ============================================
-// 島コンポーネント（テクスチャなしのフォールバック）
-// ============================================
-const IslandFallback = () => {
-  return (
-    <mesh
-      position={GAME_CONFIG.TERRAIN.ISLAND_POSITION}
-      receiveShadow
-      name={GAME_CONFIG.PHYSICS.GROUND_OBJECT_NAME}
-    >
-      <cylinderGeometry
-        args={[
-          GAME_CONFIG.TERRAIN.ISLAND_RADIUS,
-          GAME_CONFIG.TERRAIN.ISLAND_RADIUS,
-          GAME_CONFIG.TERRAIN.ISLAND_HEIGHT,
-          GAME_CONFIG.TERRAIN.ISLAND_SEGMENTS,
-        ]}
-      />
-      <meshStandardMaterial color="#F4D03F" roughness={0.8} />
-    </mesh>
-  );
-};
+        // 【重要】Blenderで地面の名前を "ground" にしていれば、
+        // Raycastはそのまま動きますが、念のため確認用ログを出せます
+        // console.log(obj.name);
+      }
+    });
+  }, [scene]);
 
-// ============================================
-// エラーバウンダリーコンポーネント
-// ============================================
-interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback: ReactNode;
-}
-
-class TextureErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  { hasError: boolean }
-> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(): { hasError: boolean } {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error) {
-    console.warn("テクスチャの読み込みに失敗しました:", error);
-    console.warn("フォールバック表示に切り替えます");
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-
-    return this.props.children;
-  }
-}
-
-// ============================================
-// 島コンポーネント（エラーハンドリング付き）
-// ============================================
-const Island = () => {
-  return (
-    <TextureErrorBoundary fallback={<IslandFallback />}>
-      <React.Suspense fallback={<IslandFallback />}>
-        <IslandWithTexture />
-      </React.Suspense>
-    </TextureErrorBoundary>
-  );
+  return <primitive object={scene} />;
 };
 
 // ============================================
@@ -354,51 +248,17 @@ const Ocean = () => {
 };
 
 // ============================================
-// 装飾オブジェクト（木）コンポーネント
-// ============================================
-const Tree = ({
-  position,
-  radius,
-  height,
-  segments,
-  color,
-}: {
-  position: [number, number, number];
-  radius: number;
-  height: number;
-  segments: number;
-  color: string;
-}) => {
-  return (
-    <mesh position={position} castShadow>
-      <coneGeometry args={[radius, height, segments]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
-  );
-};
-
-// ============================================
 // ステージ（島と海）コンポーネント
 // ============================================
 const Level = () => {
   return (
     <group>
-      <Island />
+      {/* 以前の <Island /> の代わりに新しいモデルを表示 */}
+      <React.Suspense fallback={null}>
+        <IslandModel />
+      </React.Suspense>
+      {/* 海はそのまま */}
       <Ocean />
-      <Tree
-        position={GAME_CONFIG.DECORATIONS.TREE_1.POSITION}
-        radius={GAME_CONFIG.DECORATIONS.TREE_1.RADIUS}
-        height={GAME_CONFIG.DECORATIONS.TREE_1.HEIGHT}
-        segments={GAME_CONFIG.DECORATIONS.TREE_1.SEGMENTS}
-        color={GAME_CONFIG.DECORATIONS.TREE_1.COLOR}
-      />
-      <Tree
-        position={GAME_CONFIG.DECORATIONS.TREE_2.POSITION}
-        radius={GAME_CONFIG.DECORATIONS.TREE_2.RADIUS}
-        height={GAME_CONFIG.DECORATIONS.TREE_2.HEIGHT}
-        segments={GAME_CONFIG.DECORATIONS.TREE_2.SEGMENTS}
-        color={GAME_CONFIG.DECORATIONS.TREE_2.COLOR}
-      />
     </group>
   );
 };
