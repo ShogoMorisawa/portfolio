@@ -1,9 +1,14 @@
 "use client";
 
 import * as THREE from "three";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, Component, ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, useKeyboardControls, Environment } from "@react-three/drei";
+import {
+  useGLTF,
+  useKeyboardControls,
+  Environment,
+  useTexture,
+} from "@react-three/drei";
 
 // ============================================
 // 型定義
@@ -35,6 +40,8 @@ const GAME_CONFIG = {
     ISLAND_POSITION: [0, -1, 0] as [number, number, number],
     OCEAN_SIZE: 500,
     OCEAN_POSITION: [0, -2, 0] as [number, number, number],
+    SAND_TEXTURE_PATH: "/texture/sand.jpg", // 砂テクスチャのパス
+    SAND_TEXTURE_REPEAT: [8, 8] as [number, number], // テクスチャの繰り返し回数
   },
   // 物理・判定設定
   PHYSICS: {
@@ -222,9 +229,46 @@ const Player = () => {
 };
 
 // ============================================
-// 島コンポーネント
+// 島コンポーネント（テクスチャ付き）
 // ============================================
-const Island = () => {
+const IslandWithTexture = () => {
+  // 砂テクスチャの読み込み
+  // コールバック関数でテクスチャの設定を適用
+  const sandTexture = useTexture(
+    GAME_CONFIG.TERRAIN.SAND_TEXTURE_PATH,
+    (texture) => {
+      // テクスチャの繰り返し設定（これがないと巨大な画像が1枚伸びて貼られる）
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(
+        GAME_CONFIG.TERRAIN.SAND_TEXTURE_REPEAT[0],
+        GAME_CONFIG.TERRAIN.SAND_TEXTURE_REPEAT[1]
+      );
+    }
+  );
+
+  return (
+    <mesh
+      position={GAME_CONFIG.TERRAIN.ISLAND_POSITION}
+      receiveShadow
+      name={GAME_CONFIG.PHYSICS.GROUND_OBJECT_NAME}
+    >
+      <cylinderGeometry
+        args={[
+          GAME_CONFIG.TERRAIN.ISLAND_RADIUS,
+          GAME_CONFIG.TERRAIN.ISLAND_RADIUS,
+          GAME_CONFIG.TERRAIN.ISLAND_HEIGHT,
+          GAME_CONFIG.TERRAIN.ISLAND_SEGMENTS,
+        ]}
+      />
+      <meshStandardMaterial color="#F4D03F" map={sandTexture} roughness={1} />
+    </mesh>
+  );
+};
+
+// ============================================
+// 島コンポーネント（テクスチャなしのフォールバック）
+// ============================================
+const IslandFallback = () => {
   return (
     <mesh
       position={GAME_CONFIG.TERRAIN.ISLAND_POSITION}
@@ -241,6 +285,54 @@ const Island = () => {
       />
       <meshStandardMaterial color="#F4D03F" roughness={0.8} />
     </mesh>
+  );
+};
+
+// ============================================
+// エラーバウンダリーコンポーネント
+// ============================================
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback: ReactNode;
+}
+
+class TextureErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  { hasError: boolean }
+> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn("テクスチャの読み込みに失敗しました:", error);
+    console.warn("フォールバック表示に切り替えます");
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
+// ============================================
+// 島コンポーネント（エラーハンドリング付き）
+// ============================================
+const Island = () => {
+  return (
+    <TextureErrorBoundary fallback={<IslandFallback />}>
+      <React.Suspense fallback={<IslandFallback />}>
+        <IslandWithTexture />
+      </React.Suspense>
+    </TextureErrorBoundary>
   );
 };
 
