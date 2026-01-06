@@ -33,6 +33,7 @@ const GAME_CONFIG = {
     ISLAND_HEIGHT: 2,
     ISLAND_SEGMENTS: 32,
     ISLAND_POSITION: [0, -1, 0] as [number, number, number],
+    ISLAND_SURFACE_HEIGHT: 1.5, // 島の表面の目標Y座標（海の上に出す高さ）
     OCEAN_SIZE: 500,
     OCEAN_POSITION: [0, -2, 0] as [number, number, number],
     SAND_TEXTURE_PATH: "/texture/sand.jpg", // 砂テクスチャのパス
@@ -41,7 +42,7 @@ const GAME_CONFIG = {
   // 物理・判定設定
   PHYSICS: {
     RAYCAST_OFFSET: 5, // 接地判定レイを飛ばす高さ
-    GROUND_OBJECT_NAME: "ground",
+    GROUND_OBJECT_NAME: "ground", // 地面オブジェクトの名前（"ground"で始まる名前すべてに対応）
     GRAVITY: 0.2, // 落下速度
     FALL_THRESHOLD: -5, // 落下判定の閾値
   },
@@ -142,10 +143,11 @@ const useGroundRaycast = (playerRef: React.RefObject<THREE.Group | null>) => {
 
     raycaster.current.set(rayOrigin, downVector.current);
 
-    // シーン内の "ground" という名前を持つオブジェクトと交差判定
+    // シーン内の "ground" で始まる名前を持つオブジェクトと交差判定
+    // "ground", "ground.001", "ground.002" などに対応
     const intersects = raycaster.current.intersectObjects(scene.children, true);
-    const groundHit = intersects.find(
-      (hit) => hit.object.name === GAME_CONFIG.PHYSICS.GROUND_OBJECT_NAME
+    const groundHit = intersects.find((hit) =>
+      hit.object.name.startsWith(GAME_CONFIG.PHYSICS.GROUND_OBJECT_NAME)
     );
 
     if (groundHit) {
@@ -185,7 +187,11 @@ const useCameraFollow = (playerRef: React.RefObject<THREE.Group | null>) => {
 // ============================================
 // プレイヤーコンポーネント
 // ============================================
-const Player = () => {
+interface PlayerProps {
+  islandSurfaceY?: number;
+}
+
+const Player = ({ islandSurfaceY }: PlayerProps) => {
   const playerRef = useRef<THREE.Group>(null);
 
   // GLTFモデルの読み込み
@@ -194,13 +200,28 @@ const Player = () => {
   // アニメーション用にクローンを作成（複数のシーンで使い回す場合の安全策）
   const model = React.useMemo(() => modelScene.clone(), [modelScene]);
 
+  // 島の表面の高さに基づいて初期位置を計算
+  // 島の表面の上に適切なオフセット（2ユニット）を追加
+  const initialPosition = React.useMemo(() => {
+    const surfaceY = islandSurfaceY ?? 0;
+    const playerOffset = 2; // プレイヤーを島の表面から2ユニット上に配置
+    return [0, surfaceY + playerOffset, 0] as [number, number, number];
+  }, [islandSurfaceY]);
+
+  // 初期位置が設定されたらプレイヤーの位置を更新
+  React.useEffect(() => {
+    if (playerRef.current && islandSurfaceY !== undefined) {
+      playerRef.current.position.set(...initialPosition);
+    }
+  }, [islandSurfaceY, initialPosition]);
+
   // カスタムフックの使用
   usePlayerMovement(playerRef);
   useGroundRaycast(playerRef);
   useCameraFollow(playerRef);
 
   return (
-    <group ref={playerRef} position={GAME_CONFIG.PLAYER.INITIAL_POSITION}>
+    <group ref={playerRef} position={initialPosition}>
       <primitive object={model} scale={GAME_CONFIG.PLAYER.MODEL_SCALE} />
     </group>
   );
@@ -209,25 +230,55 @@ const Player = () => {
 // ============================================
 // 新しい島コンポーネント (Blenderモデル読み込み版)
 // ============================================
-const IslandModel = () => {
+interface IslandModelProps {
+  onSurfaceHeightCalculated?: (surfaceY: number) => void;
+}
+
+const IslandModel = ({ onSurfaceHeightCalculated }: IslandModelProps) => {
   // publicフォルダに置いたファイル名を指定
   const { scene } = useGLTF("/island.glb");
+  const islandRef = useRef<THREE.Group>(null);
 
-  // シーン内のオブジェクト設定
+  // シーン内のオブジェクト設定とバウンディングボックス計算
   React.useLayoutEffect(() => {
+    // バウンディングボックスを計算して島の位置を自動調整
+    const box = new THREE.Box3().setFromObject(scene);
+    const surfaceY = box.max.y; // 島の表面のY座標（モデル座標系）
+
+    // 島の表面が設定された高さになるように位置を調整
+    const targetSurfaceY = GAME_CONFIG.TERRAIN.ISLAND_SURFACE_HEIGHT;
+    const offsetY = targetSurfaceY - surfaceY;
+
+    // 島の位置を設定
+    if (islandRef.current) {
+      islandRef.current.position.y = offsetY;
+    }
+
+    // 調整後の表面の高さを親コンポーネントに通知
+    // 調整後は表面がtargetSurfaceYになるので、その値を渡す
+    if (onSurfaceHeightCalculated) {
+      onSurfaceHeightCalculated(targetSurfaceY);
+    }
+
+    // シーン内のオブジェクト設定
     scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
         obj.castShadow = true;
         obj.receiveShadow = true;
 
-        // 【重要】Blenderで地面の名前を "ground" にしていれば、
-        // Raycastはそのまま動きますが、念のため確認用ログを出せます
-        // console.log(obj.name);
+        // 【重要】Blenderで地面の名前を "ground" または "ground.001" などに設定していれば、
+        // レイキャストは "ground" で始まる名前を検出します
+        // デバッグ用: オブジェクト名を確認したい場合は以下のコメントを外してください
+        // console.log("Mesh name:", obj.name);
       }
     });
-  }, [scene]);
+  }, [scene, onSurfaceHeightCalculated]);
 
-  return <primitive object={scene} />;
+  return (
+    <group ref={islandRef}>
+      <primitive object={scene} />
+    </group>
+  );
 };
 
 // ============================================
@@ -250,12 +301,18 @@ const Ocean = () => {
 // ============================================
 // ステージ（島と海）コンポーネント
 // ============================================
-const Level = () => {
+interface LevelProps {
+  onIslandSurfaceHeightCalculated?: (surfaceY: number) => void;
+}
+
+const Level = ({ onIslandSurfaceHeightCalculated }: LevelProps) => {
   return (
     <group>
       {/* 以前の <Island /> の代わりに新しいモデルを表示 */}
       <React.Suspense fallback={null}>
-        <IslandModel />
+        <IslandModel
+          onSurfaceHeightCalculated={onIslandSurfaceHeightCalculated}
+        />
       </React.Suspense>
       {/* 海はそのまま */}
       <Ocean />
@@ -303,13 +360,25 @@ const EnvironmentSettings = () => {
 // メインコンポーネント
 // ============================================
 const GorilliaIsland = () => {
+  // 島の表面の高さを状態として管理
+  const [islandSurfaceY, setIslandSurfaceY] = useState<number | undefined>(
+    undefined
+  );
+
+  // 島の表面の高さが計算されたら状態を更新
+  const handleIslandSurfaceHeightCalculated = (surfaceY: number) => {
+    setIslandSurfaceY(surfaceY);
+  };
+
   return (
     <>
       <Lighting />
       <EnvironmentSettings />
-      <Level />
+      <Level
+        onIslandSurfaceHeightCalculated={handleIslandSurfaceHeightCalculated}
+      />
       <React.Suspense fallback={null}>
-        <Player />
+        <Player islandSurfaceY={islandSurfaceY} />
       </React.Suspense>
     </>
   );
