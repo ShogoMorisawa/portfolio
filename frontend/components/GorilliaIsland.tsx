@@ -48,7 +48,7 @@ const GAME_CONFIG = {
   },
   // カメラ設定
   CAMERA: {
-    OFFSET: new THREE.Vector3(0, 8, 12),
+    OFFSET: new THREE.Vector3(0, 3, 5),
     LERP_FACTOR: 0.1,
   },
   // ライティング設定
