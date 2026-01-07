@@ -21,7 +21,7 @@ interface PlayerControls {
 const GAME_CONFIG = {
   // プレイヤー設定
   PLAYER: {
-    MOVEMENT_SPEED: 0.15,
+    MOVEMENT_SPEED: 0.05,
     ROTATION_SPEED: 0.15,
     INITIAL_POSITION: [0, 2, 0] as [number, number, number],
     MODEL_SCALE: [1, 1, 1] as [number, number, number],
