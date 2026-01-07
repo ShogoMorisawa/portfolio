@@ -96,7 +96,9 @@ const usePlayerMovement = (playerRef: React.RefObject<THREE.Group | null>) => {
       const direction = new THREE.Vector3(moveX, 0, moveZ).normalize();
 
       // 目標角度の計算
-      const targetRotation = Math.atan2(direction.x, direction.z);
+      // Three.jsでは、rotation.y = 0がZ軸正方向（前方）を向く
+      // モデルの初期向きに合わせて調整
+      const targetRotation = Math.atan2(direction.x, direction.z) - Math.PI / 2;
 
       // 滑らかに回転（簡易版）
       // 注意: 完全にスムーズにするにはQuaternion推奨
