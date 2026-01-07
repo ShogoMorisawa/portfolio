@@ -25,7 +25,7 @@ const GAME_CONFIG = {
     ROTATION_SPEED: 0.15,
     INITIAL_POSITION: [0, 2, 0] as [number, number, number],
     MODEL_SCALE: [1, 1, 1] as [number, number, number],
-    MODEL_PATH: "/cocolilia_v1.glb",
+    MODEL_PATH: "/coco-v2.glb",
   },
   // 島・地形設定
   TERRAIN: {
