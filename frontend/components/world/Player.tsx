@@ -106,6 +106,20 @@ const Player = ({ groundRef }: PlayerProps) => {
 
       player.position.x += moveX;
       player.position.z += moveZ;
+
+      // XZ平面での原点からの距離を計算
+      const distanceFromCenter = Math.sqrt(
+        player.position.x * player.position.x +
+          player.position.z * player.position.z,
+      );
+
+      // 半径を超えていたら、境界線上に押し戻す
+      if (distanceFromCenter > PLAYER.BOUNDARY_RADIUS) {
+        // 現在位置のベクトルを正規化し、最大半径を掛けるイメージ
+        const ratio = PLAYER.BOUNDARY_RADIUS / distanceFromCenter;
+        player.position.x *= ratio;
+        player.position.z *= ratio;
+      }
     }
 
     if (groundRef.current) {
@@ -131,10 +145,8 @@ const Player = ({ groundRef }: PlayerProps) => {
 
     const targetPosition = player.position.clone();
 
-    const cameraOffsetX =
-      Math.sin(player.rotation.y) * PLAYER.CAMERA_DISTANCE;
-    const cameraOffsetZ =
-      Math.cos(player.rotation.y) * PLAYER.CAMERA_DISTANCE;
+    const cameraOffsetX = Math.sin(player.rotation.y) * PLAYER.CAMERA_DISTANCE;
+    const cameraOffsetZ = Math.cos(player.rotation.y) * PLAYER.CAMERA_DISTANCE;
 
     const desiredCameraPos = new THREE.Vector3(
       targetPosition.x - cameraOffsetX,

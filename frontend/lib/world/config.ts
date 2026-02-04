@@ -28,4 +28,5 @@ export const PLAYER = {
   FALL_THRESHOLD: -10,
   GROUND_OFFSET: 0,
   INITIAL_Y: 10,
+  BOUNDARY_RADIUS: 26, // 移動可能な最大半径
 };
