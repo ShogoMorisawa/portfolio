@@ -28,7 +28,7 @@
 | 項目 | 内容 |
 |------|------|
 | **用途** | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ |
-| **操作** | PC: 矢印キー / Mobile: 未実装 |
+| **操作** | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下） |
 | **シーン** | ドーム（壁）+ 床 + プレイヤー。第三者視点カメラで追従 |
 
 ---
@@ -42,6 +42,8 @@
 | 3D ユーティリティ | @react-three/drei | ^10.7.7 | useGLTF, useTexture, Environment 等 |
 | 後処理 | @react-three/postprocessing | ^3.0.4 | EffectComposer, Bloom |
 | 3D エンジン | Three.js | ^0.182.0 | レンダリング基盤 |
+| 状態管理 | Zustand | ^5.0.11 | 入力状態の共有（キーボード/ジョイスティック） |
+| UI コンポーネント | react-joystick-component | ^6.2.1 | 仮想ジョイスティック |
 | 言語 | TypeScript | ^5 | 型安全 |
 
 ### パスエイリアス
@@ -55,7 +57,8 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  app/page.tsx                                               │
-│  └── <World />                                              │
+│  ├── <World />                                              │
+│  └── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -70,7 +73,8 @@
 │  │  ├── Player ─────────── groundRef ────────────────┤ │   │
 │  │  └── EffectComposer > Bloom                        │   │
 │  └─────────────────────────────────────────────────────┘   │
-│  groundRef を Floor と Player で共有（接地判定用）           │
+│  groundRef を Floor と Player で共有。useInputStore で      │
+│  JoystickControls と Player がジョイスティック入力を共有     │
 └─────────────────────────────────────────────────────────────┘
                               │
           ┌───────────────────┼───────────────────┐
@@ -78,10 +82,16 @@
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │  Dome.tsx    │    │  Floor.tsx   │    │  Player.tsx  │
 │  - dome.glb  │    │  - floor.glb │    │  - coco.glb  │
-│  - Matcap    │    │  - Matcap    │    │  - キー入力   │
+│  - Matcap    │    │  - Matcap    │    │  - キー+ジョイ │
 │  - scale 1.8 │    │  - scale 20  │    │  - 接地判定   │
 │  - Y=-7      │    │  - groundRef │    │  - カメラ追従 │
 └──────────────┘    └──────────────┘    └──────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────────┐
+│  components/world/ui/JoystickControls.tsx                   │
+│  lib/world/store.ts (Zustand: joystick { x, y, isMoving })   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -91,17 +101,20 @@
 ```
 frontend/
 ├── app/
-│   ├── page.tsx              # ルートページ。World を表示
+│   ├── page.tsx              # ルートページ。World + JoystickControls を表示
 │   ├── layout.tsx            # ルートレイアウト
 │   ├── globals.css
 │   └── favicon.ico
 ├── components/world/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
-│   ├── Dome.tsx              # ドーム（壁）
-│   ├── Floor.tsx             # 床
-│   └── Player.tsx             # プレイヤー（ココ）
+│   ├── Dome.tsx               # ドーム（壁）
+│   ├── Floor.tsx              # 床
+│   ├── Player.tsx             # プレイヤー（ココ）
+│   └── ui/
+│       └── JoystickControls.tsx  # 仮想ジョイスティック（モバイル用）
 ├── lib/world/
-│   └── config.ts             # STAGE, CAMERA, PLAYER 定数
+│   ├── config.ts             # STAGE, CAMERA, PLAYER 定数
+│   └── store.ts              # Zustand。ジョイスティック入力状態
 ├── public/
 │   ├── models/
 │   │   ├── coco.glb          # プレイヤー（アニメーション付き）
@@ -169,13 +182,27 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | キャラ表示、キー入力、移動・回転、接地判定、カメラ追従 |
+| **責務** | キャラ表示、キー入力、移動・回転、接地判定、境界制限、カメラ追従 |
 | **Props** | `groundRef: React.RefObject<THREE.Object3D \| null>` |
 | **依存** | PLAYER の全定数 |
 
 **モデル:** `models/coco.glb`（アニメーション付き）  
-**入力:** ArrowUp/Down/Left/Right  
-**アニメーション:** 最初のアニメーションクリップを前進/後退で再生（timeScale ±1）
+**入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用  
+**アニメーション:** 最初のアニメーションクリップを前進/後退で再生。`setEffectiveTimeScale(±1)` と `stop()` を使用
+
+---
+
+### JoystickControls.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | 仮想ジョイスティック UI の表示、useInputStore への入力反映 |
+| **Props** | なし |
+| **依存** | react-joystick-component, useInputStore |
+
+**配置:** `fixed bottom-10 right-10 z-50`（画面右下）  
+**ジョイスティック:** size=100, sticky=false。baseColor #EEEEEE, stickColor #333333  
+**入力マッピング:** y → 前後（1=前, -1=後）、x → 旋回（-1=右, 1=左）。move で setJoystick(x, y, true)、stop で setJoystick(0, 0, false)
 
 ---
 
@@ -211,20 +238,29 @@ frontend/
 | FALL_THRESHOLD | number | -10 | これ以下で落下停止 |
 | GROUND_OFFSET | number | 0 | 接地時の Y オフセット（めり込み防止） |
 | INITIAL_Y | number | 10 | 開始時の高さ（床ロード前の落下防止） |
+| BOUNDARY_RADIUS | number | 26 | 移動可能な最大半径（XZ 平面での原点からの距離） |
 
 ---
 
 ## データフロー
 
 ```
-[キー入力] → Player (keys state)
-                ↓
-[useFrame] → 移動・回転・接地判定・カメラ更新
+[キー入力] ──────────────┐
+                        ├→ Player (keys + joystick を統合)
+[JoystickControls] ─────┤
+  → useInputStore       │
+  (joystick {x,y,isMoving}) 
+                        ↓
+[useFrame] → 移動・回転・接地判定・境界制限・カメラ更新
                 ↓
 [groundRef] ← Floor が ref を設定
                 ↓
 [raycaster.intersectObjects(groundRef)] → 床との交点 → player.position.y
 ```
+
+**useInputStore（Zustand）:**
+- `joystick: { x, y, isMoving }` — ジョイスティックの -1〜1 の値と操作中フラグ
+- JoystickControls が setJoystick で更新、Player が joystick を購読して移動に反映
 
 **groundRef の流れ:**
 1. World で `useRef` 作成
@@ -247,6 +283,7 @@ frontend/
 
 - **Three.js の慣例:** Y 軸が上、右手系
 - **床の範囲:** floor.glb の BoundingBox × DOME_SCALE。概ね XZ で ±45 程度
+- **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（26）。境界を超えると境界線上に押し戻される
 - **ドーム:** 下端が Y=-7（床と一致）。scale 1.8 で表示
 - **プレイヤー初期位置:** (0, INITIAL_Y, 0) = (0, 10, 0)
 - **カメラ:** プレイヤー背後、距離 8、高さ +5。lerp 0.1 で滑らかに追従
@@ -264,10 +301,21 @@ frontend/
 
 **playerHeightOffset:** モデルの BoundingBox の min.y の絶対値。足元を床面に合わせるためのオフセット。
 
+### 入力統合
+
+- **キーボード:** keys.up/down → moveForward (±1)、keys.left/right → rotateY (±1)
+- **ジョイスティック:** joystick.y → moveForward、joystick.x → rotateY（符号は `rotateY -= joystick.x`）
+- **合算:** 両方の入力を加算。キーボードとジョイスティックを同時操作可能
+
 ### 移動
 
-- 前進/後退: `sin(rotation.y)`, `cos(rotation.y)` で進行方向の XZ 成分を計算
-- 旋回: `rotation.y` に ROTATION_SPEED * delta を加減算
+- 前進/後退: `moveForward * sin(rotation.y)`, `moveForward * cos(rotation.y)` で XZ 成分を計算（moveForward は -1〜1）
+- 旋回: `rotation.y += rotateY * ROTATION_SPEED * delta`（rotateY は -1〜1）
+
+### 境界制限
+
+- **判定:** XZ 平面での原点からの距離 `sqrt(x² + z²)` が BOUNDARY_RADIUS を超えた場合に境界外とみなす
+- **押し戻し:** 超えた場合、現在位置ベクトルを正規化して BOUNDARY_RADIUS を掛けた位置に補正（`ratio = BOUNDARY_RADIUS / distance` で x, z をスケール）
 
 ### カメラ追従
 
@@ -313,7 +361,7 @@ frontend/
 ### 注意事項
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
-- Player の action.timeScale への直接代入は eslint-disable が必要（Three.js の仕様）
+- Player のアニメーションは `setEffectiveTimeScale` と `stop()` を使用（timeScale 直接代入は不要）
 - floor の nodes 名は `Floor` または `floor` の両方に対応
 
 ---
@@ -321,9 +369,9 @@ frontend/
 ## 今後の拡張
 
 - [ ] **useDeviceType**: PC/Mobile 判定。CAMERA を動的に切り替え
-- [ ] **usePlayerInput**: キーボードとタッチ入力を抽象化。`{ forward, backward, turnLeft, turnRight }` を返す
-- [ ] **VirtualJoystick**: スマホ用仮想ジョイスティック UI
-- [ ] **床の境界**: プレイヤーが床外に落ちないよう制限
+- [ ] **usePlayerInput**: キーボードとタッチ入力を完全に抽象化。現状は store でジョイスティックのみ共有
+- [x] **VirtualJoystick**: スマホ用仮想ジョイスティック UI（JoystickControls + react-joystick-component で実装済み）
+- [x] **床の境界**: プレイヤーが床外に落ちないよう制限（BOUNDARY_RADIUS で XZ 平面の円形境界を実装済み）
 - [ ] **モデルプリロード**: useGLTF.preload で初回表示の高速化
 
 ---
