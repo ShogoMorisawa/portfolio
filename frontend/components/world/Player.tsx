@@ -6,13 +6,14 @@ import { useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useInputStore } from "@/lib/world/store";
-import { PLAYER } from "@/lib/world/config";
+import { PLAYER, CAMERA } from "@/lib/world/config";
 
 interface PlayerProps {
   groundRef: React.RefObject<THREE.Object3D | null>;
+  isMobile: boolean;
 }
 
-const Player = ({ groundRef }: PlayerProps) => {
+const Player = ({ groundRef, isMobile }: PlayerProps) => {
   const group = useRef<THREE.Group>(null);
   const raycaster = useRef(new THREE.Raycaster());
   const downVector = useRef(new THREE.Vector3(0, -1, 0));
@@ -25,6 +26,9 @@ const Player = ({ groundRef }: PlayerProps) => {
   }, [scene]);
 
   const joystick = useInputStore((state) => state.joystick);
+
+  // isMobile に応じて使う設定を切り替える
+  const cameraSettings = isMobile ? CAMERA.mobile : CAMERA.pc;
 
   const [keys, setKeys] = useState({
     up: false,
@@ -156,17 +160,22 @@ const Player = ({ groundRef }: PlayerProps) => {
 
     const targetPosition = player.position.clone();
 
-    const cameraOffsetX = Math.sin(player.rotation.y) * PLAYER.CAMERA_DISTANCE;
-    const cameraOffsetZ = Math.cos(player.rotation.y) * PLAYER.CAMERA_DISTANCE;
+    const cameraOffsetX =
+      Math.sin(player.rotation.y) * cameraSettings.distance;
+    const cameraOffsetZ =
+      Math.cos(player.rotation.y) * cameraSettings.distance;
 
     const desiredCameraPos = new THREE.Vector3(
       targetPosition.x - cameraOffsetX,
-      targetPosition.y + PLAYER.CAMERA_HEIGHT,
+      targetPosition.y + cameraSettings.height,
       targetPosition.z - cameraOffsetZ,
     );
 
     state.camera.position.lerp(desiredCameraPos, 0.1);
-    state.camera.lookAt(targetPosition);
+    // lookAtOffsetY で注視点を上にずらし、プレイヤーを下に、空を多く写す
+    const lookAtTarget = targetPosition.clone();
+    lookAtTarget.y += cameraSettings.lookAtOffsetY;
+    state.camera.lookAt(lookAtTarget);
   });
 
   return (

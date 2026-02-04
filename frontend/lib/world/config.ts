@@ -8,12 +8,14 @@ export const CAMERA = {
     fov: 50,
     distance: 8,
     height: 5,
+    lookAtOffsetY: 1.5, // 注視点をプレイヤーより上にずらす（空を多く写す）
     position: [0, 5, 12] as [number, number, number],
   },
   mobile: {
     fov: 55,
     distance: 6,
     height: 4,
+    lookAtOffsetY: 1.5,
     position: [0, 4, 10] as [number, number, number],
   },
 };

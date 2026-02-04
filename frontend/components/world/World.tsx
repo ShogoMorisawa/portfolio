@@ -10,13 +10,25 @@ import Dome from "./Dome";
 import Floor from "./Floor";
 import Player from "./Player";
 import { CAMERA } from "@/lib/world/config";
+import { useDeviceType } from "@/hooks/useDeviceType";
 
 export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
+  const isMobile = useDeviceType();
+
+  // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
+  const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
 
   return (
     <div className="w-full h-screen bg-black">
-      <Canvas dpr={[1, 2]} camera={{ fov: CAMERA.pc.fov, position: CAMERA.pc.position }}>
+      <Canvas
+        key={isMobile ? "mobile" : "pc"}
+        dpr={[1, 2]}
+        camera={{
+          fov: cameraConfig.fov,
+          position: cameraConfig.position,
+        }}
+      >
         <Dome />
 
         <Environment
@@ -28,7 +40,7 @@ export default function World() {
         <ambientLight intensity={1} />
 
         <Floor groundRef={groundRef} />
-        <Player groundRef={groundRef} />
+        <Player groundRef={groundRef} isMobile={isMobile} />
 
         <EffectComposer enableNormalPass={false}>
           <Bloom />

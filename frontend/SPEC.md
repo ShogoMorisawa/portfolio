@@ -73,8 +73,8 @@
 │  │  ├── Player ─────────── groundRef ────────────────┤ │   │
 │  │  └── EffectComposer > Bloom                        │   │
 │  └─────────────────────────────────────────────────────┘   │
-│  groundRef を Floor と Player で共有。useInputStore で      │
-│  JoystickControls と Player がジョイスティック入力を共有     │
+│  groundRef を Floor と Player で共有。useDeviceType で      │
+│  isMobile を判定し、CAMERA と Player に渡す                  │
 └─────────────────────────────────────────────────────────────┘
                               │
           ┌───────────────────┼───────────────────┐
@@ -89,6 +89,7 @@
           │
           ▼
 ┌─────────────────────────────────────────────────────────────┐
+│  hooks/useDeviceType.ts  ← 768px 未満で isMobile             │
 │  components/world/ui/JoystickControls.tsx                   │
 │  lib/world/store.ts (Zustand: joystick { x, y, isMoving })   │
 └─────────────────────────────────────────────────────────────┘
@@ -112,6 +113,8 @@ frontend/
 │   ├── Player.tsx             # プレイヤー（ココ）
 │   └── ui/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（モバイル用）
+├── hooks/
+│   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
 │   ├── config.ts             # STAGE, CAMERA, PLAYER 定数
 │   └── store.ts              # Zustand。ジョイスティック入力状態
@@ -137,12 +140,13 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明・後処理、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す） |
+| **状態** | `groundRef`（Floor と Player に渡す）、`useDeviceType()` で isMobile |
 | **子** | Dome, Environment, ambientLight, Floor, Player, EffectComposer |
 
 **Canvas 設定:**
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
-- `camera`: CAMERA.pc から fov, position を取得（distance/height は未使用。カメラ追従は Player 内で PLAYER.CAMERA_DISTANCE/HEIGHT を使用）
+- `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
+- `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
 
@@ -183,12 +187,13 @@ frontend/
 | 項目 | 内容 |
 |------|------|
 | **責務** | キャラ表示、キー入力、移動・回転、接地判定、境界制限、カメラ追従 |
-| **Props** | `groundRef: React.RefObject<THREE.Object3D \| null>` |
-| **依存** | PLAYER の全定数 |
+| **Props** | `groundRef`, `isMobile: boolean`（useDeviceType の結果。CAMERA 切り替え用） |
+| **依存** | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え） |
 
 **モデル:** `models/coco.glb`（アニメーション付き）  
 **入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用  
-**アニメーション:** 最初のアニメーションクリップを前進/後退で再生。`setEffectiveTimeScale(±1)` と `stop()` を使用
+**アニメーション:** 最初のアニメーションクリップを前進/後退で再生。`setEffectiveTimeScale(±1)` と `stop()` を使用  
+**カメラ:** isMobile に応じて CAMERA.mobile / CAMERA.pc の distance, height, lookAtOffsetY を使用
 
 ---
 
@@ -206,6 +211,18 @@ frontend/
 
 ---
 
+### useDeviceType
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | PC/Mobile の判定（画面幅ベース） |
+| **戻り値** | `isMobile: boolean` |
+| **判定基準** | `window.innerWidth < 768`（Tailwind の md ブレークポイント） |
+
+**挙動:** 初回マウント時と resize イベントで再判定。World と Player で CAMERA の切り替えに使用。
+
+---
+
 ## 設定リファレンス
 
 ### STAGE
@@ -220,10 +237,15 @@ frontend/
 | デバイス | キー | 型 | 値 | 説明 |
 |----------|------|-----|-----|------|
 | pc | fov | number | 50 | 視野角（度） |
-| pc | distance | number | 8 | カメラとプレイヤーの距離（将来用。現状は PLAYER.CAMERA_DISTANCE を使用） |
-| pc | height | number | 5 | カメラの高さ（将来用。現状は PLAYER.CAMERA_HEIGHT を使用） |
+| pc | distance | number | 8 | カメラとプレイヤーの距離（Player で使用） |
+| pc | height | number | 5 | カメラの高さ（Player で使用） |
+| pc | lookAtOffsetY | number | 1.5 | 注視点をプレイヤーより上にずらす（空を多く写す） |
 | pc | position | [x,y,z] | [0,5,12] | 初期カメラ位置（Canvas で使用） |
-| mobile | fov, distance, height, position | - | fov:55, dist:6, height:4, pos:[0,4,10] | 将来用。未使用 |
+| mobile | fov | number | 55 | 視野角（度） |
+| mobile | distance | number | 6 | カメラとプレイヤーの距離 |
+| mobile | height | number | 4 | カメラの高さ |
+| mobile | lookAtOffsetY | number | 1.5 | 注視点オフセット |
+| mobile | position | [x,y,z] | [0,4,10] | 初期カメラ位置 |
 
 ### PLAYER
 
@@ -231,8 +253,8 @@ frontend/
 |------|-----|-----|------|
 | MOVE_SPEED | number | 5.0 | 前進・後退の速度 |
 | ROTATION_SPEED | number | 3.0 | 旋回速度（rad/s） |
-| CAMERA_DISTANCE | number | 8 | 第三者視点カメラの距離 |
-| CAMERA_HEIGHT | number | 5 | 第三者視点カメラの高さ |
+| CAMERA_DISTANCE | number | 8 | （非推奨）カメラ距離は CAMERA.pc/mobile.distance を使用 |
+| CAMERA_HEIGHT | number | 5 | （非推奨）カメラ高さは CAMERA.pc/mobile.height を使用 |
 | RAYCAST_OFFSET | number | 5 | 接地レイの始点オフセット（プレイヤー頭上） |
 | GRAVITY | number | 0.2 | 落下加速度 |
 | FALL_THRESHOLD | number | -10 | これ以下で落下停止 |
@@ -245,6 +267,12 @@ frontend/
 ## データフロー
 
 ```
+[useDeviceType] → isMobile (768px 未満で true)
+       ↓
+[World] → Canvas key, camera (fov, position), Player に isMobile を渡す
+       ↓
+[Player] → CAMERA.pc / CAMERA.mobile で distance, height, lookAtOffsetY を切り替え
+
 [キー入力] ──────────────┐
                         ├→ Player (keys + joystick を統合)
 [JoystickControls] ─────┤
@@ -286,7 +314,7 @@ frontend/
 - **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（26）。境界を超えると境界線上に押し戻される
 - **ドーム:** 下端が Y=-7（床と一致）。scale 1.8 で表示
 - **プレイヤー初期位置:** (0, INITIAL_Y, 0) = (0, 10, 0)
-- **カメラ:** プレイヤー背後、距離 8、高さ +5。lerp 0.1 で滑らかに追従
+- **カメラ:** プレイヤー背後。useDeviceType で PC/Mobile を判定し、CAMERA.pc または CAMERA.mobile の distance, height を使用。lerp 0.1 で滑らかに追従。lookAtOffsetY で注視点を上にずらし空を多く写す
 
 ---
 
@@ -319,10 +347,11 @@ frontend/
 
 ### カメラ追従
 
+- **デバイス別設定:** isMobile に応じて CAMERA.pc または CAMERA.mobile を使用
 - プレイヤーの背中側にカメラを配置: `position - (sin, cos) * distance`
-- 高さは `player.y + CAMERA_HEIGHT`
+- 高さは `player.y + height`
 - `lerp(desiredPos, 0.1)` で滑らかに移動
-- `lookAt(player.position)` で常にプレイヤーを注視
+- **注視点:** `lookAt(player.position + lookAtOffsetY)` でプレイヤーより少し上を注視（空を多く写す）
 
 ---
 
@@ -347,11 +376,12 @@ frontend/
 - `components/world/` に配置
 - 3D オブジェクトは Canvas の子として配置
 - 定数は `lib/world/config.ts` に追加
+- カスタムフックは `hooks/` に配置
 
 ### 定数変更
 
 - `lib/world/config.ts` を編集
-- デバイス別の値は CAMERA.pc / CAMERA.mobile で分岐（現状 pc のみ使用）
+- デバイス別の値は CAMERA.pc / CAMERA.mobile で分岐。useDeviceType で isMobile を判定し、World と Player で使用
 
 ### モデル追加
 
@@ -368,7 +398,7 @@ frontend/
 
 ## 今後の拡張
 
-- [ ] **useDeviceType**: PC/Mobile 判定。CAMERA を動的に切り替え
+- [x] **useDeviceType**: PC/Mobile 判定（768px 未満でモバイル）。CAMERA を動的に切り替え（実装済み）
 - [ ] **usePlayerInput**: キーボードとタッチ入力を完全に抽象化。現状は store でジョイスティックのみ共有
 - [x] **VirtualJoystick**: スマホ用仮想ジョイスティック UI（JoystickControls + react-joystick-component で実装済み）
 - [x] **床の境界**: プレイヤーが床外に落ちないよう制限（BOUNDARY_RADIUS で XZ 平面の円形境界を実装済み）
