@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { Suspense, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 import * as THREE from "three";
@@ -29,17 +29,19 @@ export default function World() {
           position: cameraConfig.position,
         }}
       >
-        <Dome />
+        <Suspense fallback={null}>
+          <Dome />
 
-        <Environment
-          preset="city"
-          background={false}
-          environmentIntensity={0.8}
-        />
-        <ambientLight intensity={1} />
+          <Environment
+            preset="city"
+            background={false}
+            environmentIntensity={0.8}
+          />
+          <ambientLight intensity={1} />
 
-        <Floor groundRef={groundRef} />
-        <Player groundRef={groundRef} isMobile={isMobile} />
+          <Floor groundRef={groundRef} />
+          <Player groundRef={groundRef} isMobile={isMobile} />
+        </Suspense>
       </Canvas>
     </div>
   );
