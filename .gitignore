@@ -5,3 +5,6 @@
 
 # VSCode / Cursor
 .vscode/
+
+# Codex
+.codex/

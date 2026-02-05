@@ -58,7 +58,8 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  app/page.tsx                                               │
 │  ├── <World />                                              │
-│  └── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
+│  ├── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
+│  └── <Loader />            ← drei ローダー（進捗バー）         │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -70,8 +71,9 @@
 │  │  ├── Environment (preset=city)                      │   │
 │  │  ├── ambientLight                                   │   │
 │  │  ├── Floor ──────────── groundRef ─────────────────┐ │   │
-│  │  └── Player ─────────── groundRef ────────────────┤ │   │
-│  │       └── Coco (モデル+アニメーション)                │   │
+│  │  ├── Player ─────────── groundRef ────────────────┤ │   │
+│  │  │    └── Coco (モデル+アニメーション)               │   │
+│  │  └── Crystal ×8  ← ランダム配置/吹き出し              │   │
 │  └─────────────────────────────────────────────────────┘   │
 │  groundRef を Floor と Player で共有。useDeviceType で      │
 │  isMobile を判定し、CAMERA と Player に渡す                  │
@@ -86,6 +88,14 @@
 │  - scale 1.8 │    │  - scale 20  │    │  - 接地判定   │
 │  - Y=-7      │    │  - groundRef │    │  - カメラ追従 │
 └──────────────┘    └──────────────┘    └──────────────┘
+          │
+          ▼
+┌──────────────┐
+│ Crystal.tsx  │
+│ - crystal-transformed │
+│ - Matcap    │
+│ - 浮遊+距離で表示 │
+└──────────────┘
           │
           ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -112,6 +122,7 @@ frontend/
 │   ├── Floor.tsx              # 床
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
+│   ├── Crystal.tsx            # クリスタル（吹き出し・浮遊）
 │   └── ui/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（モバイル用）
 ├── hooks/
@@ -122,10 +133,12 @@ frontend/
 ├── public/
 │   ├── models/
 │   │   ├── coco-transformed.glb   # プレイヤー（Coco）。gltfjsx 用に変換済み
+│   │   ├── crystal-transformed.glb # クリスタル。gltfjsx 用に変換済み
 │   │   ├── dome-transformed.glb  # ドーム（Dome）。gltfjsx 用に変換済み
 │   │   ├── floor-transformed.glb # 床（Floor）。gltfjsx 用に変換済み
-│   │   ├── coco.glb, dome.glb, floor.glb  # 元モデル（レガシー）
+│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb  # 元モデル（レガシー）
 │   └── textures/
+│       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
 │       └── floor_texture.jpg # 床用 Matcap
 ├── SPEC.md                   # 本ドキュメント
@@ -142,8 +155,8 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`useDeviceType()` で isMobile |
-| **子** | Dome, Environment, ambientLight, Floor, Player |
+| **状態** | `groundRef`（Floor と Player に渡す）、`useDeviceType()` で isMobile、`crystals`（8体のランダム配置） |
+| **子** | Dome, Environment, ambientLight, Floor, Player, Crystal ×8 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -152,6 +165,7 @@ frontend/
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
+**クリスタル配置:** `useMemo` で 8体を生成。XZ はランダム（±15）、Y=2 固定、`scale=0.2`。メッセージは世界の挨拶配列から割り当て。
 
 ---
 
@@ -320,6 +334,21 @@ frontend/
 
 ---
 
+### Crystal.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | クリスタルモデルの表示、浮遊アニメーション、距離による吹き出し表示 |
+| **Props** | `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]` |
+| **依存** | crystal-transformed.glb, crystal_texture.jpg, drei `Html` |
+
+**モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
+**マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
+**浮遊:** `useFrame` で `y = position.y + sin(t*2)*0.5`  
+**吹き出し:** カメラとの距離 `< 10` で `Html` を表示
+
+---
+
 ## レンダリングパイプライン
 
 1. **シーン描画** → 画面へ直接出力
@@ -380,9 +409,11 @@ frontend/
 | パス | 形式 | 用途 | ノード名 |
 |------|------|------|----------|
 | models/coco-transformed.glb | GLB | プレイヤー（Coco） | Body, tongue, root_003 等。SkeletonUtils.clone でクローン |
+| models/crystal-transformed.glb | GLB | クリスタル | Body, Left_Eye |
 | models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
 | models/floor-transformed.glb | GLB | 床（Floor） | Floor |
-| models/coco.glb, dome.glb, floor.glb | GLB | 元モデル（レガシー） | - |
+| models/coco.glb, crystal.glb, dome.glb, floor.glb | GLB | 元モデル（レガシー） | - |
+| textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
