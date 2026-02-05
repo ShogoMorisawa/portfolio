@@ -40,7 +40,7 @@
 | フレームワーク | Next.js | ^16.1.6 | App Router, SSR/CSR |
 | 3D レンダリング | React Three Fiber | ^9.5.0 | React 用 Three.js ラッパー |
 | 3D ユーティリティ | @react-three/drei | ^10.7.7 | useGLTF, useTexture, Environment 等 |
-| 後処理 | @react-three/postprocessing | ^3.0.4 | EffectComposer, Bloom |
+| 3D ユーティリティ | three-stdlib | drei 経由 | GLTF 型、gltfjsx 生成コードで使用 |
 | 3D エンジン | Three.js | ^0.182.0 | レンダリング基盤 |
 | 状態管理 | Zustand | ^5.0.11 | 入力状態の共有（キーボード/ジョイスティック） |
 | UI コンポーネント | react-joystick-component | ^6.2.1 | 仮想ジョイスティック |
@@ -81,7 +81,7 @@
           ▼                   ▼                   ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │  Dome.tsx    │    │  Floor.tsx   │    │  Player.tsx  │
-│  - dome.glb  │    │  - floor.glb │    │  - Coco 子   │
+│  - dome-transformed  │    │  - floor-transformed  │    │  - Coco 子   │
 │  - Matcap    │    │  - Matcap    │    │  - キー+ジョイ │
 │  - scale 1.8 │    │  - scale 20  │    │  - 接地判定   │
 │  - Y=-7      │    │  - groundRef │    │  - カメラ追従 │
@@ -121,10 +121,10 @@ frontend/
 │   └── store.ts              # Zustand。ジョイスティック入力状態
 ├── public/
 │   ├── models/
-│   │   ├── coco-transformed.glb  # プレイヤー（Coco で使用。gltfjsx 用に変換済み）
-│   │   ├── coco.glb          # 元モデル（レガシー。Coco は coco-transformed を使用）
-│   │   ├── dome.glb          # ドーム
-│   │   └── floor.glb         # 床
+│   │   ├── coco-transformed.glb   # プレイヤー（Coco）。gltfjsx 用に変換済み
+│   │   ├── dome-transformed.glb  # ドーム（Dome）。gltfjsx 用に変換済み
+│   │   ├── floor-transformed.glb # 床（Floor）。gltfjsx 用に変換済み
+│   │   ├── coco.glb, dome.glb, floor.glb  # 元モデル（レガシー）
 │   └── textures/
 │       ├── dome_texture.jpg  # ドーム用 Matcap
 │       └── floor_texture.jpg # 床用 Matcap
@@ -161,11 +161,13 @@ frontend/
 |------|------|
 | **責務** | ドームモデルの表示 |
 | **Props** | なし |
-| **依存** | STAGE.DOME_POSITION_Y, STAGE（スケールはハードコード 1.8） |
+| **依存** | STAGE.DOME_POSITION_Y, dome-transformed.glb（gltfjsx 生成） |
 
-**モデル:** `models/dome.glb` の `nodes.Dome`  
-**マテリアル:** meshMatcapMaterial, `side={DoubleSide}`  
-**位置:** `[0, DOME_POSITION_Y, 0]`（床の下端と揃えるため Y=-7）
+**モデル:** `models/dome-transformed.glb` の `nodes.Dome`。gltfjsx で生成  
+**マテリアル:** meshMatcapMaterial（useTexture で dome_texture.jpg）, `side={DoubleSide}`, `color="#ffffff"`  
+**位置:** `[0, DOME_POSITION_Y, 0]`（床の下端と揃えるため Y=-7）  
+**スケール:** [1.8, 1.8, 1.8]  
+**プリロード:** `useGLTF.preload("/models/dome-transformed.glb")`
 
 ---
 
@@ -175,11 +177,13 @@ frontend/
 |------|------|
 | **責務** | 床モデルの表示、接地判定用 groundRef の設定 |
 | **Props** | `groundRef: React.RefObject<THREE.Object3D \| null>` |
-| **依存** | STAGE.DOME_SCALE |
+| **依存** | STAGE.DOME_SCALE, floor-transformed.glb（gltfjsx 生成） |
 
-**モデル:** `models/floor.glb` の `nodes.Floor` または `nodes.floor`  
-**マテリアル:** meshMatcapMaterial  
-**スケール:** `[DOME_SCALE, DOME_SCALE, DOME_SCALE]`（20）
+**モデル:** `models/floor-transformed.glb` の `nodes.Floor`。gltfjsx で生成  
+**マテリアル:** meshMatcapMaterial（useTexture で floor_texture.jpg）, `color="#ffffff"`  
+**スケール:** `[DOME_SCALE, DOME_SCALE, DOME_SCALE]`（20）  
+**groundRef:** ルートの `<group ref={groundRef}>` に設定  
+**プリロード:** `useGLTF.preload("/models/floor-transformed.glb")`
 
 ---
 
@@ -375,15 +379,15 @@ frontend/
 
 | パス | 形式 | 用途 | ノード名 |
 |------|------|------|----------|
-| models/coco-transformed.glb | GLB | プレイヤー（Coco） | Body, tongue, root_003, LeftBlackEye 等。gltfjsx で生成した Coco が使用 |
-| models/coco.glb | GLB | 元モデル（レガシー） | - |
-| models/dome.glb | GLB | ドーム | Dome |
-| models/floor.glb | GLB | 床 | Floor または floor |
+| models/coco-transformed.glb | GLB | プレイヤー（Coco） | Body, tongue, root_003 等。SkeletonUtils.clone でクローン |
+| models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
+| models/floor-transformed.glb | GLB | 床（Floor） | Floor |
+| models/coco.glb, dome.glb, floor.glb | GLB | 元モデル（レガシー） | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
-**coco-transformed:** gltfjsx 用に変換済み。SkeletonUtils.clone でクローンして使用。useGLTF.preload でプリロード。  
-**Matcap:** ライティングをテクスチャで疑似的に表現。環境光の影響を受けにくい。
+**-transformed モデル:** Dome, Floor, Coco は gltfjsx 用に変換済みの GLB を使用。useGLTF.preload でプリロード。  
+**Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---
 
@@ -410,7 +414,7 @@ frontend/
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
-- floor の nodes 名は `Floor` または `floor` の両方に対応
+- Dome, Floor, Coco は gltfjsx で生成。それぞれ dome-transformed, floor-transformed, coco-transformed を使用
 
 ---
 
