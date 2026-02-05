@@ -81,7 +81,7 @@
           ▼                   ▼                   ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │  Dome.tsx    │    │  Floor.tsx   │    │  Player.tsx  │
-│  - dome-transformed  │    │  - floor-transformed  │    │  - Coco 子   │
+│  - dome-transformed │    │  - floor-transformed │    │  - Coco 子   │
 │  - Matcap    │    │  - Matcap    │    │  - キー+ジョイ │
 │  - scale 1.8 │    │  - scale 20  │    │  - 接地判定   │
 │  - Y=-7      │    │  - groundRef │    │  - カメラ追従 │
@@ -163,7 +163,7 @@ frontend/
 | **Props** | なし |
 | **依存** | STAGE.DOME_POSITION_Y, dome-transformed.glb（gltfjsx 生成） |
 
-**モデル:** `models/dome-transformed.glb` の `nodes.Dome`。gltfjsx で生成  
+**モデル:** `models/dome-transformed.glb` の `nodes.Dome`。gltfjsx で生成。`as unknown as GLTFResult` で型アサーション  
 **マテリアル:** meshMatcapMaterial（useTexture で dome_texture.jpg）, `side={DoubleSide}`, `color="#ffffff"`  
 **位置:** `[0, DOME_POSITION_Y, 0]`（床の下端と揃えるため Y=-7）  
 **スケール:** [1.8, 1.8, 1.8]  
@@ -179,7 +179,7 @@ frontend/
 | **Props** | `groundRef: React.RefObject<THREE.Object3D \| null>` |
 | **依存** | STAGE.DOME_SCALE, floor-transformed.glb（gltfjsx 生成） |
 
-**モデル:** `models/floor-transformed.glb` の `nodes.Floor`。gltfjsx で生成  
+**モデル:** `models/floor-transformed.glb` の `nodes.Floor`。gltfjsx で生成。`as unknown as GLTFResult` で型アサーション  
 **マテリアル:** meshMatcapMaterial（useTexture で floor_texture.jpg）, `color="#ffffff"`  
 **スケール:** `[DOME_SCALE, DOME_SCALE, DOME_SCALE]`（20）  
 **groundRef:** ルートの `<group ref={groundRef}>` に設定  
@@ -213,7 +213,7 @@ frontend/
 **モデル:** `models/coco-transformed.glb`。gltfjsx で生成。`SkeletonUtils.clone` でシーンをクローン  
 **アニメーション:** Player から渡された isMoving, moveDirection で `setEffectiveTimeScale(moveDirection)` と `stop()` を制御  
 **目玉アタッチ:** useLayoutEffect で頭の骨（Head を含む Bone）を探索し、Eye/Point メッシュを頭に attach。骨の動きに追従  
-**forwardRef:** 親の group ref と内部 group を useImperativeHandle で結合。Player の移動 transform を正しく適用  
+**forwardRef:** useImperativeHandle で内部 group を親に公開可能。現状 Player は ref を渡さず、`<group ref={group}>` 内の子として Coco を配置するため、group の transform が Coco に適用される  
 **プリロード:** `useGLTF.preload("/models/coco-transformed.glb")` で初回表示を高速化
 
 ---
@@ -330,7 +330,7 @@ frontend/
 ## 座標系・空間
 
 - **Three.js の慣例:** Y 軸が上、右手系
-- **床の範囲:** floor.glb の BoundingBox × DOME_SCALE。概ね XZ で ±45 程度
+- **床の範囲:** floor-transformed.glb の BoundingBox × DOME_SCALE。概ね XZ で ±45 程度
 - **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（26）。境界を超えると境界線上に押し戻される
 - **ドーム:** 下端が Y=-7（床と一致）。scale 1.8 で表示
 - **プレイヤー初期位置:** (0, INITIAL_Y, 0) = (0, 10, 0)
@@ -414,7 +414,7 @@ frontend/
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
-- Dome, Floor, Coco は gltfjsx で生成。それぞれ dome-transformed, floor-transformed, coco-transformed を使用
+- Dome, Floor, Coco は gltfjsx で生成。それぞれ dome-transformed, floor-transformed, coco-transformed を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
 
 ---
 

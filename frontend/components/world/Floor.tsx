@@ -21,8 +21,13 @@ interface FloorProps {
   groundRef: React.RefObject<THREE.Object3D | null>;
 }
 
-function Floor({ groundRef, ...props }: React.ComponentPropsWithoutRef<"group"> & FloorProps) {
-  const { nodes } = useGLTF("/models/floor-transformed.glb") as GLTFResult;
+function Floor({
+  groundRef,
+  ...props
+}: React.ComponentPropsWithoutRef<"group"> & FloorProps) {
+  const { nodes } = useGLTF(
+    "/models/floor-transformed.glb",
+  ) as unknown as GLTFResult;
   const matcap = useTexture("/textures/floor_texture.jpg");
 
   return (

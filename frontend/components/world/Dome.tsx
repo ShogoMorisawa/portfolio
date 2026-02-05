@@ -18,15 +18,13 @@ type GLTFResult = GLTF & {
 };
 
 function Dome(props: React.ComponentPropsWithoutRef<"group">) {
-  const { nodes } = useGLTF("/models/dome-transformed.glb") as GLTFResult;
+  const { nodes } = useGLTF(
+    "/models/dome-transformed.glb",
+  ) as unknown as GLTFResult;
   const matcap = useTexture("/textures/dome_texture.jpg");
 
   return (
-    <group
-      {...props}
-      dispose={null}
-      position={[0, STAGE.DOME_POSITION_Y, 0]}
-    >
+    <group {...props} dispose={null} position={[0, STAGE.DOME_POSITION_Y, 0]}>
       <mesh geometry={nodes.Dome.geometry} scale={[1.8, 1.8, 1.8]}>
         <meshMatcapMaterial
           matcap={matcap}
