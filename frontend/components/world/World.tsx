@@ -22,6 +22,7 @@ export default function World() {
   return (
     <div className="w-full h-screen bg-black">
       <Canvas
+        flat
         key={isMobile ? "mobile" : "pc"}
         dpr={[1, 2]}
         camera={{
@@ -36,15 +37,10 @@ export default function World() {
           background={false}
           environmentIntensity={0.8}
         />
-
         <ambientLight intensity={1} />
 
         <Floor groundRef={groundRef} />
         <Player groundRef={groundRef} isMobile={isMobile} />
-
-        <EffectComposer enableNormalPass={false}>
-          <Bloom />
-        </EffectComposer>
       </Canvas>
     </div>
   );

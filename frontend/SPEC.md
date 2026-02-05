@@ -65,13 +65,13 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  components/world/World.tsx                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Canvas (dpr=[1,2], camera)                         │   │
+│  │  Canvas (flat, dpr=[1,2], camera)                  │   │
 │  │  ├── Dome                                           │   │
 │  │  ├── Environment (preset=city)                      │   │
 │  │  ├── ambientLight                                   │   │
 │  │  ├── Floor ──────────── groundRef ─────────────────┐ │   │
-│  │  ├── Player ─────────── groundRef ────────────────┤ │   │
-│  │  └── EffectComposer > Bloom                        │   │
+│  │  └── Player ─────────── groundRef ────────────────┤ │   │
+│  │       └── Coco (モデル+アニメーション)                │   │
 │  └─────────────────────────────────────────────────────┘   │
 │  groundRef を Floor と Player で共有。useDeviceType で      │
 │  isMobile を判定し、CAMERA と Player に渡す                  │
@@ -81,7 +81,7 @@
           ▼                   ▼                   ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │  Dome.tsx    │    │  Floor.tsx   │    │  Player.tsx  │
-│  - dome.glb  │    │  - floor.glb │    │  - coco.glb  │
+│  - dome.glb  │    │  - floor.glb │    │  - Coco 子   │
 │  - Matcap    │    │  - Matcap    │    │  - キー+ジョイ │
 │  - scale 1.8 │    │  - scale 20  │    │  - 接地判定   │
 │  - Y=-7      │    │  - groundRef │    │  - カメラ追従 │
@@ -110,7 +110,8 @@ frontend/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
-│   ├── Player.tsx             # プレイヤー（ココ）
+│   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
+│   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   └── ui/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（モバイル用）
 ├── hooks/
@@ -120,7 +121,8 @@ frontend/
 │   └── store.ts              # Zustand。ジョイスティック入力状態
 ├── public/
 │   ├── models/
-│   │   ├── coco.glb          # プレイヤー（アニメーション付き）
+│   │   ├── coco-transformed.glb  # プレイヤー（Coco で使用。gltfjsx 用に変換済み）
+│   │   ├── coco.glb          # 元モデル（レガシー。Coco は coco-transformed を使用）
 │   │   ├── dome.glb          # ドーム
 │   │   └── floor.glb         # 床
 │   └── textures/
@@ -138,19 +140,18 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | Canvas の設定、環境・照明・後処理、子コンポーネントの組み立て |
+| **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
 | **状態** | `groundRef`（Floor と Player に渡す）、`useDeviceType()` で isMobile |
-| **子** | Dome, Environment, ambientLight, Floor, Player, EffectComposer |
+| **子** | Dome, Environment, ambientLight, Floor, Player |
 
 **Canvas 設定:**
+- `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-
-**重要:** EffectComposer + Bloom を削除すると画面が真っ白になる。レンダリングパイプラインの都合で必須。EffectComposer は `enableNormalPass={false}`。
 
 ---
 
@@ -186,14 +187,30 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | キャラ表示、キー入力、移動・回転、接地判定、境界制限、カメラ追従 |
+| **責務** | 入力処理、移動・回転、接地判定、境界制限、カメラ追従。Coco に isMoving/moveDirection を渡す |
 | **Props** | `groundRef`, `isMobile: boolean`（useDeviceType の結果。CAMERA 切り替え用） |
-| **依存** | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え） |
+| **依存** | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え）、Coco |
 
-**モデル:** `models/coco.glb`（アニメーション付き）  
+**構造:** `<group ref={group}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
 **入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用  
-**アニメーション:** 最初のアニメーションクリップを前進/後退で再生。`setEffectiveTimeScale(±1)` と `stop()` を使用  
+**接地:** `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` で Y 位置を設定（BoundingBox 計算は廃止）  
 **カメラ:** isMobile に応じて CAMERA.mobile / CAMERA.pc の distance, height, lookAtOffsetY を使用
+
+---
+
+### Coco.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | ココモデルの表示、アニメーション制御、目玉の骨アタッチ |
+| **Props** | `isMoving: boolean`, `moveDirection: number`（1: 前進, -1: 後退） |
+| **依存** | coco-transformed.glb, three-stdlib (SkeletonUtils), gltfjsx 生成コード |
+
+**モデル:** `models/coco-transformed.glb`。gltfjsx で生成。`SkeletonUtils.clone` でシーンをクローン  
+**アニメーション:** Player から渡された isMoving, moveDirection で `setEffectiveTimeScale(moveDirection)` と `stop()` を制御  
+**目玉アタッチ:** useLayoutEffect で頭の骨（Head を含む Bone）を探索し、Eye/Point メッシュを頭に attach。骨の動きに追従  
+**forwardRef:** 親の group ref と内部 group を useImperativeHandle で結合。Player の移動 transform を正しく適用  
+**プリロード:** `useGLTF.preload("/models/coco-transformed.glb")` で初回表示を高速化
 
 ---
 
@@ -281,6 +298,8 @@ frontend/
                         ↓
 [useFrame] → 移動・回転・接地判定・境界制限・カメラ更新
                 ↓
+[Player] → isMoving, moveDirection を Coco に渡す → アニメーション制御
+                ↓
 [groundRef] ← Floor が ref を設定
                 ↓
 [raycaster.intersectObjects(groundRef)] → 床との交点 → player.position.y
@@ -299,11 +318,8 @@ frontend/
 
 ## レンダリングパイプライン
 
-1. **シーン描画** → オフスクリーンレンダーターゲット
-2. **EffectComposer** → Bloom 適用
-3. **出力** → 画面
-
-**注意:** EffectComposer を削除すると ToneMapping 等の処理が変わり、画面が真っ白になる。Bloom の「光を足す」効果より、パイプライン変更の影響が大きい。
+1. **シーン描画** → 画面へ直接出力
+2. **Canvas flat:** 物理ベースライティングを無効化。EffectComposer/Bloom は使用していない
 
 ---
 
@@ -324,10 +340,10 @@ frontend/
 
 1. プレイヤー位置の頭上 RAYCAST_OFFSET から下方向にレイを発射
 2. groundRef（床）と交差判定
-3. ヒット時: `hitPoint.y + playerHeightOffset + GROUND_OFFSET` を player.position.y に設定
+3. ヒット時: `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` を player.position.y に設定
 4. 非ヒット時: GRAVITY で落下。FALL_THRESHOLD 以下で停止
 
-**playerHeightOffset:** モデルの BoundingBox の min.y の絶対値。足元を床面に合わせるためのオフセット。
+**PLAYER_HEIGHT_OFFSET:** Player 内で 0.5 にハードコード。足元を床面に合わせるためのオフセット（coco-transformed モデル用）。
 
 ### 入力統合
 
@@ -359,12 +375,14 @@ frontend/
 
 | パス | 形式 | 用途 | ノード名 |
 |------|------|------|----------|
-| models/coco.glb | GLB | プレイヤー | scene（useGLTF の返り値。ルートシーンを primitive で表示） |
+| models/coco-transformed.glb | GLB | プレイヤー（Coco） | Body, tongue, root_003, LeftBlackEye 等。gltfjsx で生成した Coco が使用 |
+| models/coco.glb | GLB | 元モデル（レガシー） | - |
 | models/dome.glb | GLB | ドーム | Dome |
 | models/floor.glb | GLB | 床 | Floor または floor |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
+**coco-transformed:** gltfjsx 用に変換済み。SkeletonUtils.clone でクローンして使用。useGLTF.preload でプリロード。  
 **Matcap:** ライティングをテクスチャで疑似的に表現。環境光の影響を受けにくい。
 
 ---
@@ -386,12 +404,12 @@ frontend/
 ### モデル追加
 
 - `public/models/` に GLB を配置
-- useGLTF で読み込み。ノード名は Blender 等で確認
+- プレイヤー等のスキンメッシュ: [gltfjsx](https://github.com/pmndrs/gltfjsx) でコンポーネント生成。SkeletonUtils.clone でクローン可能に。three-stdlib は drei の依存で利用可能
 
 ### 注意事項
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
-- Player のアニメーションは `setEffectiveTimeScale` と `stop()` を使用（timeScale 直接代入は不要）
+- Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
 - floor の nodes 名は `Floor` または `floor` の両方に対応
 
 ---
@@ -402,7 +420,7 @@ frontend/
 - [ ] **usePlayerInput**: キーボードとタッチ入力を完全に抽象化。現状は store でジョイスティックのみ共有
 - [x] **VirtualJoystick**: スマホ用仮想ジョイスティック UI（JoystickControls + react-joystick-component で実装済み）
 - [x] **床の境界**: プレイヤーが床外に落ちないよう制限（BOUNDARY_RADIUS で XZ 平面の円形境界を実装済み）
-- [ ] **モデルプリロード**: useGLTF.preload で初回表示の高速化
+- [x] **モデルプリロード**: Coco で useGLTF.preload を実装済み
 
 ---
 
@@ -410,7 +428,6 @@ frontend/
 
 | 現象 | 原因 | 対処 |
 |------|------|------|
-| 画面が真っ白 | EffectComposer 削除 | Bloom を含む EffectComposer を維持 |
 | プレイヤーが床をすり抜ける | 床の法線が逆 | Blender で法線を反転 |
 | ドームが浮く/沈む | DOME_POSITION_Y のずれ | 床とドームの BoundingBox を確認し調整 |
 | モデルが表示されない | パス・ノード名の誤り | public/ からの相対パス、nodes のキーを確認 |
