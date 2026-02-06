@@ -163,7 +163,7 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
         player.position.z - tz,
       ).normalize();
 
-      const distance = 2.5;
+      const distance = 5;
 
       // カメラ位置 = クリスタル位置 + (方向 × 距離)
       desiredCameraPos.set(

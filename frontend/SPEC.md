@@ -168,7 +168,7 @@ frontend/
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-**クリスタル配置:** `useMemo` で 8体を生成。XZ はランダム（±15）、Y=2 固定、`scale=0.4`。`id` を付与して Crystal に渡し、メッセージは世界の挨拶配列から割り当て。
+**クリスタル配置:** `useMemo` で 8体を生成。XZ はランダム（±15）、Y=2 固定、`scale=1`。`id` を付与して Crystal に渡し、メッセージは世界の挨拶配列から割り当て。
 
 ---
 
@@ -215,7 +215,7 @@ frontend/
 **構造:** `<group ref={playerRef}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
 **入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用。会話中（`isTalking`）は入力無効化  
 **接地:** `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` で Y 位置を設定（BoundingBox 計算は廃止）  
-**カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視
+**カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視（距離 5）
 
 ---
 
@@ -434,7 +434,7 @@ frontend/
 
 - **目的地生成:** 半径 ROAM_RADIUS の円内を一様分布で抽選し、XZ 平面のターゲットに設定
 - **移動:** 目的地への方向ベクトルを正規化し、`SPEED * delta` で位置更新
-- **担当制:** `activeCrystalId` が空のときのみ近距離（3m以内）で担当を獲得
+- **担当制:** `activeCrystalId` が空のときのみ近距離（5m以内）で担当を獲得。担当中は 7m まで維持
 - **UI:** 担当状態は InteractionUI が Tap/メッセージを表示
 
 ---

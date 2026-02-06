@@ -41,7 +41,7 @@ export default function World() {
       const x = (rand() - 0.5) * 30;
       const y = 2;
       const z = (rand() - 0.5) * 30;
-      const scale = 0.4;
+      const scale = 1;
       return {
         key: `crystal-${index}`,
         id: `crystal-${index}`,

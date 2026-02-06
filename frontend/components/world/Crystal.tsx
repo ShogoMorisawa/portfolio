@@ -72,7 +72,7 @@ export function Model({
     }
 
     // ヒステリシス: 担当中は10mまで維持、新規は8m以内で反応
-    const threshold = activeCrystalId === id ? 3 : 3;
+    const threshold = activeCrystalId === id ? 7 : 5;
     const isNearby = distToPlayer < threshold;
 
     // 「席が空いてる(null)」かつ「自分が近い」時だけ座る（早い者勝ち）
