@@ -11,16 +11,18 @@ import { Model as Coco } from "./Coco";
 interface PlayerProps {
   groundRef: React.RefObject<THREE.Object3D | null>;
   isMobile: boolean;
+  playerRef: React.RefObject<THREE.Group | null>;
 }
 
-const Player = ({ groundRef, isMobile }: PlayerProps) => {
-  const group = useRef<THREE.Group>(null);
+const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
   const raycaster = useRef(new THREE.Raycaster());
   const downVector = useRef(new THREE.Vector3(0, -1, 0));
 
   const PLAYER_HEIGHT_OFFSET = 0.5;
 
   const joystick = useInputStore((state) => state.joystick);
+  const isTalking = useInputStore((state) => state.isTalking);
+  const targetPosition = useInputStore((state) => state.targetPosition);
   const cameraSettings = isMobile ? CAMERA.mobile : CAMERA.pc;
 
   const [keys, setKeys] = useState({
@@ -75,21 +77,26 @@ const Player = ({ groundRef, isMobile }: PlayerProps) => {
   }, []);
 
   useFrame((state, delta) => {
-    if (!group.current) return;
-    const player = group.current;
+    if (!playerRef.current) return;
+    const player = playerRef.current;
 
     // --- 入力処理 ---
     let moveForward = 0;
     let rotateY = 0;
 
-    if (keys.up) moveForward += 1;
-    if (keys.down) moveForward -= 1;
-    if (keys.left) rotateY += 1;
-    if (keys.right) rotateY -= 1;
+    if (!isTalking) {
+      if (keys.up) moveForward += 1;
+      if (keys.down) moveForward -= 1;
+      if (keys.left) rotateY += 1;
+      if (keys.right) rotateY -= 1;
 
-    if (joystick.isMoving) {
-      moveForward += joystick.y;
-      rotateY -= joystick.x;
+      if (joystick.isMoving) {
+        moveForward += joystick.y;
+        rotateY -= joystick.x;
+      }
+    } else {
+      moveForward = 0;
+      rotateY = 0;
     }
 
     // --- Cocoへの命令用フラグ更新 ---
@@ -140,26 +147,54 @@ const Player = ({ groundRef, isMobile }: PlayerProps) => {
       }
     }
 
-    // --- カメラ追従 ---
-    const targetPosition = player.position.clone();
-    const cameraOffsetX =
-      Math.sin(player.rotation.y) * cameraSettings.distance;
-    const cameraOffsetZ =
-      Math.cos(player.rotation.y) * cameraSettings.distance;
-    const desiredCameraPos = new THREE.Vector3(
-      targetPosition.x - cameraOffsetX,
-      targetPosition.y + cameraSettings.height,
-      targetPosition.z - cameraOffsetZ,
-    );
-    state.camera.position.lerp(desiredCameraPos, 0.1);
+    // --- カメラ制御 ---
+    const desiredCameraPos = new THREE.Vector3();
+    const lookAtTarget = new THREE.Vector3();
 
-    const lookAtTarget = targetPosition.clone();
-    lookAtTarget.y += cameraSettings.lookAtOffsetY;
+    if (isTalking && targetPosition) {
+      // 会話モード: クリスタルの真正面にカメラを置く
+      const [tx, ty, tz] = targetPosition;
+      const targetVec = new THREE.Vector3(tx, ty, tz);
+
+      // クリスタルからプレイヤーへの方向ベクトル（水平方向のみ）
+      const dir = new THREE.Vector3(
+        player.position.x - tx,
+        0,
+        player.position.z - tz,
+      ).normalize();
+
+      const distance = 5;
+
+      // カメラ位置 = クリスタル位置 + (方向 × 距離)
+      desiredCameraPos.set(
+        tx + dir.x * distance,
+        ty + 0.5,
+        tz + dir.z * distance,
+      );
+
+      lookAtTarget.copy(targetVec);
+    } else {
+      // 通常モード: プレイヤーを追従
+      const playerTarget = player.position.clone();
+      const cameraOffsetX =
+        Math.sin(player.rotation.y) * cameraSettings.distance;
+      const cameraOffsetZ =
+        Math.cos(player.rotation.y) * cameraSettings.distance;
+      desiredCameraPos.set(
+        playerTarget.x - cameraOffsetX,
+        playerTarget.y + cameraSettings.height,
+        playerTarget.z - cameraOffsetZ,
+      );
+      lookAtTarget.copy(playerTarget);
+      lookAtTarget.y += cameraSettings.lookAtOffsetY;
+    }
+
+    state.camera.position.lerp(desiredCameraPos, 0.1);
     state.camera.lookAt(lookAtTarget);
   });
 
   return (
-    <group ref={group} position={[0, PLAYER.INITIAL_Y, 0]}>
+    <group ref={playerRef} position={[0, PLAYER.INITIAL_Y, 0]}>
       <Coco isMoving={isMoving} moveDirection={moveDirection} />
     </group>
   );

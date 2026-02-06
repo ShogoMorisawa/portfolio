@@ -60,6 +60,7 @@
 │  ├── <World />                                              │
 │  ├── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
 │  └── <Loader />            ← drei ローダー（進捗バー）         │
+│  └── <InteractionUI />     ← 会話UI（Tap/メッセージ）         │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -101,7 +102,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  hooks/useDeviceType.ts  ← 768px 未満で isMobile             │
 │  components/world/ui/JoystickControls.tsx                   │
-│  lib/world/store.ts (Zustand: joystick { x, y, isMoving })   │
+│  lib/world/store.ts (Zustand: joystick + dialogue state)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -122,14 +123,16 @@ frontend/
 │   ├── Floor.tsx              # 床
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
-│   ├── Crystal.tsx            # クリスタル（吹き出し・浮遊）
+│   ├── Crystal.tsx            # クリスタル（徘徊・対話）
 │   └── ui/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（モバイル用）
+├── components/ui/
+│   └── InteractionUI.tsx      # 会話UI（Tap/メッセージ）
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
 │   ├── config.ts             # STAGE, CAMERA, PLAYER 定数
-│   └── store.ts              # Zustand。ジョイスティック入力状態
+│   └── store.ts              # Zustand。ジョイスティック入力 + 対話状態
 ├── public/
 │   ├── models/
 │   │   ├── coco-transformed.glb   # プレイヤー（Coco）。gltfjsx 用に変換済み
@@ -155,7 +158,7 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`useDeviceType()` で isMobile、`crystals`（8体のランダム配置） |
+| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（8体のランダム配置） |
 | **子** | Dome, Environment, ambientLight, Floor, Player, Crystal ×8 |
 
 **Canvas 設定:**
@@ -165,7 +168,7 @@ frontend/
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-**クリスタル配置:** `useMemo` で 8体を生成。XZ はランダム（±15）、Y=2 固定、`scale=0.2`。メッセージは世界の挨拶配列から割り当て。
+**クリスタル配置:** `useMemo` で 8体を生成。XZ はランダム（±15）、Y=2 固定、`scale=1`。`id` を付与して Crystal に渡し、メッセージは世界の挨拶配列から割り当て。
 
 ---
 
@@ -206,13 +209,13 @@ frontend/
 | 項目 | 内容 |
 |------|------|
 | **責務** | 入力処理、移動・回転、接地判定、境界制限、カメラ追従。Coco に isMoving/moveDirection を渡す |
-| **Props** | `groundRef`, `isMobile: boolean`（useDeviceType の結果。CAMERA 切り替え用） |
+| **Props** | `groundRef`, `isMobile: boolean`（useDeviceType の結果。CAMERA 切り替え用）, `playerRef`（World からの参照） |
 | **依存** | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え）、Coco |
 
-**構造:** `<group ref={group}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
-**入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用  
+**構造:** `<group ref={playerRef}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
+**入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用。会話中（`isTalking`）は入力無効化  
 **接地:** `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` で Y 位置を設定（BoundingBox 計算は廃止）  
-**カメラ:** isMobile に応じて CAMERA.mobile / CAMERA.pc の distance, height, lookAtOffsetY を使用
+**カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視（距離 5）
 
 ---
 
@@ -304,7 +307,7 @@ frontend/
 ```
 [useDeviceType] → isMobile (768px 未満で true)
        ↓
-[World] → Canvas key, camera (fov, position), Player に isMobile を渡す
+[World] → Canvas key, camera (fov, position), Player/Crystal に isMobile/refs を渡す
        ↓
 [Player] → CAMERA.pc / CAMERA.mobile で distance, height, lookAtOffsetY を切り替え
 
@@ -321,11 +324,21 @@ frontend/
 [groundRef] ← Floor が ref を設定
                 ↓
 [raycaster.intersectObjects(groundRef)] → 床との交点 → player.position.y
+
+[Crystal] → playerRef の位置を参照して距離判定
+        → activeCrystalId/activeMessage/targetPosition を更新
+[InteractionUI] → activeCrystalId/isTalking/activeMessage を参照してUI表示
 ```
 
 **useInputStore（Zustand）:**
 - `joystick: { x, y, isMoving }` — ジョイスティックの -1〜1 の値と操作中フラグ
+- `activeCrystalId: string | null` — 近距離で担当になったクリスタル
+- `isTalking: boolean` — 会話中フラグ
+- `activeMessage: string | null` — 表示中メッセージ
+- `targetPosition: [x,y,z] | null` — 会話時のカメラターゲット
 - JoystickControls が setJoystick で更新、Player が joystick を購読して移動に反映
+- Crystal が `activeCrystalId`/`activeMessage`/`targetPosition` を更新
+- InteractionUI が `activeCrystalId`/`isTalking`/`activeMessage` を参照して UI を制御
 
 **groundRef の流れ:**
 1. World で `useRef` 作成
@@ -338,14 +351,29 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | クリスタルモデルの表示、浮遊アニメーション、距離による吹き出し表示 |
-| **Props** | `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]` |
-| **依存** | crystal-transformed.glb, crystal_texture.jpg, drei `Html` |
+| **責務** | クリスタルモデルの表示、徘徊AI、距離と会話状態によるUI表示 |
+| **Props** | `id: string`, `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]`, `playerRef` |
+| **依存** | crystal-transformed.glb, crystal_texture.jpg, useInputStore |
 
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
 **マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
-**浮遊:** `useFrame` で `y = position.y + sin(t*2)*0.5`  
-**吹き出し:** カメラとの距離 `< 10` で `Html` を表示
+**徘徊:** 目的地をランダムに生成し、XZ 平面を移動（SPEED=2.0, ROAM_RADIUS=15）。目的地到達で再抽選  
+**浮遊:** `useFrame` で `y = initialPos.y + sin(t*2)*0.5`  
+**対話UI:** 近距離で担当になった個体のみ `activeCrystalId` をセットし、`activeMessage`/`targetPosition` を更新。UI は InteractionUI が表示  
+**向き補正:** モデルの正面が -Z とずれるため Y 軸 -90度補正をかけて lookAt に整合
+
+---
+
+### InteractionUI.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | 会話開始/終了の UI 表示、メッセージ表示 |
+| **Props** | なし |
+| **依存** | useInputStore |
+
+**Tap ボタン:** `activeCrystalId` があり `isTalking=false` のとき表示  
+**会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
 
 ---
 
@@ -401,6 +429,13 @@ frontend/
 - 高さは `player.y + height`
 - `lerp(desiredPos, 0.1)` で滑らかに移動
 - **注視点:** `lookAt(player.position + lookAtOffsetY)` でプレイヤーより少し上を注視（空を多く写す）
+
+### クリスタル徘徊/対話
+
+- **目的地生成:** 半径 ROAM_RADIUS の円内を一様分布で抽選し、XZ 平面のターゲットに設定
+- **移動:** 目的地への方向ベクトルを正規化し、`SPEED * delta` で位置更新
+- **担当制:** `activeCrystalId` が空のときのみ近距離（5m以内）で担当を獲得。担当中は 7m まで維持
+- **UI:** 担当状態は InteractionUI が Tap/メッセージを表示
 
 ---
 
