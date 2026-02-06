@@ -11,10 +11,10 @@ import { Model as Coco } from "./Coco";
 interface PlayerProps {
   groundRef: React.RefObject<THREE.Object3D | null>;
   isMobile: boolean;
+  playerRef: React.RefObject<THREE.Group | null>;
 }
 
-const Player = ({ groundRef, isMobile }: PlayerProps) => {
-  const group = useRef<THREE.Group>(null);
+const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
   const raycaster = useRef(new THREE.Raycaster());
   const downVector = useRef(new THREE.Vector3(0, -1, 0));
 
@@ -75,8 +75,8 @@ const Player = ({ groundRef, isMobile }: PlayerProps) => {
   }, []);
 
   useFrame((state, delta) => {
-    if (!group.current) return;
-    const player = group.current;
+    if (!playerRef.current) return;
+    const player = playerRef.current;
 
     // --- 入力処理 ---
     let moveForward = 0;
@@ -159,7 +159,7 @@ const Player = ({ groundRef, isMobile }: PlayerProps) => {
   });
 
   return (
-    <group ref={group} position={[0, PLAYER.INITIAL_Y, 0]}>
+    <group ref={playerRef} position={[0, PLAYER.INITIAL_Y, 0]}>
       <Coco isMoving={isMoving} moveDirection={moveDirection} />
     </group>
   );

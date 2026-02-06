@@ -1,15 +1,18 @@
 "use client";
 
 import * as THREE from "three";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { Html, useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { GLTF } from "three-stdlib";
+import { useInputStore } from "@/lib/world/store";
 
 interface CrystalProps {
+  id: string;
   position: [number, number, number];
   message: string;
   scale?: number | [number, number, number];
+  playerRef: React.RefObject<THREE.Group | null>;
 }
 
 type GLTFResult = GLTF & {
@@ -23,53 +26,153 @@ type GLTFResult = GLTF & {
   };
 };
 
-export function Model({ position, message, scale = 0.25 }: CrystalProps) {
+export function Model({
+  id,
+  position: initialPos,
+  message,
+  scale = 0.25,
+  playerRef,
+}: CrystalProps) {
   const group = useRef<THREE.Group>(null);
   const { nodes } = useGLTF(
     "/models/crystal-transformed.glb",
   ) as unknown as GLTFResult;
   const matcap = useTexture("/textures/crystal_texture.jpg");
 
-  const [showText, setShowText] = useState(false);
-  const showTextRef = useRef(false);
+  const setActiveCrystalId = useInputStore((state) => state.setActiveCrystalId);
+  const activeCrystalId = useInputStore((state) => state.activeCrystalId);
+  const isTalking = useInputStore((state) => state.isTalking);
 
-  useFrame((state) => {
+  const isFocused = activeCrystalId === id;
+
+  const SPEED = 2.0;
+  const ROAM_RADIUS = 15;
+  const targetPos = useRef(
+    new THREE.Vector3(initialPos[0], initialPos[1], initialPos[2]),
+  );
+
+  const pickNewTarget = () => {
+    const r = ROAM_RADIUS * Math.sqrt(Math.random());
+    const theta = Math.random() * 2 * Math.PI;
+    targetPos.current.set(
+      initialPos[0] + r * Math.cos(theta),
+      initialPos[1],
+      initialPos[2] + r * Math.sin(theta),
+    );
+  };
+
+  useFrame((state, delta) => {
     if (!group.current) return;
+    const currentPos = group.current.position;
 
-    group.current.position.x = position[0];
-    group.current.position.z = position[2];
-    group.current.position.y =
-      position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
-
-    const dist = group.current.position.distanceTo(state.camera.position);
-    const nextShowText = dist < 10;
-    if (showTextRef.current !== nextShowText) {
-      showTextRef.current = nextShowText;
-      setShowText(nextShowText);
+    // ココちゃん(Player)との距離を優先（playerRefが空の時はカメラでフォールバック）
+    let distToPlayer = currentPos.distanceTo(state.camera.position);
+    if (playerRef.current) {
+      distToPlayer = currentPos.distanceTo(playerRef.current.position);
     }
+
+    // ヒステリシス: 担当中は10mまで維持、新規は8m以内で反応
+    const threshold = activeCrystalId === id ? 10 : 8;
+    const isNearby = distToPlayer < threshold;
+
+    // 「席が空いてる(null)」かつ「自分が近い」時だけ座る（早い者勝ち）
+    if (isNearby && activeCrystalId === null && !isTalking) {
+      setActiveCrystalId(id);
+    }
+    // 自分が担当だったけど、遠くに行っちゃったら席を空ける
+    else if (!isNearby && activeCrystalId === id && !isTalking) {
+      setActiveCrystalId(null);
+    }
+
+    // 「自分が担当の時」または「今まさに担当になろうとしている時」だけ止まる
+    const isMyTurn =
+      activeCrystalId === id || (activeCrystalId === null && isNearby);
+
+    if (isMyTurn) {
+      // 🟢 STOPモード（担当なので止まって対応）
+      // 毎フレーム lookAt を実行 → 動くココちゃんを目で追い続ける（ひまわり効果）
+      const target = playerRef?.current
+        ? playerRef.current.position
+        : state.camera.position;
+      // clone() しないと本物の座標を書き換えてバグる（参照渡しの罠）
+      const lookTarget = target.clone();
+      lookTarget.y = currentPos.y; // 目線の高さを自分に合わせる（Y軸は固定）
+      group.current.lookAt(lookTarget);
+    } else {
+      // 🔵 MOVEモード（担当じゃないので、近くても無視して歩く）
+      const distToTarget = new THREE.Vector2(
+        currentPos.x,
+        currentPos.z,
+      ).distanceTo(
+        new THREE.Vector2(targetPos.current.x, targetPos.current.z),
+      );
+
+      if (distToTarget < 0.5) {
+        pickNewTarget();
+      } else {
+        const direction = new THREE.Vector3()
+          .subVectors(targetPos.current, currentPos)
+          .normalize();
+
+        currentPos.x += direction.x * SPEED * delta;
+        currentPos.z += direction.z * SPEED * delta;
+
+        const lookTarget = targetPos.current.clone();
+        lookTarget.y = currentPos.y;
+        group.current.lookAt(lookTarget);
+      }
+    }
+
+    currentPos.y =
+      initialPos[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
   });
 
+  // モデルの「正面」が Three.js の -Z とずれているため、90度補正
+  // （lookAt は -Z をターゲットに向けるが、crystal-transformed.glb の顔は別方向を向いている）
+  const FRONT_OFFSET_Y = -Math.PI / 2;
+
   return (
-    <group ref={group} dispose={null} scale={scale}>
-      {showText && (
-        <Html position={[0, 2, 0]} center>
-          <div className="bg-white/90 px-4 py-2 rounded-xl text-black font-bold text-sm whitespace-nowrap shadow-lg animate-bounce">
-            {message}
+    <group ref={group} position={initialPos} dispose={null} scale={scale}>
+      {isFocused && !isTalking && (
+        <Html position={[0, 2.5, 0]} center>
+          <button
+            className="bg-white text-black px-6 py-2 rounded-full font-bold shadow-xl animate-bounce hover:bg-yellow-300 transition-colors"
+            onClick={() => useInputStore.getState().setIsTalking(true)}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            Tap! 👆
+          </button>
+        </Html>
+      )}
+
+      {isFocused && isTalking && (
+        <Html position={[0, 3, 0]} center zIndexRange={[100, 0]}>
+          <div className="bg-black/80 text-white p-4 rounded-xl w-64 text-center">
+            <p className="mb-2">{message}</p>
+            <button
+              className="bg-red-500 px-3 py-1 rounded text-sm"
+              onClick={() => useInputStore.getState().setIsTalking(false)}
+            >
+              Close
+            </button>
           </div>
         </Html>
       )}
 
-      <mesh geometry={nodes.Body.geometry}>
-        <meshMatcapMaterial matcap={matcap} color={"#ffffff"} />
-      </mesh>
+      {/* モデルの正面補正: crystal-transformed.glb の顔が -Z と90度ずれている */}
+      <group rotation={[0, FRONT_OFFSET_Y, 0]}>
+        <mesh geometry={nodes.Body.geometry}>
+          <meshMatcapMaterial matcap={matcap} color={"#ffffff"} />
+        </mesh>
 
-      <mesh
-        geometry={nodes.Left_Eye.geometry}
-        position={[1.706, 0.656, -0.536]}
-        rotation={[-Math.PI / 2, -0.351, 1.968]}
-      >
-        <meshBasicMaterial color="lemonchiffon" />
-      </mesh>
+        <mesh
+          geometry={nodes.Left_Eye.geometry}
+          position={[1.706, 0.656, -0.536]}
+          rotation={[-Math.PI / 2, -0.351, 1.968]}
+        >
+          <meshBasicMaterial color="lemonchiffon" />
+        </mesh>
+      </group>
     </group>
   );
 }

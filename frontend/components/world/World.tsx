@@ -14,6 +14,7 @@ import { useDeviceType } from "@/hooks/useDeviceType";
 
 export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
+  const playerRef = useRef<THREE.Group>(null);
   const isMobile = useDeviceType();
 
   // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
@@ -43,6 +44,7 @@ export default function World() {
       const scale = 0.4;
       return {
         key: `crystal-${index}`,
+        id: `crystal-${index}`,
         position: [x, y, z] as [number, number, number],
         scale,
         message: messages[index % messages.length],
@@ -72,14 +74,20 @@ export default function World() {
           <ambientLight intensity={1} />
 
           <Floor groundRef={groundRef} />
-          <Player groundRef={groundRef} isMobile={isMobile} />
+          <Player
+            groundRef={groundRef}
+            isMobile={isMobile}
+            playerRef={playerRef}
+          />
 
           {crystals.map((crystal) => (
             <Crystal
               key={crystal.key}
+              id={crystal.id}
               position={crystal.position}
               scale={crystal.scale}
               message={crystal.message}
+              playerRef={playerRef}
             />
           ))}
         </Suspense>
