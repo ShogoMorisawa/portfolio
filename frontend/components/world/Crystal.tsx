@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import React, { useRef } from "react";
-import { Html, useGLTF, useTexture } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { GLTF } from "three-stdlib";
 import { useInputStore } from "@/lib/world/store";
@@ -40,10 +40,10 @@ export function Model({
   const matcap = useTexture("/textures/crystal_texture.jpg");
 
   const setActiveCrystalId = useInputStore((state) => state.setActiveCrystalId);
+  const setActiveMessage = useInputStore((state) => state.setActiveMessage);
+  const setTargetPosition = useInputStore((state) => state.setTargetPosition);
   const activeCrystalId = useInputStore((state) => state.activeCrystalId);
   const isTalking = useInputStore((state) => state.isTalking);
-
-  const isFocused = activeCrystalId === id;
 
   const SPEED = 2.0;
   const ROAM_RADIUS = 15;
@@ -72,16 +72,23 @@ export function Model({
     }
 
     // ヒステリシス: 担当中は10mまで維持、新規は8m以内で反応
-    const threshold = activeCrystalId === id ? 10 : 8;
+    const threshold = activeCrystalId === id ? 3 : 3;
     const isNearby = distToPlayer < threshold;
 
     // 「席が空いてる(null)」かつ「自分が近い」時だけ座る（早い者勝ち）
     if (isNearby && activeCrystalId === null && !isTalking) {
       setActiveCrystalId(id);
+      setActiveMessage(message);
     }
     // 自分が担当だったけど、遠くに行っちゃったら席を空ける
     else if (!isNearby && activeCrystalId === id && !isTalking) {
       setActiveCrystalId(null);
+      setActiveMessage(null);
+    }
+
+    // 自分がアクティブなら、カメラのターゲット座標を更新し続ける
+    if (activeCrystalId === id) {
+      setTargetPosition([currentPos.x, currentPos.y, currentPos.z]);
     }
 
     // 「自分が担当の時」または「今まさに担当になろうとしている時」だけ止まる
@@ -133,32 +140,6 @@ export function Model({
 
   return (
     <group ref={group} position={initialPos} dispose={null} scale={scale}>
-      {isFocused && !isTalking && (
-        <Html position={[0, 2.5, 0]} center>
-          <button
-            className="bg-white text-black px-6 py-2 rounded-full font-bold shadow-xl animate-bounce hover:bg-yellow-300 transition-colors"
-            onClick={() => useInputStore.getState().setIsTalking(true)}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            Tap! 👆
-          </button>
-        </Html>
-      )}
-
-      {isFocused && isTalking && (
-        <Html position={[0, 3, 0]} center zIndexRange={[100, 0]}>
-          <div className="bg-black/80 text-white p-4 rounded-xl w-64 text-center">
-            <p className="mb-2">{message}</p>
-            <button
-              className="bg-red-500 px-3 py-1 rounded text-sm"
-              onClick={() => useInputStore.getState().setIsTalking(false)}
-            >
-              Close
-            </button>
-          </div>
-        </Html>
-      )}
-
       {/* モデルの正面補正: crystal-transformed.glb の顔が -Z と90度ずれている */}
       <group rotation={[0, FRONT_OFFSET_Y, 0]}>
         <mesh geometry={nodes.Body.geometry}>

@@ -3,12 +3,14 @@
 import { Loader } from "@react-three/drei";
 import World from "@/components/world/World";
 import JoystickControls from "@/components/world/ui/JoystickControls";
+import InteractionUI from "@/components/ui/InteractionUI";
 
 export default function Home() {
   return (
     <main className="relative w-full h-screen bg-black">
       <World />
       <JoystickControls />
+      <InteractionUI />
 
       <Loader
         containerStyles={{ background: "black" }}
