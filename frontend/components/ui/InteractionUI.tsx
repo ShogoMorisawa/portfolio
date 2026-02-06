@@ -19,13 +19,13 @@ export default function InteractionUI() {
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-50">
+    <div className="absolute inset-0 pointer-events-none z-[9999]">
       {/* 会話開始ボタン (Tap!) */}
       {!isTalking && activeCrystalId && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <button
             onClick={handleStartTalk}
-            className="group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
+            className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
           >
             <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
               TAP
