@@ -1,11 +1,12 @@
 "use client";
 
 import * as THREE from "three";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { GLTF } from "three-stdlib";
 import { useInputStore } from "@/lib/world/store";
+import { PLAYER } from "@/lib/world/config";
 
 interface CrystalProps {
   id: string;
@@ -46,19 +47,44 @@ export function Model({
   const isTalking = useInputStore((state) => state.isTalking);
 
   const SPEED = 2.0;
-  const ROAM_RADIUS = 15;
-  const targetPos = useRef(
+  const ROAM_RADIUS = 10;
+  const SAFE_ZONE_RADIUS = 8;
+  const WORLD_BOUNDARY = PLAYER.BOUNDARY_RADIUS;
+  const [target, setTarget] = useState(
     new THREE.Vector3(initialPos[0], initialPos[1], initialPos[2]),
   );
 
-  const pickNewTarget = () => {
-    const r = ROAM_RADIUS * Math.sqrt(Math.random());
-    const theta = Math.random() * 2 * Math.PI;
-    targetPos.current.set(
-      initialPos[0] + r * Math.cos(theta),
-      initialPos[1],
-      initialPos[2] + r * Math.sin(theta),
-    );
+  const getNextPosition = (currentPos: THREE.Vector3) => {
+    const nextPos = new THREE.Vector3();
+    let valid = false;
+    let attempts = 0;
+
+    while (!valid && attempts < 10) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * ROAM_RADIUS;
+      const dx = Math.cos(angle) * dist;
+      const dz = Math.sin(angle) * dist;
+
+      nextPos.set(currentPos.x + dx, currentPos.y, currentPos.z + dz);
+
+      const distFromCenter = Math.sqrt(
+        nextPos.x * nextPos.x + nextPos.z * nextPos.z,
+      );
+
+      if (
+        distFromCenter > SAFE_ZONE_RADIUS &&
+        distFromCenter < WORLD_BOUNDARY
+      ) {
+        valid = true;
+      }
+      attempts += 1;
+    }
+
+    if (!valid) {
+      nextPos.copy(currentPos);
+    }
+
+    return nextPos;
   };
 
   useFrame((state, delta) => {
@@ -110,21 +136,19 @@ export function Model({
       const distToTarget = new THREE.Vector2(
         currentPos.x,
         currentPos.z,
-      ).distanceTo(
-        new THREE.Vector2(targetPos.current.x, targetPos.current.z),
-      );
+      ).distanceTo(new THREE.Vector2(target.x, target.z));
 
       if (distToTarget < 0.5) {
-        pickNewTarget();
+        setTarget(getNextPosition(currentPos));
       } else {
         const direction = new THREE.Vector3()
-          .subVectors(targetPos.current, currentPos)
+          .subVectors(target, currentPos)
           .normalize();
 
         currentPos.x += direction.x * SPEED * delta;
         currentPos.z += direction.z * SPEED * delta;
 
-        const lookTarget = targetPos.current.clone();
+        const lookTarget = target.clone();
         lookTarget.y = currentPos.y;
         group.current.lookAt(lookTarget);
       }

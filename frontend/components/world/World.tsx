@@ -27,17 +27,13 @@ export default function World() {
     };
 
     const messages = [
-      "こんにちは (日本語)",
-      "Hello (English)",
-      "Hola (Español)",
-      "Bonjour (Français)",
-      "Hallo (Deutsch)",
-      "Ciao (Italiano)",
-      "Olá (Português)",
-      "안녕하세요 (한국어)",
+      "You’re a prism. Just being here is enough to make a rainbow.",
+      "A lie is a white flag—an admission that the real you isn’t worth defending.",
+      "I’m made of the bright shards of everyone I’ve ever met.",
+      "Don’t smear mud on others and cloud their sight. Don’t smear mud on yourself and profane your own light.",
     ];
 
-    return Array.from({ length: 8 }, (_, index) => {
+    return messages.map((message, index) => {
       const x = (rand() - 0.5) * 30;
       const y = 2;
       const z = (rand() - 0.5) * 30;
@@ -47,7 +43,7 @@ export default function World() {
         id: `crystal-${index}`,
         position: [x, y, z] as [number, number, number],
         scale,
-        message: messages[index % messages.length],
+        message,
       };
     });
   }, []);

@@ -171,7 +171,7 @@ frontend/
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-**クリスタル配置:** `useMemo` で 8体を生成。XZ はランダム（±15）、Y=2 固定、`scale=1`。`id` を付与して Crystal に渡し、メッセージは世界の挨拶配列から割り当て。
+**クリスタル配置:** `useMemo` で 4体を生成。XZ はランダム（±15）、Y=2 固定、`scale=1`。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
 
 ---
 
@@ -362,7 +362,7 @@ frontend/
 
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
 **マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
-**徘徊:** 目的地をランダムに生成し、XZ 平面を移動（SPEED=2.0, ROAM_RADIUS=15）。目的地到達で再抽選  
+**徘徊:** 現在地から半径 10m 以内の候補点を抽選し、中心 8m 以内と境界外（BOUNDARY_RADIUS 以上）を避けたドーナツ領域で目的地を再抽選（最大10回）。SPEED=2.0  
 **浮遊:** `useFrame` で `y = initialPos.y + sin(t*2)*0.5`  
 **対話UI:** 近距離で担当になった個体のみ `activeCrystalId` をセットし、`activeMessage`/`targetPosition` を更新。UI は InteractionUI が表示  
 **向き補正:** モデルの正面が -Z とずれるため Y 軸 -90度補正をかけて lookAt に整合
