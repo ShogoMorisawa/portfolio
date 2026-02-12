@@ -21,7 +21,7 @@ export default function InteractionUI() {
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-[9999]">
+    <div className="absolute inset-0 pointer-events-none z-9999">
       {/* 会話開始ボタン (Tap!) */}
       {!isTalking && activeCrystalId && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

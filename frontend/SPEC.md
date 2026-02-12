@@ -161,8 +161,8 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（8体のランダム配置） |
-| **子** | Dome, Environment, ambientLight, Floor, Player, Crystal ×8 |
+| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
+| **子** | Dome, Environment, ambientLight, Floor, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -171,7 +171,7 @@ frontend/
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-**クリスタル配置:** `useMemo` で 4体を生成。XZ はランダム（±15）、Y=2 固定、`scale=1`。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
+**クリスタル配置:** `useMemo` で 4体を生成。リング（半径 20〜25）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
 
 ---
 
@@ -310,8 +310,8 @@ frontend/
 | キー | 型 | 値 | 説明 |
 |------|-----|-----|------|
 | SPEED | number | 2.0 | クリスタルの移動速度 |
-| ROAM_RADIUS | number | 10 | 目的地候補の最大半径 |
-| SAFE_ZONE_RADIUS | number | 8 | 中央の立ち入り禁止半径 |
+| MIN_RADIUS | number | 20 | リング内側の半径 |
+| MAX_RADIUS | number | 25 | リング外側の半径 |
 
 ---
 
@@ -365,12 +365,12 @@ frontend/
 | 項目 | 内容 |
 |------|------|
 | **責務** | クリスタルモデルの表示、徘徊AI、距離と会話状態によるUI表示 |
-| **Props** | `id: string`, `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]`, `playerRef` |
+| **Props** | `id: string`, `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]`, `sectorStart: number`, `sectorSize: number`, `playerRef` |
 | **依存** | crystal-transformed.glb, crystal_texture.jpg, useInputStore |
 
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
 **マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
-**徘徊:** 現在地から半径 10m 以内の候補点を抽選し、中心 8m 以内と境界外（BOUNDARY_RADIUS 以上）を避けたドーナツ領域で目的地を再抽選（最大10回）。SPEED=2.0  
+**徘徊:** リング（半径 20〜25）内の担当セクターから目的地を直接サンプリング。SPEED=2.0  
 **浮遊:** `useFrame` で `y = initialPos.y + sin(t*2)*0.5`  
 **対話UI:** 近距離で担当になった個体のみ `activeCrystalId` をセットし、`activeMessage`/`targetPosition` を更新。UI は InteractionUI が表示  
 **向き補正:** モデルの正面が -Z とずれるため Y 軸 -90度補正をかけて lookAt に整合

@@ -36,5 +36,6 @@ export const PLAYER = {
 export const CRYSTAL = {
   SPEED: 2.0,
   ROAM_RADIUS: 10,
-  SAFE_ZONE_RADIUS: 8,
+  MIN_RADIUS: 20,
+  MAX_RADIUS: 25,
 };

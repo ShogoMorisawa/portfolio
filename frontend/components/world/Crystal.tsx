@@ -6,13 +6,15 @@ import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { GLTF } from "three-stdlib";
 import { useInputStore } from "@/lib/world/store";
-import { CRYSTAL, PLAYER } from "@/lib/world/config";
+import { CRYSTAL } from "@/lib/world/config";
 
 interface CrystalProps {
   id: string;
   position: [number, number, number];
   message: string;
   scale?: number | [number, number, number];
+  sectorStart: number;
+  sectorSize: number;
   playerRef: React.RefObject<THREE.Group | null>;
 }
 
@@ -32,6 +34,8 @@ export function Model({
   position: initialPos,
   message,
   scale = 0.25,
+  sectorStart,
+  sectorSize,
   playerRef,
 }: CrystalProps) {
   const group = useRef<THREE.Group>(null);
@@ -47,42 +51,19 @@ export function Model({
   const isTalking = useInputStore((state) => state.isTalking);
 
   const SPEED = CRYSTAL.SPEED;
-  const ROAM_RADIUS = CRYSTAL.ROAM_RADIUS;
-  const SAFE_ZONE_RADIUS = CRYSTAL.SAFE_ZONE_RADIUS;
-  const WORLD_BOUNDARY = PLAYER.BOUNDARY_RADIUS;
+  const MIN_RADIUS = CRYSTAL.MIN_RADIUS;
+  const MAX_RADIUS = CRYSTAL.MAX_RADIUS;
   const [target, setTarget] = useState(
     new THREE.Vector3(initialPos[0], initialPos[1], initialPos[2]),
   );
 
   const getNextPosition = (currentPos: THREE.Vector3) => {
     const nextPos = new THREE.Vector3();
-    let valid = false;
-    let attempts = 0;
-
-    while (!valid && attempts < 10) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.random() * ROAM_RADIUS;
-      const dx = Math.cos(angle) * dist;
-      const dz = Math.sin(angle) * dist;
-
-      nextPos.set(currentPos.x + dx, currentPos.y, currentPos.z + dz);
-
-      const distFromCenter = Math.sqrt(
-        nextPos.x * nextPos.x + nextPos.z * nextPos.z,
-      );
-
-      if (
-        distFromCenter > SAFE_ZONE_RADIUS &&
-        distFromCenter < WORLD_BOUNDARY
-      ) {
-        valid = true;
-      }
-      attempts += 1;
-    }
-
-    if (!valid) {
-      nextPos.copy(currentPos);
-    }
+    const angle = sectorStart + Math.random() * sectorSize;
+    const r = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.random();
+    const dx = Math.cos(angle) * r;
+    const dz = Math.sin(angle) * r;
+    nextPos.set(dx, currentPos.y, dz);
 
     return nextPos;
   };

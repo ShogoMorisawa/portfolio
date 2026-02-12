@@ -9,7 +9,7 @@ import Dome from "./Dome";
 import Floor from "./Floor";
 import Player from "./Player";
 import { Model as Crystal } from "./Crystal";
-import { CAMERA } from "@/lib/world/config";
+import { CAMERA, CRYSTAL } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 
 export default function World() {
@@ -34,9 +34,15 @@ export default function World() {
     ];
 
     return messages.map((message, index) => {
-      const x = (rand() - 0.5) * 30;
+      const sectorSize = (Math.PI * 2) / messages.length;
+      const sectorStart = index * sectorSize;
+      const theta = sectorStart + rand() * sectorSize;
+      const r =
+        CRYSTAL.MIN_RADIUS +
+        (CRYSTAL.MAX_RADIUS - CRYSTAL.MIN_RADIUS) * rand();
+      const x = Math.cos(theta) * r;
       const y = 2;
-      const z = (rand() - 0.5) * 30;
+      const z = Math.sin(theta) * r;
       const scale = 1;
       return {
         key: `crystal-${index}`,
@@ -44,6 +50,8 @@ export default function World() {
         position: [x, y, z] as [number, number, number],
         scale,
         message,
+        sectorStart,
+        sectorSize,
       };
     });
   }, []);
@@ -83,6 +91,8 @@ export default function World() {
               position={crystal.position}
               scale={crystal.scale}
               message={crystal.message}
+              sectorStart={crystal.sectorStart}
+              sectorSize={crystal.sectorSize}
               playerRef={playerRef}
             />
           ))}
