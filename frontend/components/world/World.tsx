@@ -28,7 +28,7 @@ export default function World() {
 
     const messages = [
       "You’re a prism. Just being here is enough to make a rainbow.",
-      "A lie is a white flag—an admission that the real you isn’t worth defending.",
+      "A lie is a white flag—an admission that your true self has no worth.",
       "I’m made of the bright shards of everyone I’ve ever met.",
       "Don’t smear mud on others and cloud their sight. Don’t smear mud on yourself and profane your own light.",
     ];
