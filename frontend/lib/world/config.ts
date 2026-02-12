@@ -32,3 +32,9 @@ export const PLAYER = {
   INITIAL_Y: 10,
   BOUNDARY_RADIUS: 26, // 移動可能な最大半径
 };
+
+export const CRYSTAL = {
+  SPEED: 2.0,
+  ROAM_RADIUS: 10,
+  SAFE_ZONE_RADIUS: 8,
+};

@@ -6,7 +6,7 @@ import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { GLTF } from "three-stdlib";
 import { useInputStore } from "@/lib/world/store";
-import { PLAYER } from "@/lib/world/config";
+import { CRYSTAL, PLAYER } from "@/lib/world/config";
 
 interface CrystalProps {
   id: string;
@@ -46,9 +46,9 @@ export function Model({
   const activeCrystalId = useInputStore((state) => state.activeCrystalId);
   const isTalking = useInputStore((state) => state.isTalking);
 
-  const SPEED = 2.0;
-  const ROAM_RADIUS = 10;
-  const SAFE_ZONE_RADIUS = 8;
+  const SPEED = CRYSTAL.SPEED;
+  const ROAM_RADIUS = CRYSTAL.ROAM_RADIUS;
+  const SAFE_ZONE_RADIUS = CRYSTAL.SAFE_ZONE_RADIUS;
   const WORLD_BOUNDARY = PLAYER.BOUNDARY_RADIUS;
   const [target, setTarget] = useState(
     new THREE.Vector3(initialPos[0], initialPos[1], initialPos[2]),

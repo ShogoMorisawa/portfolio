@@ -305,6 +305,14 @@ frontend/
 | INITIAL_Y | number | 10 | 開始時の高さ（床ロード前の落下防止） |
 | BOUNDARY_RADIUS | number | 26 | 移動可能な最大半径（XZ 平面での原点からの距離） |
 
+### CRYSTAL
+
+| キー | 型 | 値 | 説明 |
+|------|-----|-----|------|
+| SPEED | number | 2.0 | クリスタルの移動速度 |
+| ROAM_RADIUS | number | 10 | 目的地候補の最大半径 |
+| SAFE_ZONE_RADIUS | number | 8 | 中央の立ち入り禁止半径 |
+
 ---
 
 ## データフロー
