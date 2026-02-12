@@ -102,6 +102,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  hooks/useDeviceType.ts  ← 768px 未満で isMobile             │
 │  components/world/ui/JoystickControls.tsx                   │
+│  components/ui/InteractionUI.tsx                            │
 │  lib/world/store.ts (Zustand: joystick + dialogue state)     │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -125,7 +126,9 @@ frontend/
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   ├── Crystal.tsx            # クリスタル（徘徊・対話）
 │   └── ui/
-│       └── JoystickControls.tsx  # 仮想ジョイスティック（モバイル用）
+│       └── JoystickControls.tsx  # 仮想ジョイスティック（動的配置）
+├── components/ui/
+│   └── InteractionUI.tsx        # 会話UI（Tap/メッセージ）
 ├── components/ui/
 │   └── InteractionUI.tsx      # 会話UI（Tap/メッセージ）
 ├── hooks/
@@ -241,11 +244,13 @@ frontend/
 |------|------|
 | **責務** | 仮想ジョイスティック UI の表示、useInputStore への入力反映 |
 | **Props** | なし |
-| **依存** | react-joystick-component, useInputStore |
+| **依存** | useInputStore |
 
-**配置:** `fixed bottom-10 right-10 z-50`（画面右下）  
-**ジョイスティック:** size=100, sticky=false。baseColor #EEEEEE, stickColor #333333  
-**入力マッピング:** y → 前後（1=前, -1=後）、x → 旋回（-1=右, 1=左）。move で setJoystick(x, y, true)、stop で setJoystick(0, 0, false)
+**配置:** `fixed inset-0 z-50`（全画面）。タッチ位置にジョイスティックを動的表示  
+**操作:** `basePos` をタップ地点に設定し、`onPointerMove` で `(current - base) / RADIUS` を計算  
+**入力マッピング:** y → 前後（上=前, 下=後）、x → 旋回（右=正, 左=負）。`setJoystick(x, y, true)`  
+**終了:** `onPointerUp/Cancel` で `setJoystick(0,0,false)` と UI を消去  
+**会話時:** `isTalking` の間は描画しない
 
 ---
 
@@ -372,7 +377,7 @@ frontend/
 | **Props** | なし |
 | **依存** | useInputStore |
 
-**Tap ボタン:** `activeCrystalId` があり `isTalking=false` のとき表示  
+**Tap ボタン:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
 **会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
 
 ---
@@ -409,13 +414,13 @@ frontend/
 ### 入力統合
 
 - **キーボード:** keys.up/down → moveForward (±1)、keys.left/right → rotateY (±1)
-- **ジョイスティック:** joystick.y → moveForward、joystick.x → rotateY（符号は `rotateY -= joystick.x`）
+- **ジョイスティック:** joystick.y → moveForward、joystick.x → rotateY（符号は `rotation.y -= joystick.x`）
 - **合算:** 両方の入力を加算。キーボードとジョイスティックを同時操作可能
 
 ### 移動
 
-- 前進/後退: `moveForward * sin(rotation.y)`, `moveForward * cos(rotation.y)` で XZ 成分を計算（moveForward は -1〜1）
-- 旋回: `rotation.y += rotateY * ROTATION_SPEED * delta`（rotateY は -1〜1）
+- 前進/後退: `moveForward` を `sin/cos(rotation.y)` 方向へ反映
+- 旋回: `rotation.y -= rotateY * ROTATION_SPEED * delta`
 
 ### 境界制限
 

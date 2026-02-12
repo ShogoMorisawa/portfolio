@@ -80,38 +80,42 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
     if (!playerRef.current) return;
     const player = playerRef.current;
 
-    // --- 入力処理 ---
-    let moveForward = 0;
-    let rotateY = 0;
+    // --- 1. 入力値の整理 (正規化) ---
+    let rawX = 0;
+    let rawY = 0;
 
     if (!isTalking) {
-      if (keys.up) moveForward += 1;
-      if (keys.down) moveForward -= 1;
-      if (keys.left) rotateY += 1;
-      if (keys.right) rotateY -= 1;
+      if (keys.up) rawY += 1;
+      if (keys.down) rawY -= 1;
+      if (keys.left) rawX -= 1;
+      if (keys.right) rawX += 1;
 
       if (joystick.isMoving) {
-        moveForward += joystick.y;
-        rotateY -= joystick.x;
+        rawX += joystick.x;
+        rawY += joystick.y;
       }
-    } else {
-      moveForward = 0;
-      rotateY = 0;
     }
 
-    // --- Cocoへの命令用フラグ更新 ---
-    const moving = Math.abs(moveForward) > 0.1;
+    const inputLen = Math.hypot(rawX, rawY);
+    const normX = inputLen > 1 ? rawX / inputLen : rawX;
+    const normY = inputLen > 1 ? rawY / inputLen : rawY;
+
+    // --- 2. アニメーションフラグの更新 ---
+    const moving = inputLen > 0.1;
     setIsMoving(moving);
     if (moving) {
-      setMoveDirection(moveForward > 0 ? 1 : -1);
+      setMoveDirection(normY < -0.5 ? -1 : 1);
     }
 
-    // --- 移動と回転 ---
-    player.rotation.y += rotateY * PLAYER.ROTATION_SPEED * delta;
-    const moveX =
-      Math.sin(player.rotation.y) * PLAYER.MOVE_SPEED * moveForward * delta;
-    const moveZ =
-      Math.cos(player.rotation.y) * PLAYER.MOVE_SPEED * moveForward * delta;
+    // --- 3. 旋回と移動の計算 ---
+    // 旋回は左右入力のみ、移動は前後入力のみ（ストレイフなし）
+    player.rotation.y -= normX * PLAYER.ROTATION_SPEED * delta;
+
+    const forwardX = Math.sin(player.rotation.y);
+    const forwardZ = Math.cos(player.rotation.y);
+
+    const moveX = forwardX * normY * PLAYER.MOVE_SPEED * delta;
+    const moveZ = forwardZ * normY * PLAYER.MOVE_SPEED * delta;
     player.position.x += moveX;
     player.position.z += moveZ;
 

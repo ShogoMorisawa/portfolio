@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useInputStore } from "@/lib/world/store";
 
 export default function InteractionUI() {
@@ -9,7 +10,8 @@ export default function InteractionUI() {
   const setIsTalking = useInputStore((state) => state.setIsTalking);
   const setTargetPosition = useInputStore((state) => state.setTargetPosition);
 
-  const handleStartTalk = () => {
+  const handleStartTalk = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
     setIsTalking(true);
   };
 
