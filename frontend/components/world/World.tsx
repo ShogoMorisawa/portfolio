@@ -13,6 +13,7 @@ import { Model as Pillar } from "./Pillar";
 import { Model as Book } from "./Book";
 import { Model as Box } from "./Box";
 import { Model as Post } from "./Post";
+import { Model as Computer } from "./Computer";
 import { CAMERA, CRYSTAL } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 
@@ -88,11 +89,16 @@ export default function World() {
             rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}
           />
           <Box
-            position={[-7, 2, 0]}
+            position={[-7, 3, 0]}
             scale={2}
             rotation={[0, -Math.PI / 2, 0]}
           />
-          <Post position={[0, 2.5, 7]} scale={2} />
+          <Post position={[0, 3, 7]} scale={2} />
+          <Computer
+            position={[0, 3, -7]}
+            scale={2}
+            rotation={[0, Math.PI, 0]}
+          />
           <Player
             groundRef={groundRef}
             isMobile={isMobile}
