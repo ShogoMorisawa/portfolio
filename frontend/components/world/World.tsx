@@ -11,6 +11,7 @@ import Player from "./Player";
 import { Model as Crystal } from "./Crystal";
 import { Model as Pillar } from "./Pillar";
 import { Model as Book } from "./Book";
+import { Model as Box } from "./Box";
 import { CAMERA, CRYSTAL } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 
@@ -84,6 +85,11 @@ export default function World() {
             position={[7, 3, 0]}
             scale={3}
             rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}
+          />
+          <Box
+            position={[-7, 2, 0]}
+            scale={2}
+            rotation={[0, -Math.PI / 2, 0]}
           />
           <Player
             groundRef={groundRef}
