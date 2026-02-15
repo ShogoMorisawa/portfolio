@@ -2,19 +2,18 @@
 
 import React, { Suspense, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
+import { Environment, Sparkles, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 
 import Dome from "./Dome";
 import Floor from "./Floor";
 import Player from "./Player";
 import { Model as Crystal } from "./Crystal";
-import { Model as Pillar } from "./Pillar";
 import { Model as Book } from "./Book";
 import { Model as Box } from "./Box";
 import { Model as Post } from "./Post";
 import { Model as Computer } from "./Computer";
-import { CAMERA, CRYSTAL } from "@/lib/world/config";
+import { CAMERA, CRYSTAL, LAYOUT } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 
 export default function World() {
@@ -81,22 +80,35 @@ export default function World() {
           />
           <ambientLight intensity={1} />
 
+          <Sparkles
+            count={1000}
+            scale={35}
+            position={[0, 6, 0]}
+            size={20}
+            speed={1}
+            opacity={1}
+            color="#ffffff"
+            noise={0.5}
+          />
+
           <Floor groundRef={groundRef} />
-          <Pillar position={[0, 0, 0]} scale={4} />
           <Book
-            position={[7, 3, 0]}
-            scale={3}
+            position={[LAYOUT.SIDE_DISTANCE, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}
+            scale={LAYOUT.BOOK_SCALE}
             rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}
           />
           <Box
-            position={[-7, 3, 0]}
-            scale={2}
+            position={[-LAYOUT.SIDE_DISTANCE, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}
+            scale={LAYOUT.BOX_SCALE}
             rotation={[0, -Math.PI / 2, 0]}
           />
-          <Post position={[0, 3, 7]} scale={2} />
+          <Post
+            position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, LAYOUT.FRONT_BACK_DISTANCE]}
+            scale={LAYOUT.POST_SCALE}
+          />
           <Computer
-            position={[0, 3, -7]}
-            scale={2}
+            position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, -LAYOUT.FRONT_BACK_DISTANCE]}
+            scale={LAYOUT.COMPUTER_SCALE}
             rotation={[0, Math.PI, 0]}
           />
           <Player

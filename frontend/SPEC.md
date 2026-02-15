@@ -29,7 +29,7 @@
 |------|------|
 | **用途** | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ |
 | **操作** | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下） |
-| **シーン** | ドーム（壁）+ 床 + 柱 + 本 + 箱 + ポスト + コンピューター + プレイヤー。第三者視点カメラで追従 |
+| **シーン** | ドーム（壁）+ 床 + 本 + 箱 + ポスト + コンピューター + プレイヤー。第三者視点カメラで追従 |
 
 ---
 
@@ -71,8 +71,8 @@
 │  │  ├── Dome                                           │   │
 │  │  ├── Environment (preset=city)                      │   │
 │  │  ├── ambientLight                                   │   │
+│  │  ├── Sparkles (白パーティクル)                       │   │
 │  │  ├── Floor ──────────── groundRef ─────────────────┐ │   │
-│  │  ├── Pillar (中央配置)                              │   │
 │  │  ├── Book (浮遊表示)                                │   │
 │  │  ├── Box (左側配置)                                 │   │
 │  │  ├── Post (奥側配置)                                │   │
@@ -127,7 +127,6 @@ frontend/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
-│   ├── Pillar.jsx             # 柱 + 前面モニター
 │   ├── Book.jsx               # 本モデル（浮遊アニメーション）
 │   ├── Box.jsx                # 箱モデル
 │   ├── Post.jsx               # ポストモデル
@@ -144,7 +143,7 @@ frontend/
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
-│   ├── config.ts             # STAGE, CAMERA, PLAYER 定数
+│   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING 定数
 │   └── store.ts              # Zustand。ジョイスティック入力 + 対話状態
 ├── public/
 │   ├── models/
@@ -156,8 +155,7 @@ frontend/
 │   │   ├── box-transformed.glb # 箱（Box）。gltfjsx 用に変換済み
 │   │   ├── post-transformed.glb # ポスト（Post）。gltfjsx 用に変換済み
 │   │   ├── computer-transformed.glb # コンピューター（Computer）。gltfjsx 用に変換済み
-│   │   ├── pillar-transformed.glb # 柱（Pillar）。gltfjsx 用に変換済み
-│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb, box.glb, post.glb, computer.glb  # 元モデル（レガシー）
+│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb  # 元モデル（レガシー）
 │   └── textures/
 │       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
@@ -177,15 +175,17 @@ frontend/
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
 | **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
-| **子** | Dome, Environment, ambientLight, Floor, Pillar, Book, Box, Post, Computer, Player, Crystal ×4 |
+| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book, Box, Post, Computer, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
+- `Sparkles`: `count=1000`, `scale=35`, `position={[0,6,0]}` の白パーティクルを常時描画
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
+**レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。
 **クリスタル配置:** `useMemo` で 4体を生成。リング（半径 20〜25）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
 
 ---
@@ -222,22 +222,6 @@ frontend/
 
 ---
 
-### Pillar.jsx
-
-| 項目 | 内容 |
-|------|------|
-| **責務** | 柱モデルと前面モニター（平面メッシュ）の表示 |
-| **Props** | R3F 標準の `group` Props（`position`, `scale` など） |
-| **依存** | pillar-transformed.glb, dome_texture.jpg |
-
-**モデル:** `models/pillar-transformed.glb` の `nodes.Pillar` を使用  
-**マテリアル:** 柱本体は `meshMatcapMaterial` + `dome_texture.jpg`、前面モニターは `meshBasicMaterial`（シアン半透明）  
-**向き:** 柱本体を Y 軸に `Math.PI / 6` 回転し、六角柱の面を正面に揃える  
-**配置:** World から `position={[0, 0, 0]}`、`scale={4}` で中央配置  
-**プリロード:** `useGLTF.preload("/models/pillar-transformed.glb")`
-
----
-
 ### Book.jsx
 
 | 項目 | 内容 |
@@ -247,7 +231,7 @@ frontend/
 | **依存** | book-transformed.glb |
 
 **モデル:** `models/book-transformed.glb` の `nodes.mesh_0` を使用  
-**浮遊+傾き:** `useFrame` で Y を `baseY + sin(t * 1) * 0.3`、Z回転を `rotation.z + sin(t * 2.5) * 0.08` で更新  
+**浮遊+傾き:** パラメータは `FLOATING.book` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[7, 3, 0]}`、`scale={3}`、`rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}`  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
 
@@ -262,7 +246,7 @@ frontend/
 | **依存** | box-transformed.glb |
 
 **モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用  
-**浮遊+傾き:** `useFrame` で Y を `baseY + sin(t * 0.9) * 0.32`、Z回転を `rotation.z + sin(t * 2.8) * 0.09` で更新  
+**浮遊+傾き:** パラメータは `FLOATING.box` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[-7, 3, 0]}`、`scale={2}`、`rotation={[0, -Math.PI / 2, 0]}`  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
 
@@ -277,7 +261,7 @@ frontend/
 | **依存** | post-transformed.glb |
 
 **モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用  
-**浮遊+傾き:** `useFrame` で Y を `baseY + sin(t * 1) * 0.3`、Z回転を `rotation.z + sin(t * 2.5) * 0.08` で更新  
+**浮遊+傾き:** パラメータは `FLOATING.post` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[0, 3, 7]}`、`scale={2}`  
 **プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
 
@@ -292,7 +276,7 @@ frontend/
 | **依存** | computer-transformed.glb |
 
 **モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用  
-**浮遊+傾き:** `useFrame` で Y を `baseY + sin(t * 1.2) * 0.28`、Z回転を `rotation.z + sin(t * 2.2) * 0.07` で更新  
+**浮遊+傾き:** パラメータは `FLOATING.computer` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[0, 3, -7]}`、`scale={2}`、`rotation={[0, Math.PI, 0]}`  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
 
@@ -307,6 +291,7 @@ frontend/
 | **依存** | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え）、Coco |
 
 **構造:** `<group ref={playerRef}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
+**初期位置:** `<group position={[PLAYER.INITIAL_X, PLAYER.INITIAL_Y, PLAYER.INITIAL_Z]}>` で生成  
 **入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用。会話中（`isTalking`）は入力無効化  
 **接地:** `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` で Y 位置を設定（BoundingBox 計算は廃止）  
 **カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視（距離 5）
@@ -393,7 +378,9 @@ frontend/
 | GRAVITY | number | 0.2 | 落下加速度 |
 | FALL_THRESHOLD | number | -10 | これ以下で落下停止 |
 | GROUND_OFFSET | number | 0 | 接地時の Y オフセット（めり込み防止） |
+| INITIAL_X | number | 0 | 開始時の X 座標 |
 | INITIAL_Y | number | 10 | 開始時の高さ（床ロード前の落下防止） |
+| INITIAL_Z | number | -15 | 開始時の Z 座標（浮遊オブジェクト群から距離を取る） |
 | BOUNDARY_RADIUS | number | 26 | 移動可能な最大半径（XZ 平面での原点からの距離） |
 
 ### CRYSTAL
@@ -403,6 +390,27 @@ frontend/
 | SPEED | number | 2.0 | クリスタルの移動速度 |
 | MIN_RADIUS | number | 20 | リング内側の半径 |
 | MAX_RADIUS | number | 25 | リング外側の半径 |
+
+### LAYOUT
+
+| キー | 型 | 値 | 説明 |
+|------|-----|-----|------|
+| SIDE_DISTANCE | number | 10 | Book/Box の X 方向距離 |
+| FRONT_BACK_DISTANCE | number | 10 | Post/Computer の Z 方向距離 |
+| FLOAT_OBJECT_HEIGHT | number | 3 | 浮遊オブジェクトの基準高さ |
+| BOOK_SCALE | number | 3 | Book のスケール |
+| BOX_SCALE | number | 2 | Box のスケール |
+| POST_SCALE | number | 2 | Post のスケール |
+| COMPUTER_SCALE | number | 2 | Computer のスケール |
+
+### FLOATING
+
+| オブジェクト | FLOAT_SPEED | FLOAT_AMPLITUDE | TILT_SPEED | TILT_ANGLE |
+|-------------|-------------|-----------------|------------|------------|
+| book | 1.0 | 0.3 | 2.5 | 0.08 |
+| post | 1.0 | 0.3 | 2.5 | 0.08 |
+| computer | 1.2 | 0.28 | 2.2 | 0.07 |
+| box | 0.9 | 0.32 | 2.8 | 0.09 |
 
 ---
 
@@ -483,7 +491,7 @@ frontend/
 
 ## レンダリングパイプライン
 
-1. **シーン描画** → 画面へ直接出力
+1. **シーン描画** → 画面へ直接出力（Environment + ambientLight + Sparkles を含む）
 2. **Canvas flat:** 物理ベースライティングを無効化。EffectComposer/Bloom は使用していない
 
 ---
@@ -494,7 +502,7 @@ frontend/
 - **床の範囲:** floor-transformed.glb の BoundingBox × DOME_SCALE。概ね XZ で ±45 程度
 - **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（26）。境界を超えると境界線上に押し戻される
 - **ドーム:** 下端が Y=-7（床と一致）。scale 1.8 で表示
-- **プレイヤー初期位置:** (0, INITIAL_Y, 0) = (0, 10, 0)
+- **プレイヤー初期位置:** `(INITIAL_X, INITIAL_Y, INITIAL_Z)` = `(0, 10, -15)`
 - **カメラ:** プレイヤー背後。useDeviceType で PC/Mobile を判定し、CAMERA.pc または CAMERA.mobile の distance, height を使用。lerp 0.1 で滑らかに追従。lookAtOffsetY で注視点を上にずらし空を多く写す
 
 ---
@@ -555,13 +563,12 @@ frontend/
 | models/box-transformed.glb | GLB | 箱（Box） | mesh_0 |
 | models/post-transformed.glb | GLB | ポスト（Post） | mesh_0 |
 | models/computer-transformed.glb | GLB | コンピューター（Computer） | mesh_0 |
-| models/pillar-transformed.glb | GLB | 柱（Pillar） | Pillar |
-| models/coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
+| models/coco.glb, crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
-**-transformed モデル:** Dome, Floor, Coco, Pillar, Book, Box, Post, Computer は変換済みの GLB を使用。useGLTF.preload でプリロード。  
+**-transformed モデル:** Dome, Floor, Coco, Book, Box, Post, Computer は変換済みの GLB を使用。useGLTF.preload でプリロード。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---
@@ -589,7 +596,7 @@ frontend/
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
-- Dome, Floor, Coco, Pillar, Book, Box, Post, Computer は transformed GLB を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
+- Dome, Floor, Coco, Book, Box, Post, Computer は transformed GLB を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
 
 ---
 
