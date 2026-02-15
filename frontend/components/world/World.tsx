@@ -10,6 +10,7 @@ import Floor from "./Floor";
 import Player from "./Player";
 import { Model as Crystal } from "./Crystal";
 import { Model as Pillar } from "./Pillar";
+import { Model as Book } from "./Book";
 import { CAMERA, CRYSTAL } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 
@@ -39,8 +40,7 @@ export default function World() {
       const sectorStart = index * sectorSize;
       const theta = sectorStart + rand() * sectorSize;
       const r =
-        CRYSTAL.MIN_RADIUS +
-        (CRYSTAL.MAX_RADIUS - CRYSTAL.MIN_RADIUS) * rand();
+        CRYSTAL.MIN_RADIUS + (CRYSTAL.MAX_RADIUS - CRYSTAL.MIN_RADIUS) * rand();
       const x = Math.cos(theta) * r;
       const y = 2;
       const z = Math.sin(theta) * r;
@@ -79,7 +79,12 @@ export default function World() {
           <ambientLight intensity={1} />
 
           <Floor groundRef={groundRef} />
-          <Pillar position={[0, 0, 0]} scale={2} />
+          <Pillar position={[0, 0, 0]} scale={4} />
+          <Book
+            position={[7, 3, 0]}
+            scale={3}
+            rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}
+          />
           <Player
             groundRef={groundRef}
             isMobile={isMobile}

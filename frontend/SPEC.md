@@ -29,7 +29,7 @@
 |------|------|
 | **用途** | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ |
 | **操作** | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下） |
-| **シーン** | ドーム（壁）+ 床 + 柱 + プレイヤー。第三者視点カメラで追従 |
+| **シーン** | ドーム（壁）+ 床 + 柱 + 本 + プレイヤー。第三者視点カメラで追従 |
 
 ---
 
@@ -73,6 +73,7 @@
 │  │  ├── ambientLight                                   │   │
 │  │  ├── Floor ──────────── groundRef ─────────────────┐ │   │
 │  │  ├── Pillar (中央配置)                              │   │
+│  │  ├── Book (浮遊表示)                                │   │
 │  │  ├── Player ─────────── groundRef ────────────────┤ │   │
 │  │  │    └── Coco (モデル+アニメーション)               │   │
 │  │  └── Crystal ×4  ← ランダム配置/吹き出し              │   │
@@ -124,6 +125,7 @@ frontend/
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
 │   ├── Pillar.jsx             # 柱 + 前面モニター
+│   ├── Book.jsx               # 本モデル（浮遊アニメーション）
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   ├── Crystal.tsx            # クリスタル（徘徊・対話）
@@ -144,8 +146,9 @@ frontend/
 │   │   ├── crystal-transformed.glb # クリスタル。gltfjsx 用に変換済み
 │   │   ├── dome-transformed.glb  # ドーム（Dome）。gltfjsx 用に変換済み
 │   │   ├── floor-transformed.glb # 床（Floor）。gltfjsx 用に変換済み
+│   │   ├── book-transformed.glb # 本（Book）。gltfjsx 用に変換済み
 │   │   ├── pillar-transformed.glb # 柱（Pillar）。gltfjsx 用に変換済み
-│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb  # 元モデル（レガシー）
+│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb  # 元モデル（レガシー）
 │   └── textures/
 │       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
@@ -165,7 +168,7 @@ frontend/
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
 | **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
-| **子** | Dome, Environment, ambientLight, Floor, Pillar, Player, Crystal ×4 |
+| **子** | Dome, Environment, ambientLight, Floor, Pillar, Book, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -221,8 +224,23 @@ frontend/
 **モデル:** `models/pillar-transformed.glb` の `nodes.Pillar` を使用  
 **マテリアル:** 柱本体は `meshMatcapMaterial` + `dome_texture.jpg`、前面モニターは `meshBasicMaterial`（シアン半透明）  
 **向き:** 柱本体を Y 軸に `Math.PI / 6` 回転し、六角柱の面を正面に揃える  
-**配置:** World から `position={[0, 0, 0]}`、`scale={2}` で中央配置  
+**配置:** World から `position={[0, 0, 0]}`、`scale={4}` で中央配置  
 **プリロード:** `useGLTF.preload("/models/pillar-transformed.glb")`
+
+---
+
+### Book.jsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | 本モデルの表示と浮遊アニメーション |
+| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
+| **依存** | book-transformed.glb |
+
+**モデル:** `models/book-transformed.glb` の `nodes.mesh_0` を使用  
+**浮遊:** `useFrame` で Y を `baseY + sin(elapsedTime * 1) * 0.3` として更新  
+**配置:** World から `position={[7, 3, 0]}`、`scale={3}`、`rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}`  
+**プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
 
 ---
 
@@ -479,13 +497,14 @@ frontend/
 | models/crystal-transformed.glb | GLB | クリスタル | Body, Left_Eye |
 | models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
 | models/floor-transformed.glb | GLB | 床（Floor） | Floor |
+| models/book-transformed.glb | GLB | 本（Book） | mesh_0 |
 | models/pillar-transformed.glb | GLB | 柱（Pillar） | Pillar |
-| models/coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb | GLB | 元モデル（レガシー） | - |
+| models/coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb | GLB | 元モデル（レガシー） | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
-**-transformed モデル:** Dome, Floor, Coco, Pillar は変換済みの GLB を使用。useGLTF.preload でプリロード。  
+**-transformed モデル:** Dome, Floor, Coco, Pillar, Book は変換済みの GLB を使用。useGLTF.preload でプリロード。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---
@@ -513,7 +532,7 @@ frontend/
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
-- Dome, Floor, Coco は gltfjsx で生成。それぞれ dome-transformed, floor-transformed, coco-transformed を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
+- Dome, Floor, Coco, Pillar, Book は transformed GLB を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
 
 ---
 
