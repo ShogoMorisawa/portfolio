@@ -29,7 +29,7 @@
 |------|------|
 | **用途** | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ |
 | **操作** | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下） |
-| **シーン** | ドーム（壁）+ 床 + プレイヤー。第三者視点カメラで追従 |
+| **シーン** | ドーム（壁）+ 床 + 柱 + プレイヤー。第三者視点カメラで追従 |
 
 ---
 
@@ -72,9 +72,10 @@
 │  │  ├── Environment (preset=city)                      │   │
 │  │  ├── ambientLight                                   │   │
 │  │  ├── Floor ──────────── groundRef ─────────────────┐ │   │
+│  │  ├── Pillar (中央配置)                              │   │
 │  │  ├── Player ─────────── groundRef ────────────────┤ │   │
 │  │  │    └── Coco (モデル+アニメーション)               │   │
-│  │  └── Crystal ×8  ← ランダム配置/吹き出し              │   │
+│  │  └── Crystal ×4  ← ランダム配置/吹き出し              │   │
 │  └─────────────────────────────────────────────────────┘   │
 │  groundRef を Floor と Player で共有。useDeviceType で      │
 │  isMobile を判定し、CAMERA と Player に渡す                  │
@@ -122,6 +123,7 @@ frontend/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
+│   ├── Pillar.jsx             # 柱 + 前面モニター
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   ├── Crystal.tsx            # クリスタル（徘徊・対話）
@@ -142,7 +144,8 @@ frontend/
 │   │   ├── crystal-transformed.glb # クリスタル。gltfjsx 用に変換済み
 │   │   ├── dome-transformed.glb  # ドーム（Dome）。gltfjsx 用に変換済み
 │   │   ├── floor-transformed.glb # 床（Floor）。gltfjsx 用に変換済み
-│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb  # 元モデル（レガシー）
+│   │   ├── pillar-transformed.glb # 柱（Pillar）。gltfjsx 用に変換済み
+│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb  # 元モデル（レガシー）
 │   └── textures/
 │       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
@@ -162,7 +165,7 @@ frontend/
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
 | **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
-| **子** | Dome, Environment, ambientLight, Floor, Player, Crystal ×4 |
+| **子** | Dome, Environment, ambientLight, Floor, Pillar, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -204,6 +207,22 @@ frontend/
 **スケール:** `[DOME_SCALE, DOME_SCALE, DOME_SCALE]`（20）  
 **groundRef:** ルートの `<group ref={groundRef}>` に設定  
 **プリロード:** `useGLTF.preload("/models/floor-transformed.glb")`
+
+---
+
+### Pillar.jsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | 柱モデルと前面モニター（平面メッシュ）の表示 |
+| **Props** | R3F 標準の `group` Props（`position`, `scale` など） |
+| **依存** | pillar-transformed.glb, dome_texture.jpg |
+
+**モデル:** `models/pillar-transformed.glb` の `nodes.Pillar` を使用  
+**マテリアル:** 柱本体は `meshMatcapMaterial` + `dome_texture.jpg`、前面モニターは `meshBasicMaterial`（シアン半透明）  
+**向き:** 柱本体を Y 軸に `Math.PI / 6` 回転し、六角柱の面を正面に揃える  
+**配置:** World から `position={[0, 0, 0]}`、`scale={2}` で中央配置  
+**プリロード:** `useGLTF.preload("/models/pillar-transformed.glb")`
 
 ---
 
@@ -460,12 +479,13 @@ frontend/
 | models/crystal-transformed.glb | GLB | クリスタル | Body, Left_Eye |
 | models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
 | models/floor-transformed.glb | GLB | 床（Floor） | Floor |
-| models/coco.glb, crystal.glb, dome.glb, floor.glb | GLB | 元モデル（レガシー） | - |
+| models/pillar-transformed.glb | GLB | 柱（Pillar） | Pillar |
+| models/coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb | GLB | 元モデル（レガシー） | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
-**-transformed モデル:** Dome, Floor, Coco は gltfjsx 用に変換済みの GLB を使用。useGLTF.preload でプリロード。  
+**-transformed モデル:** Dome, Floor, Coco, Pillar は変換済みの GLB を使用。useGLTF.preload でプリロード。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---

@@ -9,6 +9,7 @@ import Dome from "./Dome";
 import Floor from "./Floor";
 import Player from "./Player";
 import { Model as Crystal } from "./Crystal";
+import { Model as Pillar } from "./Pillar";
 import { CAMERA, CRYSTAL } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 
@@ -78,6 +79,7 @@ export default function World() {
           <ambientLight intensity={1} />
 
           <Floor groundRef={groundRef} />
+          <Pillar position={[0, 0, 0]} scale={2} />
           <Player
             groundRef={groundRef}
             isMobile={isMobile}
