@@ -29,7 +29,7 @@
 |------|------|
 | **用途** | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ |
 | **操作** | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下） |
-| **シーン** | ドーム（壁）+ 床 + 柱 + 本 + 箱 + プレイヤー。第三者視点カメラで追従 |
+| **シーン** | ドーム（壁）+ 床 + 柱 + 本 + 箱 + ポスト + プレイヤー。第三者視点カメラで追従 |
 
 ---
 
@@ -75,6 +75,7 @@
 │  │  ├── Pillar (中央配置)                              │   │
 │  │  ├── Book (浮遊表示)                                │   │
 │  │  ├── Box (左側配置)                                 │   │
+│  │  ├── Post (奥側配置)                                │   │
 │  │  ├── Player ─────────── groundRef ────────────────┤ │   │
 │  │  │    └── Coco (モデル+アニメーション)               │   │
 │  │  └── Crystal ×4  ← ランダム配置/吹き出し              │   │
@@ -128,6 +129,7 @@ frontend/
 │   ├── Pillar.jsx             # 柱 + 前面モニター
 │   ├── Book.jsx               # 本モデル（浮遊アニメーション）
 │   ├── Box.jsx                # 箱モデル
+│   ├── Post.jsx               # ポストモデル
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   ├── Crystal.tsx            # クリスタル（徘徊・対話）
@@ -150,8 +152,9 @@ frontend/
 │   │   ├── floor-transformed.glb # 床（Floor）。gltfjsx 用に変換済み
 │   │   ├── book-transformed.glb # 本（Book）。gltfjsx 用に変換済み
 │   │   ├── box-transformed.glb # 箱（Box）。gltfjsx 用に変換済み
+│   │   ├── post-transformed.glb # ポスト（Post）。gltfjsx 用に変換済み
 │   │   ├── pillar-transformed.glb # 柱（Pillar）。gltfjsx 用に変換済み
-│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb, box.glb  # 元モデル（レガシー）
+│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb, box.glb, post.glb  # 元モデル（レガシー）
 │   └── textures/
 │       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
@@ -171,7 +174,7 @@ frontend/
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
 | **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
-| **子** | Dome, Environment, ambientLight, Floor, Pillar, Book, Box, Player, Crystal ×4 |
+| **子** | Dome, Environment, ambientLight, Floor, Pillar, Book, Box, Post, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -258,6 +261,20 @@ frontend/
 **モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用  
 **配置:** World から `position={[-7, 2, 0]}`、`scale={2}`、`rotation={[0, -Math.PI / 2, 0]}`  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
+
+---
+
+### Post.jsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | ポストモデルの表示 |
+| **Props** | R3F 標準の `group` Props（`position`, `scale` など） |
+| **依存** | post-transformed.glb |
+
+**モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用  
+**配置:** World から `position={[0, 2.5, 7]}`、`scale={2}`  
+**プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
 
 ---
 
@@ -516,13 +533,14 @@ frontend/
 | models/floor-transformed.glb | GLB | 床（Floor） | Floor |
 | models/book-transformed.glb | GLB | 本（Book） | mesh_0 |
 | models/box-transformed.glb | GLB | 箱（Box） | mesh_0 |
+| models/post-transformed.glb | GLB | ポスト（Post） | mesh_0 |
 | models/pillar-transformed.glb | GLB | 柱（Pillar） | Pillar |
-| models/coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb, box.glb | GLB | 元モデル（レガシー） | - |
+| models/coco.glb, crystal.glb, dome.glb, floor.glb, pillar.glb, book.glb, box.glb, post.glb | GLB | 元モデル（レガシー） | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
-**-transformed モデル:** Dome, Floor, Coco, Pillar, Book, Box は変換済みの GLB を使用。useGLTF.preload でプリロード。  
+**-transformed モデル:** Dome, Floor, Coco, Pillar, Book, Box, Post は変換済みの GLB を使用。useGLTF.preload でプリロード。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---
@@ -550,7 +568,7 @@ frontend/
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
-- Dome, Floor, Coco, Pillar, Book, Box は transformed GLB を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
+- Dome, Floor, Coco, Pillar, Book, Box, Post は transformed GLB を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
 
 ---
 
