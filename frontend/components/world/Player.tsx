@@ -17,6 +17,7 @@ interface PlayerProps {
 const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
   const raycaster = useRef(new THREE.Raycaster());
   const downVector = useRef(new THREE.Vector3(0, -1, 0));
+  const hasInitializedRotation = useRef(false);
 
   const PLAYER_HEIGHT_OFFSET = 0.5;
 
@@ -79,6 +80,12 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
     const player = playerRef.current;
+
+    // 開始時の向きを一度だけ適用
+    if (!hasInitializedRotation.current) {
+      player.rotation.y = PLAYER.INITIAL_ROTATION_Y;
+      hasInitializedRotation.current = true;
+    }
 
     // --- 1. 入力値の整理 (正規化) ---
     let rawX = 0;

@@ -31,7 +31,8 @@ export const PLAYER = {
   GROUND_OFFSET: 0,
   INITIAL_X: 0,
   INITIAL_Y: 10,
-  INITIAL_Z: -15, // Computer(-7) より柱から離した位置
+  INITIAL_Z: -25,
+  INITIAL_ROTATION_Y: 0,
   BOUNDARY_RADIUS: 26, // 移動可能な最大半径
 };
 

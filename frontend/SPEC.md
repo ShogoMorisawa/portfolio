@@ -292,6 +292,7 @@ frontend/
 
 **構造:** `<group ref={playerRef}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
 **初期位置:** `<group position={[PLAYER.INITIAL_X, PLAYER.INITIAL_Y, PLAYER.INITIAL_Z]}>` で生成  
+**初期向き:** `useFrame` 内で初回のみ `player.rotation.y = PLAYER.INITIAL_ROTATION_Y` を適用  
 **入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用。会話中（`isTalking`）は入力無効化  
 **接地:** `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` で Y 位置を設定（BoundingBox 計算は廃止）  
 **カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視（距離 5）
@@ -380,7 +381,8 @@ frontend/
 | GROUND_OFFSET | number | 0 | 接地時の Y オフセット（めり込み防止） |
 | INITIAL_X | number | 0 | 開始時の X 座標 |
 | INITIAL_Y | number | 10 | 開始時の高さ（床ロード前の落下防止） |
-| INITIAL_Z | number | -15 | 開始時の Z 座標（浮遊オブジェクト群から距離を取る） |
+| INITIAL_Z | number | -25 | 開始時の Z 座標（シーン中心から離して開始） |
+| INITIAL_ROTATION_Y | number | 0 | 開始時の向き（Y 軸回転・rad。0 で +Z 方向） |
 | BOUNDARY_RADIUS | number | 26 | 移動可能な最大半径（XZ 平面での原点からの距離） |
 
 ### CRYSTAL
@@ -502,7 +504,7 @@ frontend/
 - **床の範囲:** floor-transformed.glb の BoundingBox × DOME_SCALE。概ね XZ で ±45 程度
 - **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（26）。境界を超えると境界線上に押し戻される
 - **ドーム:** 下端が Y=-7（床と一致）。scale 1.8 で表示
-- **プレイヤー初期位置:** `(INITIAL_X, INITIAL_Y, INITIAL_Z)` = `(0, 10, -15)`
+- **プレイヤー初期位置:** `(INITIAL_X, INITIAL_Y, INITIAL_Z)` = `(0, 10, -25)`
 - **カメラ:** プレイヤー背後。useDeviceType で PC/Mobile を判定し、CAMERA.pc または CAMERA.mobile の distance, height を使用。lerp 0.1 で滑らかに追従。lookAtOffsetY で注視点を上にずらし空を多く写す
 
 ---
