@@ -6,10 +6,14 @@ import { FLOATING } from "@/lib/world/config";
 const { FLOAT_SPEED, FLOAT_AMPLITUDE, TILT_SPEED, TILT_ANGLE } =
   FLOATING.computer;
 
+/** GLB のメッシュノード名（computer-transformed.glb のノード名） */
+const COMPUTER_MESH_NODE_KEY = "mesh_0";
+
 export function Model(props) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], ...rest } = props;
   const groupRef = useRef(null);
   const { nodes } = useGLTF("/models/computer-transformed.glb");
+  const meshNode = nodes[COMPUTER_MESH_NODE_KEY];
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -27,9 +31,14 @@ export function Model(props) {
     );
   });
 
+  if (!meshNode?.geometry) return null;
+
   return (
     <group ref={groupRef} {...rest} dispose={null}>
-      <mesh geometry={nodes.mesh_0.geometry} material={nodes.mesh_0.material} />
+      <mesh
+        geometry={meshNode.geometry}
+        material={meshNode.material}
+      />
     </group>
   );
 }

@@ -234,9 +234,9 @@ frontend/
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
 | **依存** | book-transformed.glb |
 
-**モデル:** `models/book-transformed.glb` の `nodes.mesh_0` を使用  
+**モデル:** `models/book-transformed.glb` の `nodes.Mesh_0` を使用（未取得時は `null` を返して描画しない）  
 **浮遊+傾き:** パラメータは `FLOATING.book` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[1.65, 0, 1]}`  
+**配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[0, 0, 0]}`  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
 
 ---
@@ -249,7 +249,7 @@ frontend/
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
 | **依存** | box-transformed.glb |
 
-**モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用  
+**モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
 **浮遊+傾き:** パラメータは `FLOATING.box` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
@@ -264,7 +264,7 @@ frontend/
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
 | **依存** | post-transformed.glb |
 
-**モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用  
+**モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
 **浮遊+傾き:** パラメータは `FLOATING.post` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.POST_SCALE}`、`rotation={[0, Math.PI, 0]}`  
 **プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
@@ -279,7 +279,7 @@ frontend/
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
 | **依存** | computer-transformed.glb |
 
-**モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用  
+**モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
 **浮遊+傾き:** パラメータは `FLOATING.computer` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
@@ -568,7 +568,7 @@ frontend/
 | models/crystal-transformed.glb | GLB | クリスタル | Body, Left_Eye |
 | models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
 | models/floor-transformed.glb | GLB | 床（Floor） | Floor |
-| models/book-transformed.glb | GLB | 本（Book） | mesh_0 |
+| models/book-transformed.glb | GLB | 本（Book） | Mesh_0 |
 | models/box-transformed.glb | GLB | 箱（Box） | mesh_0 |
 | models/post-transformed.glb | GLB | ポスト（Post） | mesh_0 |
 | models/computer-transformed.glb | GLB | コンピューター（Computer） | mesh_0 |

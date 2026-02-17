@@ -5,10 +5,14 @@ import { FLOATING } from "@/lib/world/config";
 
 const { FLOAT_SPEED, FLOAT_AMPLITUDE, TILT_SPEED, TILT_ANGLE } = FLOATING.book;
 
+/** GLB のメッシュノード名（book-transformed.glb のノード名） */
+const BOOK_MESH_NODE_KEY = "Mesh_0";
+
 export function Model(props) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], ...rest } = props;
   const groupRef = useRef(null);
   const { nodes } = useGLTF("/models/book-transformed.glb");
+  const meshNode = nodes[BOOK_MESH_NODE_KEY];
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -26,9 +30,14 @@ export function Model(props) {
     );
   });
 
+  if (!meshNode?.geometry) return null;
+
   return (
     <group ref={groupRef} {...rest} dispose={null}>
-      <mesh geometry={nodes.mesh_0.geometry} material={nodes.mesh_0.material} />
+      <mesh
+        geometry={meshNode.geometry}
+        material={meshNode.material}
+      />
     </group>
   );
 }
