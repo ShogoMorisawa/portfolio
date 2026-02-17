@@ -190,7 +190,7 @@ frontend/
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
 **レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。90°ごとの円形配置を使用。
-**クリスタル配置:** `useMemo` で 4体を生成。リング（半径 20〜25）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
+**クリスタル配置:** `useMemo` で 4体を生成。リング（半径 10〜15）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
 
 ---
 
@@ -395,8 +395,8 @@ frontend/
 | キー | 型 | 値 | 説明 |
 |------|-----|-----|------|
 | SPEED | number | 2.0 | クリスタルの移動速度 |
-| MIN_RADIUS | number | 20 | リング内側の半径 |
-| MAX_RADIUS | number | 25 | リング外側の半径 |
+| MIN_RADIUS | number | 10 | リング内側の半径 |
+| MAX_RADIUS | number | 15 | リング外側の半径 |
 
 ### LAYOUT
 
@@ -478,7 +478,7 @@ frontend/
 
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
 **マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
-**徘徊:** リング（半径 20〜25）内の担当セクターから目的地を直接サンプリング。SPEED=2.0  
+**徘徊:** リング（半径 10〜15）内の担当セクターから目的地を直接サンプリング。SPEED=2.0  
 **浮遊:** `useFrame` で `y = initialPos.y + sin(t*2)*0.5`  
 **対話UI:** 近距離で担当になった個体のみ `activeCrystalId` をセットし、`activeMessage`/`targetPosition` を更新。UI は InteractionUI が表示  
 **向き補正:** モデルの正面が -Z とずれるため Y 軸 -90度補正をかけて lookAt に整合

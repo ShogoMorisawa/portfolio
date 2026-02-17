@@ -39,8 +39,8 @@ export const PLAYER = {
 export const CRYSTAL = {
   SPEED: 2.0,
   ROAM_RADIUS: 10,
-  MIN_RADIUS: 20,
-  MAX_RADIUS: 25,
+  MIN_RADIUS: 10,
+  MAX_RADIUS: 15,
 };
 
 /** ステージ上のオブジェクト配置（90°ごとに円形） */

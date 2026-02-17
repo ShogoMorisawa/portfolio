@@ -2,7 +2,7 @@
 
 import React, { Suspense, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment, Sparkles, ContactShadows } from "@react-three/drei";
+import { Environment, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 
 import Dome from "./Dome";
