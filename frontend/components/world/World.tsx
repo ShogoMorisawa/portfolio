@@ -76,9 +76,9 @@ export default function World() {
           <Environment
             preset="city"
             background={false}
-            environmentIntensity={0.8}
+            environmentIntensity={2}
           />
-          <ambientLight intensity={1} />
+          <ambientLight intensity={2} />
 
           <Sparkles
             count={1000}

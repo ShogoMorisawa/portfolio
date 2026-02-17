@@ -182,6 +182,8 @@ frontend/
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
+- `Environment`: `environmentIntensity={2}`
+- `ambientLight`: `intensity={2}`
 - `Sparkles`: `count=1000`, `scale=35`, `position={[0,6,0]}` の白パーティクルを常時描画
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
