@@ -43,14 +43,12 @@ export const CRYSTAL = {
   MAX_RADIUS: 25,
 };
 
-/** ステージ上のオブジェクト配置 */
+/** ステージ上のオブジェクト配置（90°ごとに円形） */
 export const LAYOUT = {
-  /** Book/Box の原点からの距離（X 方向） */
-  SIDE_DISTANCE: 10,
-  /** Post/Computer の原点からの距離（Z 方向） */
-  FRONT_BACK_DISTANCE: 10,
+  /** 浮遊オブジェクトの円の半径（外側に配置） */
+  OBJECT_RING_RADIUS: 26,
   /** 浮遊オブジェクトの基準の高さ */
-  FLOAT_OBJECT_HEIGHT: 3,
+  FLOAT_OBJECT_HEIGHT: 2,
   BOOK_SCALE: 3,
   BOX_SCALE: 2,
   POST_SCALE: 2,

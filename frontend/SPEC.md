@@ -185,7 +185,7 @@ frontend/
 - `Sparkles`: `count=1000`, `scale=35`, `position={[0,6,0]}` の白パーティクルを常時描画
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-**レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。
+**レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。90°ごとの円形配置を使用。
 **クリスタル配置:** `useMemo` で 4体を生成。リング（半径 20〜25）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
 
 ---
@@ -232,7 +232,7 @@ frontend/
 
 **モデル:** `models/book-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.book` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[7, 3, 0]}`、`scale={3}`、`rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}`  
+**配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[1.65, 0, 1]}`  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
 
 ---
@@ -247,7 +247,7 @@ frontend/
 
 **モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.box` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[-7, 3, 0]}`、`scale={2}`、`rotation={[0, -Math.PI / 2, 0]}`  
+**配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
 
 ---
@@ -262,7 +262,7 @@ frontend/
 
 **モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.post` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[0, 3, 7]}`、`scale={2}`  
+**配置:** World から `position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.POST_SCALE}`、`rotation={[0, Math.PI, 0]}`  
 **プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
 
 ---
@@ -275,9 +275,9 @@ frontend/
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
 | **依存** | computer-transformed.glb |
 
-**モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用  
+**モデル:** `models/computer-transformed.glb`。`nodes.mesh_0` があれば使用し、なければ最初の Mesh ノードをフォールバック利用  
 **浮遊+傾き:** パラメータは `FLOATING.computer` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[0, 3, -7]}`、`scale={2}`、`rotation={[0, Math.PI, 0]}`  
+**配置:** World から `position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
 
 ---
@@ -397,9 +397,8 @@ frontend/
 
 | キー | 型 | 値 | 説明 |
 |------|-----|-----|------|
-| SIDE_DISTANCE | number | 10 | Book/Box の X 方向距離 |
-| FRONT_BACK_DISTANCE | number | 10 | Post/Computer の Z 方向距離 |
-| FLOAT_OBJECT_HEIGHT | number | 3 | 浮遊オブジェクトの基準高さ |
+| OBJECT_RING_RADIUS | number | 26 | 浮遊オブジェクトを配置する円の半径 |
+| FLOAT_OBJECT_HEIGHT | number | 2 | 浮遊オブジェクトの基準高さ |
 | BOOK_SCALE | number | 3 | Book のスケール |
 | BOX_SCALE | number | 2 | Box のスケール |
 | POST_SCALE | number | 2 | Post のスケール |

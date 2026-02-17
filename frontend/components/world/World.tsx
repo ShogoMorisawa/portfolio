@@ -92,24 +92,41 @@ export default function World() {
           />
 
           <Floor groundRef={groundRef} />
+          {/* 90°ごとに円形配置: 0°=+X, 90°=+Z, 180°=-X, 270°=-Z */}
           <Book
-            position={[LAYOUT.SIDE_DISTANCE, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}
+            position={[
+              LAYOUT.OBJECT_RING_RADIUS,
+              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              0,
+            ]}
             scale={LAYOUT.BOOK_SCALE}
-            rotation={[Math.PI / 2, Math.PI / 6, -Math.PI / 2]}
-          />
-          <Box
-            position={[-LAYOUT.SIDE_DISTANCE, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}
-            scale={LAYOUT.BOX_SCALE}
-            rotation={[0, -Math.PI / 2, 0]}
+            rotation={[1.65, 0, 1]}
           />
           <Post
-            position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, LAYOUT.FRONT_BACK_DISTANCE]}
+            position={[
+              0,
+              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              LAYOUT.OBJECT_RING_RADIUS,
+            ]}
             scale={LAYOUT.POST_SCALE}
+            rotation={[0, Math.PI, 0]}
+          />
+          <Box
+            position={[
+              -LAYOUT.OBJECT_RING_RADIUS,
+              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              0,
+            ]}
+            scale={LAYOUT.BOX_SCALE}
+            rotation={[0, Math.PI / 2, 0]}
           />
           <Computer
-            position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, -LAYOUT.FRONT_BACK_DISTANCE]}
+            position={[
+              0,
+              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              -LAYOUT.OBJECT_RING_RADIUS,
+            ]}
             scale={LAYOUT.COMPUTER_SCALE}
-            rotation={[0, Math.PI, 0]}
           />
           <Player
             groundRef={groundRef}

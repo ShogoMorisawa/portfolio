@@ -10,6 +10,8 @@ export function Model(props) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], ...rest } = props;
   const groupRef = useRef(null);
   const { nodes } = useGLTF("/models/computer-transformed.glb");
+  const meshNode =
+    nodes.mesh_0 ?? Object.values(nodes).find((node) => node?.isMesh);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -27,9 +29,11 @@ export function Model(props) {
     );
   });
 
+  if (!meshNode) return null;
+
   return (
     <group ref={groupRef} {...rest} dispose={null}>
-      <mesh geometry={nodes.mesh_0.geometry} material={nodes.mesh_0.material} />
+      <mesh geometry={meshNode.geometry} material={meshNode.material} />
     </group>
   );
 }
