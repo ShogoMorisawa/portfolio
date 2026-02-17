@@ -147,7 +147,7 @@ frontend/
 │   └── store.ts              # Zustand。ジョイスティック入力 + 対話状態
 ├── public/
 │   ├── models/
-│   │   ├── coco-transformed.glb   # プレイヤー（Coco）。gltfjsx 用に変換済み
+│   │   ├── coco-transformed.glb   # Coco の旧変換モデル（現状は未使用）
 │   │   ├── crystal-transformed.glb # クリスタル。gltfjsx 用に変換済み
 │   │   ├── dome-transformed.glb  # ドーム（Dome）。gltfjsx 用に変換済み
 │   │   ├── floor-transformed.glb # 床（Floor）。gltfjsx 用に変換済み
@@ -155,8 +155,10 @@ frontend/
 │   │   ├── box-transformed.glb # 箱（Box）。gltfjsx 用に変換済み
 │   │   ├── post-transformed.glb # ポスト（Post）。gltfjsx 用に変換済み
 │   │   ├── computer-transformed.glb # コンピューター（Computer）。gltfjsx 用に変換済み
-│   │   ├── coco.glb, crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb  # 元モデル（レガシー）
+│   │   ├── coco.glb               # プレイヤー（Coco）で使用
+│   │   ├── crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb  # 元モデル（レガシー）
 │   └── textures/
+│       ├── coco_texture.png   # Coco Body の Matcap
 │       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
 │       └── floor_texture.jpg # 床用 Matcap
@@ -277,7 +279,7 @@ frontend/
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
 | **依存** | computer-transformed.glb |
 
-**モデル:** `models/computer-transformed.glb`。`nodes.mesh_0` があれば使用し、なければ最初の Mesh ノードをフォールバック利用  
+**モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.computer` を使用。`useFrame` で Y と Z 回転を更新  
 **配置:** World から `position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
@@ -305,15 +307,16 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | ココモデルの表示、アニメーション制御、目玉の骨アタッチ |
+| **責務** | ココモデルの表示、Body への Matcap 適用、アニメーション制御 |
 | **Props** | `isMoving: boolean`, `moveDirection: number`（1: 前進, -1: 後退） |
-| **依存** | coco-transformed.glb, three-stdlib (SkeletonUtils), gltfjsx 生成コード |
+| **依存** | coco.glb, coco_texture.png, three-stdlib (SkeletonUtils) |
 
-**モデル:** `models/coco-transformed.glb`。gltfjsx で生成。`SkeletonUtils.clone` でシーンをクローン  
+**モデル:** `models/coco.glb` を読み込み、`SkeletonUtils.clone` でシーンをクローン  
+**マテリアル:** `Body` メッシュに `MeshMatcapMaterial` を適用し、`textures/coco_texture.png` を使用  
 **アニメーション:** Player から渡された isMoving, moveDirection で `setEffectiveTimeScale(moveDirection)` と `stop()` を制御  
-**目玉アタッチ:** useLayoutEffect で頭の骨（Head を含む Bone）を探索し、Eye/Point メッシュを頭に attach。骨の動きに追従  
 **forwardRef:** useImperativeHandle で内部 group を親に公開可能。現状 Player は ref を渡さず、`<group ref={group}>` 内の子として Coco を配置するため、group の transform が Coco に適用される  
-**プリロード:** `useGLTF.preload("/models/coco-transformed.glb")` で初回表示を高速化
+**デバッグログ:** 初回にオブジェクト/メッシュ/マテリアル一覧を `console.log` 出力  
+**プリロード:** `useGLTF.preload("/models/coco.glb")` で初回表示を高速化
 
 ---
 
@@ -519,7 +522,7 @@ frontend/
 3. ヒット時: `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` を player.position.y に設定
 4. 非ヒット時: GRAVITY で落下。FALL_THRESHOLD 以下で停止
 
-**PLAYER_HEIGHT_OFFSET:** Player 内で 0.5 にハードコード。足元を床面に合わせるためのオフセット（coco-transformed モデル用）。
+**PLAYER_HEIGHT_OFFSET:** Player 内で 0.5 にハードコード。足元を床面に合わせるためのオフセット（coco モデル用）。
 
 ### 入力統合
 
@@ -558,7 +561,7 @@ frontend/
 
 | パス | 形式 | 用途 | ノード名 |
 |------|------|------|----------|
-| models/coco-transformed.glb | GLB | プレイヤー（Coco） | Body, tongue, root_003 等。SkeletonUtils.clone でクローン |
+| models/coco.glb | GLB | プレイヤー（Coco） | Scene ルートを `SkeletonUtils.clone` でクローン |
 | models/crystal-transformed.glb | GLB | クリスタル | Body, Left_Eye |
 | models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
 | models/floor-transformed.glb | GLB | 床（Floor） | Floor |
@@ -566,12 +569,14 @@ frontend/
 | models/box-transformed.glb | GLB | 箱（Box） | mesh_0 |
 | models/post-transformed.glb | GLB | ポスト（Post） | mesh_0 |
 | models/computer-transformed.glb | GLB | コンピューター（Computer） | mesh_0 |
-| models/coco.glb, crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
+| models/coco-transformed.glb | GLB | Coco の旧変換モデル（未使用） | - |
+| models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
+| textures/coco_texture.png | PNG | Coco Body の Matcap | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
 | textures/floor_texture.jpg | JPG | 床 Matcap | - |
 
-**-transformed モデル:** Dome, Floor, Coco, Book, Box, Post, Computer は変換済みの GLB を使用。useGLTF.preload でプリロード。  
+**-transformed モデル:** Dome, Floor, Book, Box, Post, Computer は変換済みの GLB を使用。Coco は `coco.glb` を使用。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---
@@ -599,7 +604,7 @@ frontend/
 
 - `"use client"` が全コンポーネントに必要（useFrame, useState 等使用のため）
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
-- Dome, Floor, Coco, Book, Box, Post, Computer は transformed GLB を使用。Dome/Floor は `as unknown as GLTFResult` で useGLTF の型を補正
+- Dome, Floor, Book, Box, Post, Computer は transformed GLB を使用。Coco は `coco.glb` + `coco_texture.png` を使用
 
 ---
 
