@@ -31,9 +31,9 @@ export const PLAYER = {
   GROUND_OFFSET: 0,
   INITIAL_X: 0,
   INITIAL_Y: 10,
-  INITIAL_Z: -25,
+  INITIAL_Z: 0,
   INITIAL_ROTATION_Y: 0,
-  BOUNDARY_RADIUS: 26, // 移動可能な最大半径
+  BOUNDARY_RADIUS: 20, // 移動可能な最大半径
 };
 
 export const CRYSTAL = {
@@ -45,14 +45,18 @@ export const CRYSTAL = {
 
 /** ステージ上のオブジェクト配置（90°ごとに円形） */
 export const LAYOUT = {
-  /** 浮遊オブジェクトの円の半径（外側に配置） */
-  OBJECT_RING_RADIUS: 26,
-  /** 浮遊オブジェクトの基準の高さ */
-  FLOAT_OBJECT_HEIGHT: 2,
-  BOOK_SCALE: 3,
-  BOX_SCALE: 2,
-  POST_SCALE: 2,
-  COMPUTER_SCALE: 2,
+  /** オブジェクトの円の半径（外側に配置） */
+  OBJECT_RING_RADIUS: 30,
+  /** オブジェクトの高さ */
+  BOOK_HEIGHT: 4,
+  POST_HEIGHT: 5,
+  BOX_HEIGHT: 5,
+  COMPUTER_HEIGHT: 3.5,
+  /** オブジェクトのスケール */
+  BOOK_SCALE: 10,
+  BOX_SCALE: 7,
+  POST_SCALE: 10,
+  COMPUTER_SCALE: 9,
 } as const;
 
 /** 浮遊オブジェクトのふわふわ・横傾き（オブジェクトごとに差をつけて同期しない） */

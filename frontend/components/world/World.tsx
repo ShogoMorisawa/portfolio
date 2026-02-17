@@ -96,7 +96,7 @@ export default function World() {
           <Book
             position={[
               LAYOUT.OBJECT_RING_RADIUS,
-              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              LAYOUT.BOOK_HEIGHT,
               0,
             ]}
             scale={LAYOUT.BOOK_SCALE}
@@ -105,7 +105,7 @@ export default function World() {
           <Post
             position={[
               0,
-              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              LAYOUT.POST_HEIGHT,
               LAYOUT.OBJECT_RING_RADIUS,
             ]}
             scale={LAYOUT.POST_SCALE}
@@ -114,7 +114,7 @@ export default function World() {
           <Box
             position={[
               -LAYOUT.OBJECT_RING_RADIUS,
-              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              LAYOUT.BOX_HEIGHT,
               0,
             ]}
             scale={LAYOUT.BOX_SCALE}
@@ -123,7 +123,7 @@ export default function World() {
           <Computer
             position={[
               0,
-              LAYOUT.FLOAT_OBJECT_HEIGHT,
+              LAYOUT.COMPUTER_HEIGHT,
               -LAYOUT.OBJECT_RING_RADIUS,
             ]}
             scale={LAYOUT.COMPUTER_SCALE}

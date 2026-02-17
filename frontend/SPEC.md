@@ -236,7 +236,7 @@ frontend/
 
 **モデル:** `models/book-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.book` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[1.65, 0, 1]}`  
+**配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[1.65, 0, 1]}`  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
 
 ---
@@ -251,7 +251,7 @@ frontend/
 
 **モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.box` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.FLOAT_OBJECT_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
+**配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
 
 ---
@@ -266,7 +266,7 @@ frontend/
 
 **モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.post` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.POST_SCALE}`、`rotation={[0, Math.PI, 0]}`  
+**配置:** World から `position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.POST_SCALE}`、`rotation={[0, Math.PI, 0]}`  
 **プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
 
 ---
@@ -281,7 +281,7 @@ frontend/
 
 **モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用  
 **浮遊+傾き:** パラメータは `FLOATING.computer` を使用。`useFrame` で Y と Z 回転を更新  
-**配置:** World から `position={[0, LAYOUT.FLOAT_OBJECT_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
+**配置:** World から `position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
 
 ---
@@ -386,9 +386,9 @@ frontend/
 | GROUND_OFFSET | number | 0 | 接地時の Y オフセット（めり込み防止） |
 | INITIAL_X | number | 0 | 開始時の X 座標 |
 | INITIAL_Y | number | 10 | 開始時の高さ（床ロード前の落下防止） |
-| INITIAL_Z | number | -25 | 開始時の Z 座標（シーン中心から離して開始） |
+| INITIAL_Z | number | 0 | 開始時の Z 座標 |
 | INITIAL_ROTATION_Y | number | 0 | 開始時の向き（Y 軸回転・rad。0 で +Z 方向） |
-| BOUNDARY_RADIUS | number | 26 | 移動可能な最大半径（XZ 平面での原点からの距離） |
+| BOUNDARY_RADIUS | number | 20 | 移動可能な最大半径（XZ 平面での原点からの距離） |
 
 ### CRYSTAL
 
@@ -402,12 +402,15 @@ frontend/
 
 | キー | 型 | 値 | 説明 |
 |------|-----|-----|------|
-| OBJECT_RING_RADIUS | number | 26 | 浮遊オブジェクトを配置する円の半径 |
-| FLOAT_OBJECT_HEIGHT | number | 2 | 浮遊オブジェクトの基準高さ |
-| BOOK_SCALE | number | 3 | Book のスケール |
-| BOX_SCALE | number | 2 | Box のスケール |
-| POST_SCALE | number | 2 | Post のスケール |
-| COMPUTER_SCALE | number | 2 | Computer のスケール |
+| OBJECT_RING_RADIUS | number | 30 | オブジェクトを配置する円の半径 |
+| BOOK_HEIGHT | number | 4 | Book の高さ（Y） |
+| POST_HEIGHT | number | 5 | Post の高さ（Y） |
+| BOX_HEIGHT | number | 5 | Box の高さ（Y） |
+| COMPUTER_HEIGHT | number | 3.5 | Computer の高さ（Y） |
+| BOOK_SCALE | number | 10 | Book のスケール |
+| BOX_SCALE | number | 7 | Box のスケール |
+| POST_SCALE | number | 10 | Post のスケール |
+| COMPUTER_SCALE | number | 9 | Computer のスケール |
 
 ### FLOATING
 
@@ -506,9 +509,9 @@ frontend/
 
 - **Three.js の慣例:** Y 軸が上、右手系
 - **床の範囲:** floor-transformed.glb の BoundingBox × DOME_SCALE。概ね XZ で ±45 程度
-- **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（26）。境界を超えると境界線上に押し戻される
+- **プレイヤー移動範囲:** 原点を中心とした XZ 平面の円形。半径 BOUNDARY_RADIUS（20）。境界を超えると境界線上に押し戻される
 - **ドーム:** 下端が Y=-7（床と一致）。scale 1.8 で表示
-- **プレイヤー初期位置:** `(INITIAL_X, INITIAL_Y, INITIAL_Z)` = `(0, 10, -25)`
+- **プレイヤー初期位置:** `(INITIAL_X, INITIAL_Y, INITIAL_Z)` = `(0, 10, 0)`
 - **カメラ:** プレイヤー背後。useDeviceType で PC/Mobile を判定し、CAMERA.pc または CAMERA.mobile の distance, height を使用。lerp 0.1 で滑らかに追従。lookAtOffsetY で注視点を上にずらし空を多く写す
 
 ---
