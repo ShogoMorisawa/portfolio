@@ -68,6 +68,12 @@ export function Model({
     return nextPos;
   };
 
+  // タブを離れて戻ったとき: delta が大きい＝一時停止していたので、ワープせず「今の位置から新しい目的地だけ決める」
+  const PAUSE_THRESHOLD = 0.5;
+  const MAX_DELTA = 0.1; // 1フレームで進める最大時間（ワープ防止）
+  const ARRIVAL_RADIUS = 0.5; // この距離以内なら「到着」とみなして次の目的地を決める
+  const MIN_DIRECTION_LENGTH = 1e-6; // これ以下ならゼロベクトルとみなし normalize をスキップ（NaN防止）
+
   useFrame((state, delta) => {
     if (!group.current) return;
     const currentPos = group.current.position;
@@ -105,11 +111,11 @@ export function Model({
     if (isMyTurn) {
       // 🟢 STOPモード（担当なので止まって対応）
       // 毎フレーム lookAt を実行 → 動くココちゃんを目で追い続ける（ひまわり効果）
-      const target = playerRef?.current
+      const lookAtTarget = playerRef?.current
         ? playerRef.current.position
         : state.camera.position;
       // clone() しないと本物の座標を書き換えてバグる（参照渡しの罠）
-      const lookTarget = target.clone();
+      const lookTarget = lookAtTarget.clone();
       lookTarget.y = currentPos.y; // 目線の高さを自分に合わせる（Y軸は固定）
       group.current.lookAt(lookTarget);
     } else {
@@ -119,20 +125,32 @@ export function Model({
         currentPos.z,
       ).distanceTo(new THREE.Vector2(target.x, target.z));
 
-      if (distToTarget < 0.5) {
+      // タブ復帰などで delta が大きい＝一時停止していた → ワープせず今の位置から新しい目的地だけ決める
+      const wasPaused = delta > PAUSE_THRESHOLD;
+      const nextTarget = wasPaused ? getNextPosition(currentPos) : null;
+      if (nextTarget) setTarget(nextTarget);
+
+      const dt = wasPaused ? 0 : Math.min(delta, MAX_DELTA);
+
+      if (!wasPaused && distToTarget < ARRIVAL_RADIUS) {
         setTarget(getNextPosition(currentPos));
-      } else {
-        const direction = new THREE.Vector3()
-          .subVectors(target, currentPos)
-          .normalize();
-
-        currentPos.x += direction.x * SPEED * delta;
-        currentPos.z += direction.z * SPEED * delta;
-
-        const lookTarget = target.clone();
-        lookTarget.y = currentPos.y;
-        group.current.lookAt(lookTarget);
+      } else if (dt > 0) {
+        const dest = nextTarget ?? target;
+        const direction = new THREE.Vector3().subVectors(
+          dest,
+          currentPos,
+        );
+        const len = direction.length();
+        if (len > MIN_DIRECTION_LENGTH) {
+          direction.normalize();
+          currentPos.x += direction.x * SPEED * dt;
+          currentPos.z += direction.z * SPEED * dt;
+        }
       }
+
+      const lookTarget = (nextTarget ?? target).clone();
+      lookTarget.y = currentPos.y;
+      group.current.lookAt(lookTarget);
     }
 
     currentPos.y =

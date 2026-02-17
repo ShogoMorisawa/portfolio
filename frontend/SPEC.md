@@ -176,23 +176,21 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`contextLostRef`（WebGL コンテキストロスト検知）、`canvasKey`（再マウント用）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
+| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
 | **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book, Box, Post, Computer, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
-- `key={\`\${isMobile ? "mobile" : "pc"}-\${canvasKey}\`}`: デバイス切り替え + コンテキスト復旧時に Canvas を再マウント
+- `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 - `Environment`: `environmentIntensity={2}`
 - `ambientLight`: `intensity={2}`
 - `Sparkles`: `count=1000`, `scale=35`, `position={[0,6,0]}` の白パーティクルを常時描画
-- `onCreated`: `webglcontextlost` を検知して `contextLostRef=true`、`webglcontextrestored` で `canvasKey` を更新して再マウント
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
 **レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。90°ごとの円形配置を使用。
 **クリスタル配置:** `useMemo` で 4体を生成。リング（半径 10〜15）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
-**復旧処理:** `visibilitychange` でタブ復帰時に `contextLostRef` を確認し、ロスト済みなら `canvasKey` を更新して Canvas を再マウント。
 
 ---
 
@@ -481,6 +479,7 @@ frontend/
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
 **マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
 **徘徊:** リング（半径 10〜15）内の担当セクターから目的地を直接サンプリング。SPEED=2.0  
+**タブ復帰時:** `delta > 0.5` を一時停止復帰とみなし、ワープを避けて「現在位置から新しい目的地のみ再設定」  
 **浮遊:** `useFrame` で `y = initialPos.y + sin(t*2)*0.5`  
 **対話UI:** 近距離で担当になった個体のみ `activeCrystalId` をセットし、`activeMessage`/`targetPosition` を更新。UI は InteractionUI が表示  
 **向き補正:** モデルの正面が -Z とずれるため Y 軸 -90度補正をかけて lookAt に整合
@@ -556,7 +555,9 @@ frontend/
 ### クリスタル徘徊/対話
 
 - **目的地生成:** 半径 ROAM_RADIUS の円内を一様分布で抽選し、XZ 平面のターゲットに設定
-- **移動:** 目的地への方向ベクトルを正規化し、`SPEED * delta` で位置更新
+- **移動:** 目的地への方向ベクトルを正規化し、`SPEED * min(delta, 0.1)` で位置更新（大きい delta をクランプ）
+- **一時停止復帰:** `delta > 0.5` のフレームでは移動せず、現在位置から新しい目的地を再抽選
+- **数値安定化:** 方向ベクトル長が極小（`<= 1e-6`）のときは `normalize` をスキップして NaN を防止
 - **担当制:** `activeCrystalId` が空のときのみ近距離（5m以内）で担当を獲得。担当中は 7m まで維持
 - **UI:** 担当状態は InteractionUI が Tap/メッセージを表示
 

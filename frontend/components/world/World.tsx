@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useMemo, useRef, useState, useEffect } from "react";
+import React, { Suspense, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
@@ -19,21 +19,7 @@ import { useDeviceType } from "@/hooks/useDeviceType";
 export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
   const playerRef = useRef<THREE.Group>(null);
-  const contextLostRef = useRef(false);
-  const [canvasKey, setCanvasKey] = useState(0);
   const isMobile = useDeviceType();
-
-  // タブに戻ったときに WebGLコンテキストロスト済みなら Canvas をリマウント
-  useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible" && contextLostRef.current) {
-        contextLostRef.current = false;
-        setCanvasKey((k) => k + 1);
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, []);
 
   // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
   const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
@@ -77,21 +63,11 @@ export default function World() {
     <div className="w-full h-screen bg-black">
       <Canvas
         flat
-        key={`${isMobile ? "mobile" : "pc"}-${canvasKey}`}
+        key={isMobile ? "mobile" : "pc"}
         dpr={[1, 2]}
         camera={{
           fov: cameraConfig.fov,
           position: cameraConfig.position,
-        }}
-        onCreated={({ gl }) => {
-          const canvas = gl.domElement;
-          canvas.addEventListener("webglcontextlost", () => {
-            contextLostRef.current = true;
-          });
-          canvas.addEventListener("webglcontextrestored", () => {
-            contextLostRef.current = false;
-            setCanvasKey((k) => k + 1);
-          });
         }}
       >
         <Suspense fallback={null}>
