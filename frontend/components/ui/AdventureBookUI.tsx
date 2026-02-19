@@ -39,9 +39,9 @@ function SlotList({
           >
             <span className="block">ぼうけんのしょ{slot.id}</span>
             <span className="block text-sm opacity-80 mt-0.5">
-              {slot.id === 1 && "HIGH SCHOOL"}
-              {slot.id === 2 && "UNIVERSITY (APU)"}
-              {slot.id === 3 && "INTERNSHIP / NEW CAREER"}
+              {slot.id === 1 && "こうこうせい"}
+              {slot.id === 2 && "はうすきーぱー"}
+              {slot.id === 3 && "えんじにあ"}
             </span>
           </button>
         ))}
@@ -126,9 +126,7 @@ function DetailView({
 
       {slot.skills.length > 0 && (
         <div>
-          <p className={`${FONT_CLASS} text-white text-sm mb-2`}>
-            スキル（とくぎ）
-          </p>
+          <p className={`${FONT_CLASS} text-white text-sm mb-2`}>とくぎ</p>
           <ul className="list-disc list-inside text-white text-sm space-y-1">
             {slot.skills.map((s, i) => (
               <li key={i} className={FONT_CLASS}>
@@ -166,9 +164,7 @@ function DetailView({
 export default function AdventureBookUI() {
   const isOpen = useInputStore((s) => s.isAdventureBookOpen);
   const selectedSlot = useInputStore((s) => s.selectedAdventureSlot);
-  const setIsAdventureBookOpen = useInputStore(
-    (s) => s.setIsAdventureBookOpen,
-  );
+  const setIsAdventureBookOpen = useInputStore((s) => s.setIsAdventureBookOpen);
   const setSelectedAdventureSlot = useInputStore(
     (s) => s.setSelectedAdventureSlot,
   );

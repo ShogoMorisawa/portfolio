@@ -531,8 +531,8 @@ frontend/
 | **依存** | useInputStore, `adventureBookData.ts`, `.font-adventure` |
 
 **表示条件:** `isAdventureBookOpen=true` のとき全画面オーバーレイを表示  
-**スロット一覧:** `ADVENTURE_SLOTS`（1〜3）を表示し、選択で `selectedAdventureSlot` を更新  
-**詳細画面:** `getAdventureSlot(selectedAdventureSlot)` から `level/job/location/hp/mp/skills/description` を表示  
+**スロット一覧:** `ADVENTURE_SLOTS`（1〜3）を表示し、各行のサブラベルには職業名（`job`）を表示。選択で `selectedAdventureSlot` を更新  
+**詳細画面:** `getAdventureSlot(selectedAdventureSlot)` から `level/job/location/hp/mp/skills/description` を表示（`description` は複数行テキスト対応）  
 **クローズ:** 背景クリック、`Esc` キー、`とじる` ボタンで閉じる。`Esc` は詳細表示中なら一覧に戻る  
 **フォント:** `DotGothic16` を `--font-adventure` として読み込み、`.font-adventure` 経由で適用
 

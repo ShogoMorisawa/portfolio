@@ -27,10 +27,14 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
     id: 1,
     level: 18,
     job: "こうこうせい",
-    location: "SAITAMA",
-    skills: [],
-    description:
-      "こうこうじだいの　ぼうけん。さいたまの　まちで　すごした　ひび。",
+    location: "おおいた",
+    skills: ["てにす", "ぶろすた", "でゅえま"],
+    description: `うまれてから　ずっと　おおいた　で　そだった。
+                  いみのない　ルールが　きらいだった。
+                  まじめな　あのこらは　かっこいい。
+                  でも　ぼくには　できなかった。
+                  てんすうで　ひとの　かちは　はかれない。
+                  せかいは　もっと　じゆうだと　しんじていた。`,
     hp: 180,
     hpMax: 180,
     mp: 60,
@@ -38,16 +42,16 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
   },
   {
     id: 2,
-    level: 22,
-    job: "だいがくせい",
-    location: "BEPPU, OITA",
-    skills: [
-      "はうすきーぴんぐ（4ねん）",
-      "ｗｅｂかいはつ（どくがく）",
-      "あわーす（SAA）",
-    ],
-    description:
-      "ほてるせいそうを　４ねんかん　やりぬいた。だいがくに　いった　ひすうの　２ばいいじょう。だいがくは　おまけの　ようなもの。ほんしょくは　はうすきーぱー　だった。どくがくで　ｗｅｂかいはつを　べんきょうした。",
+    level: 23,
+    job: "はうすきーぱー",
+    location: "おおいた",
+    skills: ["おそうじ", "Webかいはつ", "しんりきのう"],
+    description: `ほてるせいそうを　４ねんかん　やりぬいた。
+                  だいがくに　いった　にっすうの　２ばいいじょう。
+                  ほんしょくは　はうすきーぱー　だった。
+                  なにも　できなかった　じぶんに
+                  あたまの　つかいかたと　ひとびとの　かがやきを
+                  おしえてくれた　４ねんかん。`,
     hp: 230,
     hpMax: 230,
     mp: 200,
@@ -57,10 +61,14 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
     id: 3,
     level: 24,
     job: "えんじにあ",
-    location: "TOKYO",
-    skills: [],
-    description:
-      "とうきょうで　えんじにあとしての　ぼうけんが　はじまった。しんの　せかいへ。",
+    location: "とうきょう",
+    skills: ["PHP", "TypeScript", "AWS"],
+    description: `できないこと　ふまんなこと　いらだつこと
+                  それら　すべて　ぼくの　かいぞうどぶそく。
+                  どりょくし　ひとをしり
+                  じぶんを　しること。
+                  じゆうに　じんせいを　あそび
+                  けんきょに　さきへ　すすもう。`,
     hp: 240,
     hpMax: 240,
     mp: 220,
@@ -68,6 +76,8 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
   },
 ];
 
-export function getAdventureSlot(id: AdventureSlotId): AdventureSlot | undefined {
+export function getAdventureSlot(
+  id: AdventureSlotId,
+): AdventureSlot | undefined {
   return ADVENTURE_SLOTS.find((s) => s.id === id);
 }
