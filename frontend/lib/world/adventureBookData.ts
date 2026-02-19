@@ -29,7 +29,7 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
     job: "こうこうせい",
     location: "おおいた",
     skills: ["てにす", "ぶろすた", "でゅえま"],
-    description: `うまれてから　ずっと　おおいた　で　そだった。
+    description: `うまれてから　ずっと　おおいたで　そだった。
                   いみのない　ルールが　きらいだった。
                   まじめな　あのこらは　かっこいい。
                   でも　ぼくには　できなかった。
@@ -47,7 +47,7 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
     location: "おおいた",
     skills: ["おそうじ", "Webかいはつ", "しんりきのう"],
     description: `ほてるせいそうを　４ねんかん　やりぬいた。
-                  だいがくに　いった　にっすうの　２ばいいじょう。
+                  だいがくの　にっすうの　２ばいいじょう。
                   ほんしょくは　はうすきーぱー　だった。
                   なにも　できなかった　じぶんに
                   あたまの　つかいかたと　ひとびとの　かがやきを

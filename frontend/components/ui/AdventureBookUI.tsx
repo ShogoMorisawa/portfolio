@@ -22,7 +22,8 @@ function SlotList({
       <p
         className={`text-white text-center text-lg md:text-xl ${FONT_CLASS} tracking-wide`}
       >
-        どの　ぼうけんのしょ　を　みますか？
+        <span className="block md:inline">どの　ぼうけんのしょ　を　</span>
+        <span>みますか？</span>
       </p>
       <div className="flex flex-col gap-3">
         {ADVENTURE_SLOTS.map((slot) => (
