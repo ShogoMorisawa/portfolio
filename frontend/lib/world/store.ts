@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+export type AdventureSlotId = 1 | 2 | 3;
+
 interface InputState {
   joystick: { x: number; y: number; isMoving: boolean };
   setJoystick: (x: number, y: number, isMoving: boolean) => void;
@@ -16,7 +18,16 @@ interface DialogueState {
   setTargetPosition: (pos: [number, number, number] | null) => void;
 }
 
-type WorldState = InputState & DialogueState;
+interface AdventureBookState {
+  isBookNearby: boolean;
+  isAdventureBookOpen: boolean;
+  selectedAdventureSlot: AdventureSlotId | null;
+  setIsBookNearby: (nearby: boolean) => void;
+  setIsAdventureBookOpen: (open: boolean) => void;
+  setSelectedAdventureSlot: (slot: AdventureSlotId | null) => void;
+}
+
+type WorldState = InputState & DialogueState & AdventureBookState;
 
 export const useInputStore = create<WorldState>((set) => ({
   joystick: { x: 0, y: 0, isMoving: false },
@@ -30,4 +41,12 @@ export const useInputStore = create<WorldState>((set) => ({
   setActiveMessage: (message) => set({ activeMessage: message }),
   setIsTalking: (isTalking) => set({ isTalking }),
   setTargetPosition: (pos) => set({ targetPosition: pos }),
+
+  isBookNearby: false,
+  isAdventureBookOpen: false,
+  selectedAdventureSlot: null,
+  setIsBookNearby: (nearby) => set({ isBookNearby: nearby }),
+  setIsAdventureBookOpen: (open) =>
+    set({ isAdventureBookOpen: open, ...(open ? {} : { selectedAdventureSlot: null }) }),
+  setSelectedAdventureSlot: (slot) => set({ selectedAdventureSlot: slot }),
 }));

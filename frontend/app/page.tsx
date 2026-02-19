@@ -4,6 +4,7 @@ import { Loader } from "@react-three/drei";
 import World from "@/components/world/World";
 import JoystickControls from "@/components/world/ui/JoystickControls";
 import InteractionUI from "@/components/ui/InteractionUI";
+import AdventureBookUI from "@/components/ui/AdventureBookUI";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <World />
       <JoystickControls />
       <InteractionUI />
+      <AdventureBookUI />
 
       <Loader
         containerStyles={{ background: "black" }}

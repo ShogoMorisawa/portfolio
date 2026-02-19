@@ -97,6 +97,7 @@ export default function World() {
             position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}
             scale={LAYOUT.BOOK_SCALE}
             rotation={[0, 0, 0]}
+            playerRef={playerRef}
           />
           <Post
             position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}

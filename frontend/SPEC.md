@@ -59,8 +59,9 @@
 │  app/page.tsx                                               │
 │  ├── <World />                                              │
 │  ├── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
+│  ├── <InteractionUI />     ← 会話UI（Tap/メッセージ）         │
+│  ├── <AdventureBookUI />   ← ぼうけんのしょUI               │
 │  └── <Loader />            ← drei ローダー（進捗バー）         │
-│  └── <InteractionUI />     ← 会話UI（Tap/メッセージ）         │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -73,7 +74,7 @@
 │  │  ├── ambientLight                                   │   │
 │  │  ├── Sparkles (白パーティクル)                       │   │
 │  │  ├── Floor ──────────── groundRef ─────────────────┐ │   │
-│  │  ├── Book (浮遊表示)                                │   │
+│  │  ├── Book (浮遊表示 + 近接判定)                     │   │
 │  │  ├── Box (左側配置)                                 │   │
 │  │  ├── Post (奥側配置)                                │   │
 │  │  ├── Computer (手前側配置)                          │   │
@@ -108,7 +109,9 @@
 │  hooks/useDeviceType.ts  ← 768px 未満で isMobile             │
 │  components/world/ui/JoystickControls.tsx                   │
 │  components/ui/InteractionUI.tsx                            │
-│  lib/world/store.ts (Zustand: joystick + dialogue state)     │
+│  components/ui/AdventureBookUI.tsx                          │
+│  lib/world/store.ts (Zustand: input + dialogue + book state) │
+│  lib/world/adventureBookData.ts（ぼうけんのしょ定義）        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -119,9 +122,9 @@
 ```
 frontend/
 ├── app/
-│   ├── page.tsx              # ルートページ。World + JoystickControls を表示
-│   ├── layout.tsx            # ルートレイアウト
-│   ├── globals.css
+│   ├── page.tsx              # ルートページ。World + JoystickControls + UI群を表示
+│   ├── layout.tsx            # ルートレイアウト（Geist + DotGothic16 フォント変数）
+│   ├── globals.css           # グローバルCSS（font-adventure クラスを定義）
 │   └── favicon.ico
 ├── components/world/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
@@ -137,14 +140,14 @@ frontend/
 │   └── ui/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（動的配置）
 ├── components/ui/
-│   └── InteractionUI.tsx        # 会話UI（Tap/メッセージ）
-├── components/ui/
-│   └── InteractionUI.tsx      # 会話UI（Tap/メッセージ）
+│   ├── InteractionUI.tsx      # 会話UI（Tap/メッセージ + 本へのTAP導線）
+│   └── AdventureBookUI.tsx    # ぼうけんのしょUI（スロット選択/詳細）
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
 │   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING 定数
-│   └── store.ts              # Zustand。ジョイスティック入力 + 対話状態
+│   ├── store.ts              # Zustand。入力 + 対話 + 本UI状態
+│   └── adventureBookData.ts  # ぼうけんのしょ表示データ
 ├── public/
 │   ├── models/
 │   │   ├── coco-transformed.glb   # Coco の旧変換モデル（現状は未使用）
@@ -177,7 +180,7 @@ frontend/
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
 | **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
-| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book, Box, Post, Computer, Player, Crystal ×4 |
+| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef` を渡す）, Box, Post, Computer, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -230,13 +233,15 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 本モデルの表示と浮遊アニメーション |
-| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存** | book-transformed.glb |
+| **責務** | 本モデルの表示、浮遊アニメーション、プレイヤー近接判定（本TAP表示用） |
+| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など）+ `playerRef` |
+| **依存** | book-transformed.glb, `BOOK.NEARBY_THRESHOLD`, useInputStore |
 
 **モデル:** `models/book-transformed.glb` の `nodes.Mesh_0` を使用（未取得時は `null` を返して描画しない）  
 **浮遊+傾き:** パラメータは `FLOATING.book` を使用。`useFrame` で Y と Z 回転を更新  
+**近接判定:** `useFrame` で本とプレイヤー距離を計算し、`dist < BOOK.NEARBY_THRESHOLD` なら `setIsBookNearby(true)`。`isTalking` または `isAdventureBookOpen` 中は判定を無効化  
 **配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[0, 0, 0]}`  
+**参照:** `World` から `playerRef` を受け取り、未指定時は `state.camera.position` をフォールバックとして使用  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
 
 ---
@@ -398,6 +403,12 @@ frontend/
 | MIN_RADIUS | number | 10 | リング内側の半径 |
 | MAX_RADIUS | number | 15 | リング外側の半径 |
 
+### BOOK
+
+| キー | 型 | 値 | 説明 |
+|------|-----|-----|------|
+| NEARBY_THRESHOLD | number | 15 | 本オブジェクトを「近い」と判定する閾値（TAP表示用） |
+
 ### LAYOUT
 
 | キー | 型 | 値 | 説明 |
@@ -448,7 +459,13 @@ frontend/
 
 [Crystal] → playerRef の位置を参照して距離判定
         → activeCrystalId/activeMessage/targetPosition を更新
-[InteractionUI] → activeCrystalId/isTalking/activeMessage を参照してUI表示
+[Book] → playerRef の位置を参照して距離判定
+      → isBookNearby を更新
+[InteractionUI] → activeCrystalId/isTalking/isBookNearby を参照
+               → クリスタル優先で TAP を表示（次点で本TAP）
+               → setIsAdventureBookOpen(true) で本UIを開く
+[AdventureBookUI] → isAdventureBookOpen/selectedAdventureSlot を参照
+                 → スロット選択/詳細表示/閉じる を制御
 ```
 
 **useInputStore（Zustand）:**
@@ -457,9 +474,14 @@ frontend/
 - `isTalking: boolean` — 会話中フラグ
 - `activeMessage: string | null` — 表示中メッセージ
 - `targetPosition: [x,y,z] | null` — 会話時のカメラターゲット
+- `isBookNearby: boolean` — 本が近距離かどうか（本TAP表示トリガー）
+- `isAdventureBookOpen: boolean` — ぼうけんのしょ UI の開閉状態
+- `selectedAdventureSlot: AdventureSlotId | null` — 選択中セーブスロット（1/2/3）
 - JoystickControls が setJoystick で更新、Player が joystick を購読して移動に反映
 - Crystal が `activeCrystalId`/`activeMessage`/`targetPosition` を更新
-- InteractionUI が `activeCrystalId`/`isTalking`/`activeMessage` を参照して UI を制御
+- Book が `isBookNearby` を更新
+- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby` を参照して UI を制御
+- AdventureBookUI が `isAdventureBookOpen`/`selectedAdventureSlot` を参照して表示を制御
 
 **groundRef の流れ:**
 1. World で `useRef` 作成
@@ -490,12 +512,29 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 会話開始/終了の UI 表示、メッセージ表示 |
+| **責務** | 会話開始/終了の UI 表示、メッセージ表示、本TAP導線の表示 |
 | **Props** | なし |
 | **依存** | useInputStore |
 
-**Tap ボタン:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
+**Tap ボタン（クリスタル）:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
+**Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
 **会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
+
+---
+
+### AdventureBookUI.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | ぼうけんのしょUIの表示制御（スロット一覧/詳細画面/クローズ） |
+| **Props** | なし |
+| **依存** | useInputStore, `adventureBookData.ts`, `.font-adventure` |
+
+**表示条件:** `isAdventureBookOpen=true` のとき全画面オーバーレイを表示  
+**スロット一覧:** `ADVENTURE_SLOTS`（1〜3）を表示し、選択で `selectedAdventureSlot` を更新  
+**詳細画面:** `getAdventureSlot(selectedAdventureSlot)` から `level/job/location/hp/mp/skills/description` を表示  
+**クローズ:** 背景クリック、`Esc` キー、`とじる` ボタンで閉じる。`Esc` は詳細表示中なら一覧に戻る  
+**フォント:** `DotGothic16` を `--font-adventure` として読み込み、`.font-adventure` 経由で適用
 
 ---
 
