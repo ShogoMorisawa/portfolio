@@ -145,7 +145,7 @@ frontend/
 ├── components/ui/
 │   ├── InteractionUI.tsx      # 会話UI（Tap/メッセージ + 本へのTAP導線）
 │   ├── AdventureBookUI.tsx    # ぼうけんのしょUI（スロット選択/詳細）
-│   └── BoxUI.tsx              # アイテムBOX UI（メニュー/10x10グリッド）
+│   └── BoxUI.tsx              # アイテムBOX UI（メニュー/可変グリッド）
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
@@ -575,8 +575,9 @@ frontend/
 
 **表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
 **メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移  
-**グリッド:** `SLOTS_PER_PAGE=100` の 10×10 固定。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
+**グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示  
+**ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
 **軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  
 **クローズ:** menu 画面では外側クリックで閉じる。grid 画面は「もどる」で menu に戻る
 
@@ -647,7 +648,7 @@ frontend/
 
 ### Box UI グリッド更新
 
-- **固定グリッド:** 1ページ 10×10（100セル）を描画
+- **可変グリッド:** PC は 1ページ 10×10（100セル）、モバイルは 6×6（36セル）
 - **選択更新:** `selectedBoxSlotIndex` 変更時、ハイライトは `classList` で前回セル/今回セルのみ更新（O(1)）
 - **意図:** 100セル全体の再描画を避け、スマホでのタップ応答を改善
 

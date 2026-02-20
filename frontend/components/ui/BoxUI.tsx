@@ -8,7 +8,6 @@ import {
   SKILL_ENTRIES,
   ITEM_ENTRIES,
   SLOTS_PER_PAGE,
-  ITEM_PAGE_COUNT,
   type BoxMenuEntry,
   type SkillEntry,
   type ItemEntry,
@@ -33,13 +32,17 @@ const RARITY_COLOR: Record<SkillRarity, string> = {
 const FRAME_CLASS =
   "bg-[#1a1510] border-2 border-amber-700/80 text-amber-100 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]";
 
-const SELECTED_CELL_CLASSES = [
-  "bg-[#52c234]",
-  "opacity-100",
+const SELECTED_CELL_CONTAINER_CLASSES = [
   "relative",
   "z-10",
-  "[box-shadow:0_0_0_3px_rgb(250,204,21),inset_0_0_4px_rgba(0,0,0,0.3)]",
+  "[box-shadow:0_0_0_3px_rgb(250,204,21)]",
 ];
+
+const SELECTED_CELL_BUTTON_CLASSES = ["bg-[#52c234]", "opacity-100"];
+const BASE_CELL_BUTTON_BG_CLASS = "bg-[#796296]";
+const EMPTY_CELL_OPACITY_CLASS = "opacity-50";
+const MOBILE_GRID_SIZE = 6;
+const MOBILE_SLOTS_PER_PAGE = MOBILE_GRID_SIZE * MOBILE_GRID_SIZE;
 
 /** メインメニュー: 左側縦並びメニュー */
 function BoxMenuView({
@@ -105,11 +108,7 @@ function JukurenGauge({ level }: { level: number }) {
 /** スキル用詳細パネル */
 function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
   if (!skill) {
-    return (
-      <div className="p-4 text-amber-200/60 text-sm">
-        スロットを選択してください
-      </div>
-    );
+    return <div className="p-4 text-amber-200/60 text-sm">スロットを選択してください</div>;
   }
   return (
     <div className="p-4 flex flex-col gap-3">
@@ -125,18 +124,14 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
         </div>
         <div>
           <p className="font-bold text-amber-100">{skill.name}</p>
-          <p className={`text-xs ${RARITY_COLOR[skill.rarity]}`}>
-            {RARITY_LABEL[skill.rarity]}
-          </p>
+          <p className={`text-xs ${RARITY_COLOR[skill.rarity]}`}>{RARITY_LABEL[skill.rarity]}</p>
         </div>
       </div>
       <div>
         <p className="text-xs text-amber-200/80 mb-1">じゅくれんど</p>
         <JukurenGauge level={skill.level} />
       </div>
-      <p className="text-sm text-amber-100/90 leading-relaxed">
-        {skill.description}
-      </p>
+      <p className="text-sm text-amber-100/90 leading-relaxed">{skill.description}</p>
     </div>
   );
 }
@@ -144,11 +139,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 /** アイテム用詳細パネル */
 function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
   if (!item) {
-    return (
-      <div className="p-4 text-amber-200/60 text-sm">
-        スロットを選択してください
-      </div>
-    );
+    return <div className="p-4 text-amber-200/60 text-sm">スロットを選択してください</div>;
   }
   return (
     <div className="p-4 flex flex-col gap-3">
@@ -162,9 +153,7 @@ function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
         </div>
         <p className="font-bold text-amber-100">{item.name}</p>
       </div>
-      <p className="text-sm text-amber-100/90 leading-relaxed">
-        {item.description}
-      </p>
+      <p className="text-sm text-amber-100/90 leading-relaxed">{item.description}</p>
     </div>
   );
 }
@@ -174,23 +163,29 @@ const BoxGridCell = memo(function BoxGridCell({
   entry,
   globalIndex,
   onSelectSlot,
+  onMountContainer,
   onMountButton,
 }: {
   entry: SkillEntry | ItemEntry | null;
   globalIndex: number;
   onSelectSlot: (index: number) => void;
+  onMountContainer: (index: number, el: HTMLDivElement | null) => void;
   onMountButton: (index: number, el: HTMLButtonElement | null) => void;
 }) {
   const displayName = entry ? (entry as ItemEntry).name ?? (entry as SkillEntry).name : "";
   const displayChar = displayName ? displayName.slice(0, 1) : "";
   const handleClick = useCallback(() => onSelectSlot(globalIndex), [onSelectSlot, globalIndex]);
+  const handleContainerRef = useCallback(
+    (el: HTMLDivElement | null) => onMountContainer(globalIndex, el),
+    [onMountContainer, globalIndex],
+  );
   const handleRef = useCallback(
     (el: HTMLButtonElement | null) => onMountButton(globalIndex, el),
     [onMountButton, globalIndex],
   );
 
   return (
-    <div className="aspect-square min-w-0">
+    <div ref={handleContainerRef} className="aspect-square min-w-0">
       <button
         ref={handleRef}
         data-empty={entry ? "false" : "true"}
@@ -199,9 +194,9 @@ const BoxGridCell = memo(function BoxGridCell({
         className={`
           w-full h-full flex items-center justify-center
           [clip-path:polygon(5px_0,calc(100%-5px)_0,100%_5px,100%_calc(100%-5px),calc(100%-5px)_100%,5px_100%,0_calc(100%-5px),0_5px)]
-          text-xs font-bold transition-colors font-adventure
-          bg-[#796296] shadow-[inset_0_0_4px_rgba(0,0,0,0.3)]
-          ${entry ? "" : "opacity-50"}
+          text-xs font-bold font-adventure
+          ${BASE_CELL_BUTTON_BG_CLASS} shadow-[inset_0_0_4px_rgba(0,0,0,0.3)]
+          ${entry ? "" : EMPTY_CELL_OPACITY_CLASS}
         `}
       >
         {entry ? (
@@ -218,7 +213,7 @@ const BoxGridCell = memo(function BoxGridCell({
   );
 });
 
-/** 10×10 グリッド（100マスを必ずDOMに描画） */
+/** PC:10×10 / Mobile:6×6 グリッド */
 function BoxGridView() {
   const isMobile = useDeviceType();
   const boxView = useInputStore((s) => s.boxView);
@@ -227,6 +222,7 @@ function BoxGridView() {
   const selectedBoxSlotIndex = useInputStore((s) => s.selectedBoxSlotIndex);
   const setCurrentBoxPage = useInputStore((s) => s.setCurrentBoxPage);
   const setSelectedBoxSlotIndex = useInputStore((s) => s.setSelectedBoxSlotIndex);
+  const containerRefMap = useRef<Map<number, HTMLDivElement>>(new Map());
   const buttonRefMap = useRef<Map<number, HTMLButtonElement>>(new Map());
   const highlightedIndexRef = useRef(-1);
 
@@ -242,19 +238,28 @@ function BoxGridView() {
     }
     buttonRefMap.current.set(index, el);
   }, []);
+  const handleMountContainer = useCallback((index: number, el: HTMLDivElement | null) => {
+    if (!el) {
+      containerRefMap.current.delete(index);
+      return;
+    }
+    containerRefMap.current.set(index, el);
+  }, []);
 
   const isGridActive = boxView === "grid" && activeBoxCategory !== null;
   const isSkills = activeBoxCategory === "skills";
   const entries = isSkills ? SKILL_ENTRIES : ITEM_ENTRIES;
-  const pageCount = isSkills ? 1 : ITEM_PAGE_COUNT;
-  const startIndex = (currentBoxPage - 1) * SLOTS_PER_PAGE;
+  const slotsPerPage = isMobile ? MOBILE_SLOTS_PER_PAGE : SLOTS_PER_PAGE;
+  const gridColsClass = isMobile ? "grid-cols-6" : "grid-cols-10";
+  const pageCount = Math.max(1, Math.ceil(entries.length / slotsPerPage));
+  const startIndex = (currentBoxPage - 1) * slotsPerPage;
 
   const selectedEntry =
     selectedBoxSlotIndex >= 0 && selectedBoxSlotIndex < entries.length
       ? entries[selectedBoxSlotIndex]
       : null;
 
-  const gridCells = Array.from({ length: SLOTS_PER_PAGE }, (_, i) => {
+  const gridCells = Array.from({ length: slotsPerPage }, (_, i) => {
     const globalIndex = startIndex + i;
     const entry =
       globalIndex >= 0 && globalIndex < entries.length
@@ -266,6 +271,7 @@ function BoxGridView() {
         entry={entry}
         globalIndex={globalIndex}
         onSelectSlot={handleSelectSlot}
+        onMountContainer={handleMountContainer}
         onMountButton={handleMountButton}
       />
     );
@@ -281,14 +287,24 @@ function BoxGridView() {
       : null;
 
   useEffect(() => {
+    if (!isGridActive) return;
+    const clampedPage = Math.min(Math.max(currentBoxPage, 1), pageCount);
+    if (clampedPage !== currentBoxPage) {
+      setCurrentBoxPage(clampedPage);
+    }
+  }, [isGridActive, currentBoxPage, pageCount, setCurrentBoxPage]);
+
+  useEffect(() => {
     if (!isGridActive) {
+      const prevContainer = containerRefMap.current.get(highlightedIndexRef.current);
       const prevButton = buttonRefMap.current.get(highlightedIndexRef.current);
-      if (prevButton) prevButton.classList.remove(...SELECTED_CELL_CLASSES);
+      if (prevContainer) prevContainer.classList.remove(...SELECTED_CELL_CONTAINER_CLASSES);
+      if (prevButton) prevButton.classList.remove(...SELECTED_CELL_BUTTON_CLASSES);
       highlightedIndexRef.current = -1;
       return;
     }
 
-    const pageEndIndex = startIndex + SLOTS_PER_PAGE;
+    const pageEndIndex = startIndex + slotsPerPage;
     const nextHighlightedIndex =
       selectedBoxSlotIndex >= startIndex && selectedBoxSlotIndex < pageEndIndex
         ? selectedBoxSlotIndex
@@ -296,18 +312,27 @@ function BoxGridView() {
     const prevHighlightedIndex = highlightedIndexRef.current;
     if (prevHighlightedIndex === nextHighlightedIndex) return;
 
+    const prevContainer = containerRefMap.current.get(prevHighlightedIndex);
     const prevButton = buttonRefMap.current.get(prevHighlightedIndex);
+    if (prevContainer) prevContainer.classList.remove(...SELECTED_CELL_CONTAINER_CLASSES);
     if (prevButton) {
-      prevButton.classList.remove(...SELECTED_CELL_CLASSES);
+      prevButton.classList.remove(...SELECTED_CELL_BUTTON_CLASSES);
+      prevButton.classList.add(BASE_CELL_BUTTON_BG_CLASS);
+      if (prevButton.dataset.empty === "true") {
+        prevButton.classList.add(EMPTY_CELL_OPACITY_CLASS);
+      }
     }
 
+    const nextContainer = containerRefMap.current.get(nextHighlightedIndex);
     const nextButton = buttonRefMap.current.get(nextHighlightedIndex);
+    if (nextContainer) nextContainer.classList.add(...SELECTED_CELL_CONTAINER_CLASSES);
     if (nextButton) {
-      nextButton.classList.add(...SELECTED_CELL_CLASSES);
+      nextButton.classList.remove(BASE_CELL_BUTTON_BG_CLASS, EMPTY_CELL_OPACITY_CLASS);
+      nextButton.classList.add(...SELECTED_CELL_BUTTON_CLASSES);
     }
 
     highlightedIndexRef.current = nextHighlightedIndex;
-  }, [isGridActive, selectedBoxSlotIndex, startIndex]);
+  }, [isGridActive, selectedBoxSlotIndex, startIndex, slotsPerPage]);
 
   if (!isGridActive) return null;
 
@@ -342,9 +367,7 @@ function BoxGridView() {
       >
         {/* 上段: ヘッダー（レトロゲームUI風） */}
         <div className="flex items-center justify-between px-2 py-1.5 border-b border-black/50 bg-[#6b672a]">
-          <span
-            className="text-[#ffea00] font-extrabold text-xl md:text-2xl tracking-widest"
-          >
+          <span className="text-[#ffea00] font-extrabold text-xl md:text-2xl tracking-widest">
             {headerTitle}
           </span>
           {pageCount > 1 ? (
@@ -363,24 +386,20 @@ function BoxGridView() {
               <button
                 type="button"
                 disabled={currentBoxPage >= pageCount}
-                onClick={() =>
-                  setCurrentBoxPage(Math.min(pageCount, currentBoxPage + 1))
-                }
+                onClick={() => setCurrentBoxPage(Math.min(pageCount, currentBoxPage + 1))}
                 className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1.5 py-0.5 leading-none disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
               >
                 R
               </button>
             </div>
           ) : (
-            <span className="text-white text-xl font-bold tabular-nums">
-              1 / 1
-            </span>
+            <span className="text-white text-xl font-bold tabular-nums">1 / 1</span>
           )}
         </div>
 
-        {/* 10×10グリッド（高さに合わせた正方形でフッターと重ならない） */}
+        {/* PC:10×10 / Mobile:6×6 グリッド */}
         <div className="flex-1 min-h-0 min-w-0 flex items-center justify-center overflow-hidden bg-black">
-          <div className="grid grid-cols-10 gap-2 bg-black p-2 aspect-square h-full max-w-full min-h-0 min-w-0">
+          <div className={`grid ${gridColsClass} gap-2 bg-black p-2 aspect-square h-full max-w-full min-h-0 min-w-0`}>
             {gridCells}
           </div>
         </div>
@@ -430,9 +449,7 @@ export default function BoxUI() {
         {boxView === "menu" && (
           <div className="flex flex-col h-full">
             <div className="p-4 border-b border-amber-700/50">
-              <h2 className="text-amber-100 font-bold text-lg">
-                アイテムBOX
-              </h2>
+              <h2 className="text-amber-100 font-bold text-lg">アイテムBOX</h2>
             </div>
             <div className="flex-1 overflow-auto">
               <BoxMenuView onSelect={handleMenuSelect} onClose={handleClose} />
