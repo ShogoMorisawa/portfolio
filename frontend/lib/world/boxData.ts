@@ -95,7 +95,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
   },
 ];
 
-/** 1スロット = 1アイテム。100マス目までバクオンソー、101〜102が愛用品 */
+/** 1スロット = 1アイテム。100マス目までバクオンソー、101〜113が愛用品 */
 export type ItemEntry = {
   id: string;
   name: string;
@@ -121,6 +121,18 @@ const BAKUN_SOU_SLOTS: ItemEntry[] = Array.from({ length: 100 }, () => ({
   ...BAKUN_SOU_ENTRY,
 }));
 
+const LIPTON_ENTRY: ItemEntry = {
+  id: "lipton-lemon",
+  name: "リプトンのレモンティー",
+  description: "小学生の頃から一生飲んでる。血液多分この色。",
+  quantity: 12,
+  iconPath: "/items/lipton.png",
+};
+
+const LIPTON_SLOTS: ItemEntry[] = Array.from({ length: 12 }, () => ({
+  ...LIPTON_ENTRY,
+}));
+
 const LOVED_ITEMS: ItemEntry[] = [
   {
     id: "buta-kun",
@@ -129,16 +141,10 @@ const LOVED_ITEMS: ItemEntry[] = [
     quantity: 1,
     iconPath: "/items/butakun.png",
   },
-  {
-    id: "lipton-lemon",
-    name: "リプトンのレモンティー",
-    description: "小学生の頃から一生飲んでる。血液多分この色。",
-    quantity: 1,
-    iconPath: "/items/lipton.png",
-  },
+  ...LIPTON_SLOTS,
 ];
 
-/** 全102スロット（1〜100: バクオンソー, 101: ブタくん, 102: リプトン） */
+/** 全113スロット（1〜100: バクオンソー, 101: ブタくん, 102〜113: リプトン） */
 export const ITEM_ENTRIES: ItemEntry[] = [...BAKUN_SOU_SLOTS, ...LOVED_ITEMS];
 
 /** 1ページあたりのスロット数（10×10固定） */
