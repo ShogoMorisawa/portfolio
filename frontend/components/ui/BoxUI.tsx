@@ -347,14 +347,15 @@ function BoxGridView() {
     <div
       className={`
         flex flex-col md:flex-row h-full w-full font-adventure
+        ${isMobile ? "justify-end" : ""}
         ${isMobile ? "gap-2" : "gap-4"}
       `}
     >
       {/* 詳細パネル: PC=左 / モバイル=上 */}
       <div
         className={`
-          ${FRAME_CLASS} rounded min-h-0 shrink-0 font-adventure
-          ${isMobile ? "w-full max-h-[40%]" : "w-64 shrink-0"}
+          ${FRAME_CLASS} rounded min-h-0 font-adventure
+          ${isMobile ? "w-full flex-1 overflow-auto" : "w-64 shrink-0"}
         `}
       >
         {isSkills ? (
@@ -367,9 +368,9 @@ function BoxGridView() {
       {/* グリッド部分のみモンハン装備BOX風（外枠・ヘッダー・グリッド・フッター） */}
       <div
         className={`
-          flex flex-col flex-1 min-h-0 w-full max-w-2xl mx-auto
+          flex flex-col min-h-0 w-full max-w-2xl mx-auto
           border-[3px] border-black bg-[#2e2b26] font-adventure
-          ${isMobile ? "aspect-square max-h-[50vh] place-self-center" : ""}
+          ${isMobile ? "shrink-0 aspect-square max-h-[50vh] self-center" : "flex-1"}
         `}
       >
         {/* 上段: ヘッダー（レトロゲームUI風） */}
