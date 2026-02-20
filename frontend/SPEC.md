@@ -61,6 +61,7 @@
 │  ├── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
 │  ├── <InteractionUI />     ← 会話UI（Tap/メッセージ）         │
 │  ├── <AdventureBookUI />   ← ぼうけんのしょUI               │
+│  ├── <BoxUI />             ← アイテムBOX UI（動的 import）   │
 │  └── <Loader />            ← drei ローダー（進捗バー）         │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -68,7 +69,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  components/world/World.tsx                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Canvas (flat, dpr=[1,2], camera)                  │   │
+│  │  Canvas (flat, dpr=[1,2], camera, frameloop)       │   │
 │  │  ├── Dome                                           │   │
 │  │  ├── Environment (preset=city)                      │   │
 │  │  ├── ambientLight                                   │   │
@@ -110,8 +111,10 @@
 │  components/world/ui/JoystickControls.tsx                   │
 │  components/ui/InteractionUI.tsx                            │
 │  components/ui/AdventureBookUI.tsx                          │
-│  lib/world/store.ts (Zustand: input + dialogue + book state) │
+│  components/ui/BoxUI.tsx                                    │
+│  lib/world/store.ts (Zustand: input + dialogue + book + box) │
 │  lib/world/adventureBookData.ts（ぼうけんのしょ定義）        │
+│  lib/world/boxData.ts（BOX 表示データ）                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -141,13 +144,15 @@ frontend/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（動的配置）
 ├── components/ui/
 │   ├── InteractionUI.tsx      # 会話UI（Tap/メッセージ + 本へのTAP導線）
-│   └── AdventureBookUI.tsx    # ぼうけんのしょUI（スロット選択/詳細）
+│   ├── AdventureBookUI.tsx    # ぼうけんのしょUI（スロット選択/詳細）
+│   └── BoxUI.tsx              # アイテムBOX UI（メニュー/10x10グリッド）
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
 │   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING 定数
-│   ├── store.ts              # Zustand。入力 + 対話 + 本UI状態
-│   └── adventureBookData.ts  # ぼうけんのしょ表示データ
+│   ├── store.ts              # Zustand。入力 + 対話 + 本UI + BoxUI状態
+│   ├── adventureBookData.ts  # ぼうけんのしょ表示データ
+│   └── boxData.ts            # BoxUI表示データ（スキル/アイテム）
 ├── public/
 │   ├── models/
 │   │   ├── coco-transformed.glb   # Coco の旧変換モデル（現状は未使用）
@@ -179,13 +184,14 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player と Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置） |
-| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef` を渡す）, Box, Post, Computer, Player, Crystal ×4 |
+| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（overlay判定） |
+| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post, Computer, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
+- `frameloop`: `boxView !== "closed"` または `isAdventureBookOpen` の間は `"demand"` に切り替え、3D更新を停止してUI表示時の負荷を削減
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 - `Environment`: `environmentIntensity={2}`
 - `ambientLight`: `intensity={2}`
@@ -250,13 +256,15 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 箱モデルの表示と浮遊アニメーション |
-| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存** | box-transformed.glb |
+| **責務** | 箱モデルの表示、浮遊アニメーション、プレイヤー近接判定（Box TAP表示用） |
+| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など）+ `playerRef` |
+| **依存** | box-transformed.glb, `BOX.NEARBY_THRESHOLD`, useInputStore |
 
 **モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
 **浮遊+傾き:** パラメータは `FLOATING.box` を使用。`useFrame` で Y と Z 回転を更新  
+**近接判定:** `useFrame` で箱とプレイヤー距離を計算し、`dist < BOX.NEARBY_THRESHOLD` なら `setIsBoxNearby(true)`。`boxView !== "closed"` の間は更新を停止  
 **配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
+**参照:** `World` から `playerRef` を受け取り、未指定時は `state.camera.position` をフォールバックとして使用  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
 
 ---
@@ -409,6 +417,12 @@ frontend/
 |------|-----|-----|------|
 | NEARBY_THRESHOLD | number | 15 | 本オブジェクトを「近い」と判定する閾値（TAP表示用） |
 
+### BOX
+
+| キー | 型 | 値 | 説明 |
+|------|-----|-----|------|
+| NEARBY_THRESHOLD | number | 15 | Boxオブジェクトを「近い」と判定する閾値（TAP表示用） |
+
 ### LAYOUT
 
 | キー | 型 | 値 | 説明 |
@@ -461,11 +475,16 @@ frontend/
         → activeCrystalId/activeMessage/targetPosition を更新
 [Book] → playerRef の位置を参照して距離判定
       → isBookNearby を更新
-[InteractionUI] → activeCrystalId/isTalking/isBookNearby を参照
-               → クリスタル優先で TAP を表示（次点で本TAP）
+[Box] → playerRef の位置を参照して距離判定
+     → isBoxNearby を更新
+[InteractionUI] → activeCrystalId/isTalking/isBookNearby/isBoxNearby を参照
+               → クリスタル優先で TAP を表示（次点で本TAP、次にBoxTAP）
                → setIsAdventureBookOpen(true) で本UIを開く
+[page.tsx] → boxView !== "closed" のとき BoxUI を動的表示
 [AdventureBookUI] → isAdventureBookOpen/selectedAdventureSlot を参照
                  → スロット選択/詳細表示/閉じる を制御
+[BoxUI] → boxView/activeBoxCategory/currentBoxPage/selectedBoxSlotIndex を参照
+       → menu/grid 遷移、詳細更新、ページ切替を制御
 ```
 
 **useInputStore（Zustand）:**
@@ -477,11 +496,18 @@ frontend/
 - `isBookNearby: boolean` — 本が近距離かどうか（本TAP表示トリガー）
 - `isAdventureBookOpen: boolean` — ぼうけんのしょ UI の開閉状態
 - `selectedAdventureSlot: AdventureSlotId | null` — 選択中セーブスロット（1/2/3）
+- `isBoxNearby: boolean` — Boxが近距離かどうか（BoxTAP表示トリガー）
+- `boxView: "closed" | "menu" | "grid"` — BoxUI の表示フェーズ
+- `activeBoxCategory: "skills" | "items" | null` — BoxUI の選択カテゴリ
+- `currentBoxPage: number` — 現在ページ（1始まり）
+- `selectedBoxSlotIndex: number` — 選択中スロット（未選択は -1）
 - JoystickControls が setJoystick で更新、Player が joystick を購読して移動に反映
 - Crystal が `activeCrystalId`/`activeMessage`/`targetPosition` を更新
 - Book が `isBookNearby` を更新
-- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby` を参照して UI を制御
+- Box が `isBoxNearby` を更新
+- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby`/`isBoxNearby` を参照して UI を制御
 - AdventureBookUI が `isAdventureBookOpen`/`selectedAdventureSlot` を参照して表示を制御
+- BoxUI が `boxView`/`activeBoxCategory`/`currentBoxPage`/`selectedBoxSlotIndex` を参照して表示を制御
 
 **groundRef の流れ:**
 1. World で `useRef` 作成
@@ -517,6 +543,7 @@ frontend/
 | **依存** | useInputStore |
 
 **Tap ボタン（クリスタル）:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
+**Tap ボタン（Box）:** `activeCrystalId` がなく `isBookNearby=false` かつ `isBoxNearby=true` のとき表示。クリックで `setBoxView("menu")`  
 **Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
 **会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
 
@@ -538,10 +565,28 @@ frontend/
 
 ---
 
+### BoxUI.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | アイテムBOX UI の表示制御（menu/grid 切り替え、詳細表示、ページング） |
+| **Props** | なし |
+| **依存** | useInputStore, `boxData.ts`, `useDeviceType` |
+
+**表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
+**メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移  
+**グリッド:** `SLOTS_PER_PAGE=100` の 10×10 固定。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
+**詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示  
+**軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  
+**クローズ:** menu 画面では外側クリックで閉じる。grid 画面は「もどる」で menu に戻る
+
+---
+
 ## レンダリングパイプライン
 
 1. **シーン描画** → 画面へ直接出力（Environment + ambientLight + Sparkles を含む）
 2. **Canvas flat:** 物理ベースライティングを無効化。EffectComposer/Bloom は使用していない
+3. **Overlay最適化:** BoxUI/AdventureBookUI 表示中は `frameloop="demand"` で 3D の常時更新を止め、UI操作時の負荷を削減
 
 ---
 
@@ -599,6 +644,12 @@ frontend/
 - **数値安定化:** 方向ベクトル長が極小（`<= 1e-6`）のときは `normalize` をスキップして NaN を防止
 - **担当制:** `activeCrystalId` が空のときのみ近距離（5m以内）で担当を獲得。担当中は 7m まで維持
 - **UI:** 担当状態は InteractionUI が Tap/メッセージを表示
+
+### Box UI グリッド更新
+
+- **固定グリッド:** 1ページ 10×10（100セル）を描画
+- **選択更新:** `selectedBoxSlotIndex` 変更時、ハイライトは `classList` で前回セル/今回セルのみ更新（O(1)）
+- **意図:** 100セル全体の再描画を避け、スマホでのタップ応答を改善
 
 ---
 

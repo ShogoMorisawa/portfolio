@@ -27,7 +27,23 @@ interface AdventureBookState {
   setSelectedAdventureSlot: (slot: AdventureSlotId | null) => void;
 }
 
-type WorldState = InputState & DialogueState & AdventureBookState;
+export type BoxView = "closed" | "menu" | "grid";
+export type BoxCategory = "skills" | "items" | null;
+
+interface BoxState {
+  isBoxNearby: boolean;
+  boxView: BoxView;
+  activeBoxCategory: BoxCategory;
+  currentBoxPage: number;
+  selectedBoxSlotIndex: number;
+  setIsBoxNearby: (nearby: boolean) => void;
+  setBoxView: (view: BoxView) => void;
+  setActiveBoxCategory: (category: BoxCategory) => void;
+  setCurrentBoxPage: (page: number) => void;
+  setSelectedBoxSlotIndex: (index: number) => void;
+}
+
+type WorldState = InputState & DialogueState & AdventureBookState & BoxState;
 
 export const useInputStore = create<WorldState>((set) => ({
   joystick: { x: 0, y: 0, isMoving: false },
@@ -49,4 +65,21 @@ export const useInputStore = create<WorldState>((set) => ({
   setIsAdventureBookOpen: (open) =>
     set({ isAdventureBookOpen: open, ...(open ? {} : { selectedAdventureSlot: null }) }),
   setSelectedAdventureSlot: (slot) => set({ selectedAdventureSlot: slot }),
+
+  isBoxNearby: false,
+  boxView: "closed",
+  activeBoxCategory: null,
+  currentBoxPage: 1,
+  selectedBoxSlotIndex: -1,
+  setIsBoxNearby: (nearby) => set({ isBoxNearby: nearby }),
+  setBoxView: (view) =>
+    set({
+      boxView: view,
+      ...(view !== "grid"
+        ? { activeBoxCategory: null, currentBoxPage: 1, selectedBoxSlotIndex: -1 }
+        : {}),
+    }),
+  setActiveBoxCategory: (category) => set({ activeBoxCategory: category }),
+  setCurrentBoxPage: (page) => set({ currentBoxPage: page }),
+  setSelectedBoxSlotIndex: (index) => set({ selectedBoxSlotIndex: index }),
 }));

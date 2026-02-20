@@ -48,6 +48,11 @@ export const BOOK = {
   NEARBY_THRESHOLD: 15,
 };
 
+/** Boxオブジェクトに「近い」とみなす距離（TAP 表示用） */
+export const BOX = {
+  NEARBY_THRESHOLD: 15,
+};
+
 /** ステージ上のオブジェクト配置（90°ごとに円形） */
 export const LAYOUT = {
   /** オブジェクトの円の半径（外側に配置） */

@@ -15,11 +15,15 @@ import { Model as Post } from "./Post";
 import { Model as Computer } from "./Computer";
 import { CAMERA, CRYSTAL, LAYOUT } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
+import { useInputStore } from "@/lib/world/store";
 
 export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
   const playerRef = useRef<THREE.Group>(null);
   const isMobile = useDeviceType();
+  const boxView = useInputStore((s) => s.boxView);
+  const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);
+  const isOverlayOpen = boxView !== "closed" || isAdventureBookOpen;
 
   // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
   const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
@@ -65,6 +69,7 @@ export default function World() {
         flat
         key={isMobile ? "mobile" : "pc"}
         dpr={[1, 2]}
+        frameloop={isOverlayOpen ? "demand" : "always"}
         camera={{
           fov: cameraConfig.fov,
           position: cameraConfig.position,
@@ -108,6 +113,7 @@ export default function World() {
             position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}
             scale={LAYOUT.BOX_SCALE}
             rotation={[0, Math.PI / 2, 0]}
+            playerRef={playerRef}
           />
           <Computer
             position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}
