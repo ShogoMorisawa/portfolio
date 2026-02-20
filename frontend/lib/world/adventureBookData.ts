@@ -59,7 +59,7 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
   },
   {
     id: 3,
-    level: 24,
+    level: 23,
     job: "えんじにあ",
     location: "とうきょう",
     skills: ["PHP", "TypeScript", "AWS"],
@@ -69,8 +69,8 @@ export const ADVENTURE_SLOTS: AdventureSlot[] = [
                   じぶんを　しること。
                   じゆうに　じんせいを　あそび
                   けんきょに　さきへ　すすもう。`,
-    hp: 240,
-    hpMax: 240,
+    hp: 230,
+    hpMax: 230,
     mp: 220,
     mpMax: 220,
   },
