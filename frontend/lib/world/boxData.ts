@@ -114,7 +114,7 @@ const BAKUN_SOU_ENTRY: ItemEntry = {
   name: "バクオンソー",
   description: BAKUN_SOU_DESCRIPTION,
   quantity: 100,
-  iconPath: undefined,
+  iconPath: "/items/bakuonso.png",
 };
 
 const BAKUN_SOU_SLOTS: ItemEntry[] = Array.from({ length: 100 }, () => ({

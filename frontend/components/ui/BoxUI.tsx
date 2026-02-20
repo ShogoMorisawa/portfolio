@@ -113,10 +113,10 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
     <div className="p-4 flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <div
-          className={`w-12 h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl ${RARITY_COLOR[skill.rarity]}`}
+          className={`w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl shrink-0 ${RARITY_COLOR[skill.rarity]}`}
         >
           {skill.iconPath ? (
-            <img src={skill.iconPath} alt="" className="w-8 h-8 object-contain" />
+            <img src={skill.iconPath} alt="" className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="font-bold">{skill.name.slice(0, 1)}</span>
           )}
@@ -143,9 +143,9 @@ function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
   return (
     <div className="p-4 flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200">
+        <div className="w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200 shrink-0">
           {item.iconPath ? (
-            <img src={item.iconPath} alt="" className="w-8 h-8 object-contain" />
+            <img src={item.iconPath} alt="" className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="font-bold">{item.name.slice(0, 1)}</span>
           )}
@@ -354,18 +354,17 @@ function BoxGridView() {
       <div
         className={`
           ${FRAME_CLASS} rounded p-1 min-h-0 overflow-hidden font-adventure
-          ${isMobile ? "w-full shrink-0 basis-[28vh] max-h-[32vh] overflow-auto" : "w-64 shrink-0"}
+          ${isMobile ? "w-full shrink-0 basis-[30vh] max-h-[36vh] overflow-auto" : "w-64 shrink-0 min-h-[280px]"}
         `}
       >
         <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-black overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-auto min-h-[200px]">
             {isSkills ? (
               <SkillDetailPanel skill={selectedEntry as SkillEntry | null} />
             ) : (
               <ItemDetailPanel item={selectedEntry as ItemEntry | null} />
             )}
           </div>
-          <div className="shrink-0 h-10 border-t border-black/50 bg-[#532219]" />
         </div>
       </div>
 
