@@ -571,11 +571,12 @@ frontend/
 |------|------|
 | **責務** | アイテムBOX UI の表示制御（menu/grid 切り替え、詳細表示、ページング） |
 | **Props** | なし |
-| **依存** | useInputStore, `boxData.ts`, `useDeviceType` |
+| **依存** | useInputStore, `boxData.ts` |
 
 **表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
 **メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移  
 **グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
+**デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示  
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
 **軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  

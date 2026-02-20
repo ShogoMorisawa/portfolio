@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useCallback, memo, useEffect, useRef } from "react";
+import React, { useCallback, memo, useEffect, useRef, useState } from "react";
 import { useInputStore } from "@/lib/world/store";
-import { useDeviceType } from "@/hooks/useDeviceType";
 import {
   BOX_MENU_ENTRIES,
   SKILL_ENTRIES,
@@ -215,7 +214,9 @@ const BoxGridCell = memo(function BoxGridCell({
 
 /** PC:10×10 / Mobile:6×6 グリッド */
 function BoxGridView() {
-  const isMobile = useDeviceType();
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  );
   const boxView = useInputStore((s) => s.boxView);
   const activeBoxCategory = useInputStore((s) => s.activeBoxCategory);
   const currentBoxPage = useInputStore((s) => s.currentBoxPage);
@@ -285,6 +286,12 @@ function BoxGridView() {
     selectedEntry && !isSkills
       ? (selectedEntry as ItemEntry).quantity
       : null;
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isGridActive) return;
