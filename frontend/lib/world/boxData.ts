@@ -144,8 +144,25 @@ const LOVED_ITEMS: ItemEntry[] = [
   ...LIPTON_SLOTS,
 ];
 
-/** 全113スロット（1〜100: バクオンソー, 101: ブタくん, 102〜113: リプトン） */
-export const ITEM_ENTRIES: ItemEntry[] = [...BAKUN_SOU_SLOTS, ...LOVED_ITEMS];
+function shuffleWithSeed<T>(source: readonly T[], initialSeed: number): T[] {
+  const result = [...source];
+  let seed = initialSeed >>> 0;
+  const nextRandom = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0x100000000;
+  };
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(nextRandom() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/** 全113スロットを固定シードで一度だけシャッフルして配置 */
+export const ITEM_ENTRIES: ItemEntry[] = shuffleWithSeed(
+  [...BAKUN_SOU_SLOTS, ...LOVED_ITEMS],
+  20260220,
+);
 
 /** 1ページあたりのスロット数（10×10固定） */
 export const SLOTS_PER_PAGE = 100;
