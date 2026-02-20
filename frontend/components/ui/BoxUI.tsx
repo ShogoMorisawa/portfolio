@@ -52,7 +52,7 @@ function BoxMenuView({
   onClose: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full font-adventure">
       <div className="flex flex-col gap-2 p-4 md:p-6">
         {BOX_MENU_ENTRIES.map((entry) => (
           <button
@@ -459,7 +459,7 @@ export default function BoxUI() {
         `}
       >
         {boxView === "menu" && (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full font-adventure">
             <div className="p-4 border-b border-black/50">
               <h2 className="text-amber-100 font-bold text-lg">アイテムBOX</h2>
             </div>

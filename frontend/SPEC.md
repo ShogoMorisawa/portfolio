@@ -574,7 +574,7 @@ frontend/
 | **依存** | useInputStore, `boxData.ts` |
 
 **表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
-**メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移  
+**メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移。メニュー画面全体に `font-adventure`（ドットフォント）を適用  
 **グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
 **アイテムデータ:** `ITEM_ENTRIES` は全113スロット（バクオンソー100 + ブタくん1 + リプトン12）。リプトンは各スロット `quantity=12`。表示順は固定シード（`20260220`）で初期化時に1回だけシャッフル  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
