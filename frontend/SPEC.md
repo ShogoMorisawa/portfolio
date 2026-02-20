@@ -671,6 +671,7 @@ frontend/
 | models/computer-transformed.glb | GLB | コンピューター（Computer） | mesh_0 |
 | models/coco-transformed.glb | GLB | Coco の旧変換モデル（未使用） | - |
 | models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
+| items/bakuonso.png, items/butakun.png, items/lipton.png | PNG | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | - |
 | textures/coco_texture.png | PNG | Coco Body の Matcap | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |

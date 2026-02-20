@@ -127,14 +127,14 @@ const LOVED_ITEMS: ItemEntry[] = [
     name: "ブタくん",
     description: "小学生の頃どこ行くにも持っていってたぬいぐるみ。",
     quantity: 1,
-    iconPath: undefined,
+    iconPath: "/items/butakun.png",
   },
   {
     id: "lipton-lemon",
     name: "リプトンのレモンティー",
     description: "小学生の頃から一生飲んでる。血液多分この色。",
     quantity: 1,
-    iconPath: undefined,
+    iconPath: "/items/lipton.png",
   },
 ];
 
