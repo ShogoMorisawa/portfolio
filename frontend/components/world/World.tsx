@@ -64,7 +64,7 @@ export default function World() {
   }, []);
 
   return (
-    <div className="w-full h-screen bg-black">
+    <div className="w-full h-full bg-black">
       <Canvas
         flat
         key={isMobile ? "mobile" : "pc"}

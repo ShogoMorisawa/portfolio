@@ -14,7 +14,7 @@ export default function Home() {
   const boxView = useInputStore((s) => s.boxView);
 
   return (
-    <main className="relative w-full h-screen bg-black">
+    <main className="relative w-full h-dvh overflow-hidden bg-black">
       <World />
       <JoystickControls />
       <InteractionUI />
