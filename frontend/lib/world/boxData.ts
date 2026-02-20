@@ -106,7 +106,7 @@ export type ItemEntry = {
 };
 
 const BAKUN_SOU_DESCRIPTION =
-  "「こいつ強すぎ！絶対値上がりするやろ」と思って一枚1200円で100枚買った。合計130,000円。今は4枚セットで300円。";
+  "「こいつ強すぎ！絶対値上がりするやろ」と思って一枚1200円で100枚買ったカード。合計130,000円。今は4枚セットで300円。";
 
 /** バクオンソー × 100（100要素をDOMに描画するため、実際に100個用意） */
 const BAKUN_SOU_ENTRY: ItemEntry = {
@@ -136,8 +136,8 @@ const LIPTON_SLOTS: ItemEntry[] = Array.from({ length: 12 }, () => ({
 const LOVED_ITEMS: ItemEntry[] = [
   {
     id: "buta-kun",
-    name: "ブタくん",
-    description: "小学生の頃どこ行くにも持っていってたぬいぐるみ。",
+    name: "ぶたくん",
+    description: "幼い頃どこ行くにも連れていったぬいぐるみ。",
     quantity: 1,
     iconPath: "/items/butakun.png",
   },
