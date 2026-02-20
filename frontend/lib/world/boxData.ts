@@ -111,7 +111,7 @@ const BAKUN_SOU_DESCRIPTION =
 /** バクオンソー × 100（100要素をDOMに描画するため、実際に100個用意） */
 const BAKUN_SOU_ENTRY: ItemEntry = {
   id: "bakun-sou",
-  name: "バクオンソー",
+  name: "頂上混成 BAKUONSOOO8th",
   description: BAKUN_SOU_DESCRIPTION,
   quantity: 100,
   iconPath: "/items/bakuonso.png",
