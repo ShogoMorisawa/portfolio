@@ -354,7 +354,7 @@ function BoxGridView() {
       <div
         className={`
           ${FRAME_CLASS} rounded p-1 min-h-0 overflow-hidden font-adventure
-          ${isMobile ? "w-full shrink-0 basis-[30vh] max-h-[36vh] overflow-auto" : "w-64 shrink-0 min-h-[280px]"}
+          ${isMobile ? "w-full shrink-0 basis-[30vh] max-h-[36vh] overflow-auto" : "w-80 shrink-0 h-[40%] min-h-[280px]"}
         `}
       >
         <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-black overflow-hidden">

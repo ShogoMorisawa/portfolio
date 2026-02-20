@@ -578,6 +578,7 @@ frontend/
 **グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `bg-black`  
+**PCレイアウト:** 詳細パネルは `w-80` 固定幅、`h-[40%]` かつ `min-h-[280px]` で高さを確保  
 **モバイルレイアウト:** 詳細パネルは `basis-[30vh] / max-h-[36vh]` の固定寄り高さ、グリッドは `aspect-square / max-h-[50vh]` で下側配置。両者の間隔は `gap-4`  
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
 **軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  
