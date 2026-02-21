@@ -16,6 +16,7 @@ interface CrystalProps {
   sectorStart: number;
   sectorSize: number;
   playerRef: React.RefObject<THREE.Group | null>;
+  isFrozen?: boolean;
 }
 
 type GLTFResult = GLTF & {
@@ -37,6 +38,7 @@ export function Model({
   sectorStart,
   sectorSize,
   playerRef,
+  isFrozen = false,
 }: CrystalProps) {
   const group = useRef<THREE.Group>(null);
   const { nodes } = useGLTF(
@@ -76,6 +78,7 @@ export function Model({
 
   useFrame((state, delta) => {
     if (!group.current) return;
+    if (isFrozen) return;
     const currentPos = group.current.position;
 
     // ココちゃん(Player)との距離を優先（playerRefが空の時はカメラでフォールバック）

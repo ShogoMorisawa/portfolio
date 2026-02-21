@@ -184,14 +184,14 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（overlay判定） |
+| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
 | **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post, Computer, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
-- `frameloop`: `boxView !== "closed"` または `isAdventureBookOpen` の間は `"demand"` に切り替え、3D更新を停止してUI表示時の負荷を削減
+- `frameloop`: 常時 `"always"`。UIオーバーレイ表示中も Book/Box/Post/Computer などの3D更新は継続
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 - `Environment`: `environmentIntensity={2}`
 - `ambientLight`: `intensity={2}`
@@ -521,7 +521,7 @@ frontend/
 | 項目 | 内容 |
 |------|------|
 | **責務** | クリスタルモデルの表示、徘徊AI、距離と会話状態によるUI表示 |
-| **Props** | `id: string`, `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]`, `sectorStart: number`, `sectorSize: number`, `playerRef` |
+| **Props** | `id: string`, `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]`, `sectorStart: number`, `sectorSize: number`, `playerRef`, `isFrozen?: boolean` |
 | **依存** | crystal-transformed.glb, crystal_texture.jpg, useInputStore |
 
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
@@ -529,6 +529,7 @@ frontend/
 **徘徊:** リング（半径 10〜15）内の担当セクターから目的地を直接サンプリング。SPEED=2.0  
 **タブ復帰時:** `delta > 0.5` を一時停止復帰とみなし、ワープを避けて「現在位置から新しい目的地のみ再設定」  
 **浮遊:** `useFrame` で `y = initialPos.y + sin(t*2)*0.5`  
+**停止制御:** `isFrozen=true` の間は `useFrame` 冒頭で早期 return し、徘徊・向き追従・浮遊を停止  
 **対話UI:** 近距離で担当になった個体のみ `activeCrystalId` をセットし、`activeMessage`/`targetPosition` を更新。UI は InteractionUI が表示  
 **向き補正:** モデルの正面が -Z とずれるため Y 軸 -90度補正をかけて lookAt に整合
 
@@ -591,7 +592,7 @@ frontend/
 
 1. **シーン描画** → 画面へ直接出力（Environment + ambientLight + Sparkles を含む）
 2. **Canvas flat:** 物理ベースライティングを無効化。EffectComposer/Bloom は使用していない
-3. **Overlay最適化:** BoxUI/AdventureBookUI 表示中は `frameloop="demand"` で 3D の常時更新を止め、UI操作時の負荷を削減
+3. **Overlay最適化:** Canvas は `frameloop="always"` を維持し、BoxUI/AdventureBookUI 表示中は `Crystal` のみ `isFrozen` で停止。Book/Box/Post/Computer の動きは継続
 
 ---
 

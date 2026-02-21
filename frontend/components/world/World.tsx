@@ -23,7 +23,7 @@ export default function World() {
   const isMobile = useDeviceType();
   const boxView = useInputStore((s) => s.boxView);
   const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);
-  const isOverlayOpen = boxView !== "closed" || isAdventureBookOpen;
+  const shouldFreezeCrystals = boxView !== "closed" || isAdventureBookOpen;
 
   // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
   const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
@@ -69,7 +69,7 @@ export default function World() {
         flat
         key={isMobile ? "mobile" : "pc"}
         dpr={[1, 2]}
-        frameloop={isOverlayOpen ? "demand" : "always"}
+        frameloop="always"
         camera={{
           fov: cameraConfig.fov,
           position: cameraConfig.position,
@@ -135,6 +135,7 @@ export default function World() {
               sectorStart={crystal.sectorStart}
               sectorSize={crystal.sectorSize}
               playerRef={playerRef}
+              isFrozen={shouldFreezeCrystals}
             />
           ))}
         </Suspense>
