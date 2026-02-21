@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import { useRef, type ComponentPropsWithoutRef, type RefObject } from "react";
+import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { FLOATING, BOX } from "@/lib/world/config";
@@ -9,10 +10,23 @@ const { FLOAT_SPEED, FLOAT_AMPLITUDE, TILT_SPEED, TILT_ANGLE } = FLOATING.box;
 /** GLB のメッシュノード名（box-transformed.glb のノード名） */
 const BOX_MESH_NODE_KEY = "mesh_0";
 
-export function Model(props) {
+type FloatingModelProps = Omit<ComponentPropsWithoutRef<"group">, "position" | "rotation"> & {
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+};
+
+type BoxProps = FloatingModelProps & {
+  playerRef?: RefObject<THREE.Group | null>;
+};
+
+type GLTFNodesResult = {
+  nodes: Record<string, THREE.Mesh>;
+};
+
+export function Model(props: BoxProps) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], playerRef, ...rest } = props;
-  const groupRef = useRef(null);
-  const { nodes } = useGLTF("/models/box-transformed.glb");
+  const groupRef = useRef<THREE.Group | null>(null);
+  const { nodes } = useGLTF("/models/box-transformed.glb") as unknown as GLTFNodesResult;
   const meshNode = nodes[BOX_MESH_NODE_KEY];
   const setIsBoxNearby = useInputStore((s) => s.setIsBoxNearby);
   const boxView = useInputStore((s) => s.boxView);
@@ -52,4 +66,4 @@ export function Model(props) {
   );
 }
 
-useGLTF.preload("/models/box-transformed.glb")
+useGLTF.preload("/models/box-transformed.glb");

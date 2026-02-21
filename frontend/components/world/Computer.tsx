@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import { useRef, type ComponentPropsWithoutRef } from "react";
+import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { FLOATING } from "@/lib/world/config";
@@ -9,10 +10,19 @@ const { FLOAT_SPEED, FLOAT_AMPLITUDE, TILT_SPEED, TILT_ANGLE } =
 /** GLB のメッシュノード名（computer-transformed.glb のノード名） */
 const COMPUTER_MESH_NODE_KEY = "mesh_0";
 
-export function Model(props) {
+type FloatingModelProps = Omit<ComponentPropsWithoutRef<"group">, "position" | "rotation"> & {
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+};
+
+type GLTFNodesResult = {
+  nodes: Record<string, THREE.Mesh>;
+};
+
+export function Model(props: FloatingModelProps) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], ...rest } = props;
-  const groupRef = useRef(null);
-  const { nodes } = useGLTF("/models/computer-transformed.glb");
+  const groupRef = useRef<THREE.Group | null>(null);
+  const { nodes } = useGLTF("/models/computer-transformed.glb") as unknown as GLTFNodesResult;
   const meshNode = nodes[COMPUTER_MESH_NODE_KEY];
 
   useFrame((state) => {
@@ -43,4 +53,4 @@ export function Model(props) {
   );
 }
 
-useGLTF.preload("/models/computer-transformed.glb")
+useGLTF.preload("/models/computer-transformed.glb");

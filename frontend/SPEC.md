@@ -133,10 +133,10 @@ frontend/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
-│   ├── Book.jsx               # 本モデル（浮遊アニメーション）
-│   ├── Box.jsx                # 箱モデル
-│   ├── Post.jsx               # ポストモデル
-│   ├── Computer.jsx           # コンピューターモデル
+│   ├── Book.tsx               # 本モデル（浮遊アニメーション）
+│   ├── Box.tsx                # 箱モデル
+│   ├── Post.tsx               # ポストモデル
+│   ├── Computer.tsx           # コンピューターモデル
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   ├── Crystal.tsx            # クリスタル（徘徊・対話）
@@ -235,7 +235,7 @@ frontend/
 
 ---
 
-### Book.jsx
+### Book.tsx
 
 | 項目 | 内容 |
 |------|------|
@@ -252,7 +252,7 @@ frontend/
 
 ---
 
-### Box.jsx
+### Box.tsx
 
 | 項目 | 内容 |
 |------|------|
@@ -269,7 +269,7 @@ frontend/
 
 ---
 
-### Post.jsx
+### Post.tsx
 
 | 項目 | 内容 |
 |------|------|
@@ -284,7 +284,7 @@ frontend/
 
 ---
 
-### Computer.jsx
+### Computer.tsx
 
 | 項目 | 内容 |
 |------|------|
