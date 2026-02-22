@@ -57,6 +57,19 @@ export const WebVitalsRegistry = () => {
         patched = patched.replace(cDomain, origin);
         patched = patched.replace(hDomain, origin);
 
+        const key = decode('Y2xhcml0eQ==');
+        const g =
+          typeof window !== 'undefined'
+            ? (window as unknown as Record<string, unknown>)
+            : {};
+        if (!g[key] || typeof g[key] !== 'function') {
+          const fn = function (...args: unknown[]) {
+            const self = (g[key] as { q?: unknown[] }) ?? {};
+            (self.q = self.q || []).push(args);
+          };
+          g[key] = fn;
+        }
+
         const s = document.createElement('script');
         s.textContent = patched;
         document.head.appendChild(s);
