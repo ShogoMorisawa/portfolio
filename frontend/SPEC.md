@@ -133,6 +133,7 @@ frontend/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
+│   ├── FloatingWorldModel.tsx # 浮遊オブジェクト共通描画（GLTF+浮遊+傾き）
 │   ├── Book.tsx               # 本モデル（浮遊アニメーション）
 │   ├── Box.tsx                # 箱モデル
 │   ├── Post.tsx               # ポストモデル
@@ -235,17 +236,31 @@ frontend/
 
 ---
 
+### FloatingWorldModel.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | 浮遊オブジェクト共通の描画処理（GLTF読込、Y浮遊、Z傾き、任意の `onFrame`） |
+| **Props** | `modelPath`, `meshNodeKey`, `floating`, `position?`, `rotation?`, `onFrame?`, + R3F `group` Props |
+| **依存** | useGLTF, useFrame |
+
+**モデル:** `useGLTF(modelPath)` の `nodes[meshNodeKey]` を使用  
+**浮遊+傾き:** `floating`（`FLOAT_SPEED/FLOAT_AMPLITUDE/TILT_SPEED/TILT_ANGLE`）で `useFrame` 更新  
+**拡張ポイント:** `onFrame` で近接判定など各モデル固有ロジックを注入  
+
+---
+
 ### Book.tsx
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 本モデルの表示、浮遊アニメーション、プレイヤー近接判定（本TAP表示用） |
+| **責務** | 本モデルの表示、プレイヤー近接判定（本TAP表示用） |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など）+ `playerRef` |
-| **依存** | book-transformed.glb, `BOOK.NEARBY_THRESHOLD`, useInputStore |
+| **依存** | `FloatingWorldModel`, `BOOK.NEARBY_THRESHOLD`, useInputStore |
 
-**モデル:** `models/book-transformed.glb` の `nodes.Mesh_0` を使用（未取得時は `null` を返して描画しない）  
-**浮遊+傾き:** パラメータは `FLOATING.book` を使用。`useFrame` で Y と Z 回転を更新  
-**近接判定:** `useFrame` で本とプレイヤー距離を計算し、`dist < BOOK.NEARBY_THRESHOLD` なら `setIsBookNearby(true)`。`isTalking` または `isAdventureBookOpen` 中は判定を無効化  
+**描画:** `FloatingWorldModel` に `modelPath="/models/book-transformed.glb"` と `meshNodeKey="Mesh_0"` を渡して描画  
+**浮遊+傾き:** `FLOATING.book` を `FloatingWorldModel` へ渡して適用  
+**近接判定:** `onFrame` で本とプレイヤー距離を計算し、`dist < BOOK.NEARBY_THRESHOLD` なら `setIsBookNearby(true)`。`isTalking` または `isAdventureBookOpen` 中は判定を無効化  
 **配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[0, 0, 0]}`  
 **参照:** `World` から `playerRef` を受け取り、未指定時は `state.camera.position` をフォールバックとして使用  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
@@ -256,13 +271,13 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 箱モデルの表示、浮遊アニメーション、プレイヤー近接判定（Box TAP表示用） |
+| **責務** | 箱モデルの表示、プレイヤー近接判定（Box TAP表示用） |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など）+ `playerRef` |
-| **依存** | box-transformed.glb, `BOX.NEARBY_THRESHOLD`, useInputStore |
+| **依存** | `FloatingWorldModel`, `BOX.NEARBY_THRESHOLD`, useInputStore |
 
-**モデル:** `models/box-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
-**浮遊+傾き:** パラメータは `FLOATING.box` を使用。`useFrame` で Y と Z 回転を更新  
-**近接判定:** `useFrame` で箱とプレイヤー距離を計算し、`dist < BOX.NEARBY_THRESHOLD` なら `setIsBoxNearby(true)`。`boxView !== "closed"` の間は更新を停止  
+**描画:** `FloatingWorldModel` に `modelPath="/models/box-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
+**浮遊+傾き:** `FLOATING.box` を `FloatingWorldModel` へ渡して適用  
+**近接判定:** `onFrame` で箱とプレイヤー距離を計算し、`dist < BOX.NEARBY_THRESHOLD` なら `setIsBoxNearby(true)`。`boxView !== "closed"` の間は更新を停止  
 **配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
 **参照:** `World` から `playerRef` を受け取り、未指定時は `state.camera.position` をフォールバックとして使用  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
@@ -273,12 +288,12 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | ポストモデルの表示と浮遊アニメーション |
+| **責務** | ポストモデルの表示 |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存** | post-transformed.glb |
+| **依存** | `FloatingWorldModel` |
 
-**モデル:** `models/post-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
-**浮遊+傾き:** パラメータは `FLOATING.post` を使用。`useFrame` で Y と Z 回転を更新  
+**描画:** `FloatingWorldModel` に `modelPath="/models/post-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
+**浮遊+傾き:** `FLOATING.post` を `FloatingWorldModel` へ渡して適用  
 **配置:** World から `position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.POST_SCALE}`、`rotation={[0, Math.PI, 0]}`  
 **プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
 
@@ -288,12 +303,12 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | コンピューターモデルの表示と浮遊アニメーション |
+| **責務** | コンピューターモデルの表示 |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存** | computer-transformed.glb |
+| **依存** | `FloatingWorldModel` |
 
-**モデル:** `models/computer-transformed.glb` の `nodes.mesh_0` を使用（未取得時は `null` を返して描画しない）  
-**浮遊+傾き:** パラメータは `FLOATING.computer` を使用。`useFrame` で Y と Z 回転を更新  
+**描画:** `FloatingWorldModel` に `modelPath="/models/computer-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
+**浮遊+傾き:** `FLOATING.computer` を `FloatingWorldModel` へ渡して適用  
 **配置:** World から `position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
 

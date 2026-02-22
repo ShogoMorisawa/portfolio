@@ -1,69 +1,43 @@
-import { useRef, type ComponentPropsWithoutRef, type RefObject } from "react";
+import { type RefObject } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import { FLOATING, BOX } from "@/lib/world/config";
 import { useInputStore } from "@/lib/world/store";
-
-const { FLOAT_SPEED, FLOAT_AMPLITUDE, TILT_SPEED, TILT_ANGLE } = FLOATING.box;
+import {
+  FloatingWorldModel,
+  type FloatingModelProps,
+} from "./FloatingWorldModel";
 
 /** GLB のメッシュノード名（box-transformed.glb のノード名） */
 const BOX_MESH_NODE_KEY = "mesh_0";
-
-type FloatingModelProps = Omit<ComponentPropsWithoutRef<"group">, "position" | "rotation"> & {
-  position?: [number, number, number];
-  rotation?: [number, number, number];
-};
+const BOX_MODEL_PATH = "/models/box-transformed.glb";
 
 type BoxProps = FloatingModelProps & {
   playerRef?: RefObject<THREE.Group | null>;
 };
 
-type GLTFNodesResult = {
-  nodes: Record<string, THREE.Mesh>;
-};
-
 export function Model(props: BoxProps) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], playerRef, ...rest } = props;
-  const groupRef = useRef<THREE.Group | null>(null);
-  const { nodes } = useGLTF("/models/box-transformed.glb") as unknown as GLTFNodesResult;
-  const meshNode = nodes[BOX_MESH_NODE_KEY];
   const setIsBoxNearby = useInputStore((s) => s.setIsBoxNearby);
   const boxView = useInputStore((s) => s.boxView);
 
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-    const [x, baseY, z] = position;
-    groupRef.current.position.set(
-      x,
-      baseY + Math.sin(t * FLOAT_SPEED) * FLOAT_AMPLITUDE,
-      z,
-    );
-    groupRef.current.rotation.set(
-      rotation[0],
-      rotation[1],
-      rotation[2] + Math.sin(t * TILT_SPEED) * TILT_ANGLE,
-    );
-
-    // プレイヤーとの距離で TAP 表示のオンオフ（Box UI 表示中は更新しない）
-    if (boxView !== "closed") return;
-    const boxPos = groupRef.current.position;
-    const playerPos = playerRef?.current?.position ?? state.camera.position;
-    const dist = boxPos.distanceTo(playerPos);
-    setIsBoxNearby(dist < BOX.NEARBY_THRESHOLD);
-  });
-
-  if (!meshNode?.geometry) return null;
-
   return (
-    <group ref={groupRef} {...rest} dispose={null}>
-      <mesh
-        geometry={meshNode.geometry}
-        material={meshNode.material}
-      />
-    </group>
+    <FloatingWorldModel
+      {...rest}
+      position={position}
+      rotation={rotation}
+      modelPath={BOX_MODEL_PATH}
+      meshNodeKey={BOX_MESH_NODE_KEY}
+      floating={FLOATING.box}
+      onFrame={({ state, group }) => {
+        // プレイヤーとの距離で TAP 表示のオンオフ（Box UI 表示中は更新しない）
+        if (boxView !== "closed") return;
+        const playerPos = playerRef?.current?.position ?? state.camera.position;
+        const dist = group.position.distanceTo(playerPos);
+        setIsBoxNearby(dist < BOX.NEARBY_THRESHOLD);
+      }}
+    />
   );
 }
 
-useGLTF.preload("/models/box-transformed.glb");
+useGLTF.preload(BOX_MODEL_PATH);
