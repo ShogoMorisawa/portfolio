@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, memo, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useInputStore } from "@/lib/world/store";
 import {
   BOX_MENU_ENTRIES,
@@ -116,7 +117,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
           className={`w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl shrink-0 ${RARITY_COLOR[skill.rarity]}`}
         >
           {skill.iconPath ? (
-            <img src={skill.iconPath} alt="" className="w-full h-full object-contain p-0.5" />
+            <Image src={skill.iconPath} alt="" width={80} height={80} className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="font-bold">{skill.name.slice(0, 1)}</span>
           )}
@@ -145,7 +146,7 @@ function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
       <div className="flex items-center gap-3">
         <div className="w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200 shrink-0">
           {item.iconPath ? (
-            <img src={item.iconPath} alt="" className="w-full h-full object-contain p-0.5" />
+            <Image src={item.iconPath} alt="" width={80} height={80} className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="font-bold">{item.name.slice(0, 1)}</span>
           )}
@@ -200,7 +201,7 @@ const BoxGridCell = memo(function BoxGridCell({
       >
         {entry ? (
           entry.iconPath ? (
-            <img src={entry.iconPath} alt="" className="w-full h-full object-contain p-0.5" />
+            <Image src={entry.iconPath} alt="" width={64} height={64} className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="text-white drop-shadow-sm">{displayChar}</span>
           )
@@ -358,7 +359,7 @@ function BoxGridView() {
         `}
       >
         <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-black overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-auto min-h-[200px]">
+          <div className="flex-1 min-h-[200px] overflow-auto">
             {isSkills ? (
               <SkillDetailPanel skill={selectedEntry as SkillEntry | null} />
             ) : (
@@ -451,7 +452,7 @@ export default function BoxUI() {
   };
 
   return (
-    <div className="absolute inset-0 z-[10000] flex items-center justify-center bg-black/70 pointer-events-auto">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-auto">
       <div
         className={`
           w-[95vw] max-w-4xl h-[85vh] max-h-[800px]
