@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { DotGothic16 } from "next/font/google";
+import { WebVitalsRegistry } from "@/components/providers/WebVitalsRegistry";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dotGothic16.variable} antialiased`}
       >
+        <WebVitalsRegistry />
         {children}
       </body>
     </html>
