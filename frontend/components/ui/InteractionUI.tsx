@@ -10,10 +10,14 @@ export default function InteractionUI() {
   const setIsTalking = useInputStore((state) => state.setIsTalking);
   const setTargetPosition = useInputStore((state) => state.setTargetPosition);
   const isBookNearby = useInputStore((state) => state.isBookNearby);
+  const isAdventureBookOpen = useInputStore(
+    (state) => state.isAdventureBookOpen,
+  );
   const setIsAdventureBookOpen = useInputStore(
     (state) => state.setIsAdventureBookOpen,
   );
   const isBoxNearby = useInputStore((state) => state.isBoxNearby);
+  const boxView = useInputStore((state) => state.boxView);
   const setBoxView = useInputStore((state) => state.setBoxView);
 
   const handleStartTalk = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -54,7 +58,11 @@ export default function InteractionUI() {
       )}
 
       {/* Box の TAP - アイテムBOXを開く（メインメニューへ） */}
-      {!isTalking && !activeCrystalId && !isBookNearby && isBoxNearby && (
+      {!isTalking &&
+        !activeCrystalId &&
+        !isBookNearby &&
+        isBoxNearby &&
+        boxView === "closed" && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <button
             onClick={handleOpenBox}
@@ -69,7 +77,10 @@ export default function InteractionUI() {
       )}
 
       {/* 本の TAP - ぼうけんのしょを開く */}
-      {!isTalking && !activeCrystalId && isBookNearby && (
+      {!isTalking &&
+        !activeCrystalId &&
+        isBookNearby &&
+        !isAdventureBookOpen && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <button
             onClick={handleOpenAdventureBook}

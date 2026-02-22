@@ -559,8 +559,8 @@ frontend/
 | **依存** | useInputStore |
 
 **Tap ボタン（クリスタル）:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
-**Tap ボタン（Box）:** `activeCrystalId` がなく `isBookNearby=false` かつ `isBoxNearby=true` のとき表示。クリックで `setBoxView("menu")`  
-**Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
+**Tap ボタン（Box）:** `activeCrystalId` がなく `isBookNearby=false` かつ `isBoxNearby=true` かつ `boxView==="closed"` のとき表示。クリックで `setBoxView("menu")`  
+**Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` かつ `isAdventureBookOpen=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
 **会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
 
 ---
