@@ -46,6 +46,17 @@ export const WebVitalsRegistry = () => {
         patched = patched.replace(cFull, proxyPaths.sync);
         patched = patched.replace(cBare, proxyPaths.sync);
 
+        const cDomain = new RegExp(
+          escapeRegex(decode('aHR0cHM6Ly9jLmNsYXJpdHkubXM=')),
+          'g',
+        );
+        const hDomain = new RegExp(
+          escapeRegex(decode('aHR0cHM6Ly9oLmNsYXJpdHkubXM=')),
+          'g',
+        );
+        patched = patched.replace(cDomain, origin);
+        patched = patched.replace(hDomain, origin);
+
         const s = document.createElement('script');
         s.textContent = patched;
         document.head.appendChild(s);
