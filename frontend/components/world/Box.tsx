@@ -1,4 +1,4 @@
-import { type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { FLOATING, BOX } from "@/lib/world/config";
@@ -20,6 +20,7 @@ export function Model(props: BoxProps) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], playerRef, ...rest } = props;
   const setIsBoxNearby = useInputStore((s) => s.setIsBoxNearby);
   const boxView = useInputStore((s) => s.boxView);
+  const prevNearbyRef = useRef<boolean | null>(null);
 
   return (
     <FloatingWorldModel
@@ -34,7 +35,11 @@ export function Model(props: BoxProps) {
         if (boxView !== "closed") return;
         const playerPos = playerRef?.current?.position ?? state.camera.position;
         const dist = group.position.distanceTo(playerPos);
-        setIsBoxNearby(dist < BOX.NEARBY_THRESHOLD);
+        const isNearby = dist < BOX.NEARBY_THRESHOLD;
+        if (prevNearbyRef.current !== isNearby) {
+          prevNearbyRef.current = isNearby;
+          setIsBoxNearby(isNearby);
+        }
       }}
     />
   );

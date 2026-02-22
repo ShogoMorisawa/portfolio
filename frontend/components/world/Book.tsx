@@ -1,4 +1,4 @@
-import { type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { FLOATING, BOOK } from "@/lib/world/config";
@@ -21,6 +21,7 @@ export function Model(props: BookProps) {
   const setIsBookNearby = useInputStore((s) => s.setIsBookNearby);
   const isTalking = useInputStore((s) => s.isTalking);
   const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);
+  const prevNearbyRef = useRef<boolean | null>(null);
 
   return (
     <FloatingWorldModel
@@ -35,7 +36,11 @@ export function Model(props: BookProps) {
         if (isTalking || isAdventureBookOpen) return;
         const playerPos = playerRef?.current?.position ?? state.camera.position;
         const dist = group.position.distanceTo(playerPos);
-        setIsBookNearby(dist < BOOK.NEARBY_THRESHOLD);
+        const isNearby = dist < BOOK.NEARBY_THRESHOLD;
+        if (prevNearbyRef.current !== isNearby) {
+          prevNearbyRef.current = isNearby;
+          setIsBookNearby(isNearby);
+        }
       }}
     />
   );

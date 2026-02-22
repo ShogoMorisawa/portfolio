@@ -260,7 +260,7 @@ frontend/
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/book-transformed.glb"` と `meshNodeKey="Mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.book` を `FloatingWorldModel` へ渡して適用  
-**近接判定:** `onFrame` で本とプレイヤー距離を計算し、`dist < BOOK.NEARBY_THRESHOLD` なら `setIsBookNearby(true)`。`isTalking` または `isAdventureBookOpen` 中は判定を無効化  
+**近接判定:** `onFrame` で本とプレイヤー距離を計算し、`dist < BOOK.NEARBY_THRESHOLD` の結果が前回から変化した時だけ `setIsBookNearby` を実行。`isTalking` または `isAdventureBookOpen` 中は判定を無効化  
 **配置:** World から `position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}`、`scale={LAYOUT.BOOK_SCALE}`、`rotation={[0, 0, 0]}`  
 **参照:** `World` から `playerRef` を受け取り、未指定時は `state.camera.position` をフォールバックとして使用  
 **プリロード:** `useGLTF.preload("/models/book-transformed.glb")`
@@ -277,7 +277,7 @@ frontend/
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/box-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.box` を `FloatingWorldModel` へ渡して適用  
-**近接判定:** `onFrame` で箱とプレイヤー距離を計算し、`dist < BOX.NEARBY_THRESHOLD` なら `setIsBoxNearby(true)`。`boxView !== "closed"` の間は更新を停止  
+**近接判定:** `onFrame` で箱とプレイヤー距離を計算し、`dist < BOX.NEARBY_THRESHOLD` の結果が前回から変化した時だけ `setIsBoxNearby` を実行。`boxView !== "closed"` の間は更新を停止  
 **配置:** World から `position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}`、`scale={LAYOUT.BOX_SCALE}`、`rotation={[0, Math.PI / 2, 0]}`  
 **参照:** `World` から `playerRef` を受け取り、未指定時は `state.camera.position` をフォールバックとして使用  
 **プリロード:** `useGLTF.preload("/models/box-transformed.glb")`
