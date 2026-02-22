@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
         source: "/api/vitals-report",
         destination: "https://h.clarity.ms/collect",
       },
+      {
+        source: "/assets/vitals-sync.gif",
+        destination: "https://c.clarity.ms/c.gif",
+      },
     ];
   },
 };
