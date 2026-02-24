@@ -148,49 +148,85 @@ function JukurenGauge({ level }: { level: number }) {
   );
 }
 
-/** スキル用詳細パネル */
+/** スキル詳細パネル用の統一区切り線 */
+const SKILL_PANEL_DIVIDER = "border-b-[3px] border-dashed border-[#2a364f] my-2";
+
+/** スキル用詳細パネル（モンハンステータス画面風・画像構造準拠） */
 function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
   if (!skill) {
-    return <div className="p-4 text-amber-200/60 text-sm">スロットを選択してください</div>;
+    return (
+      <div className="p-4 bg-[#0b101c] text-amber-200/60 text-sm">
+        スロットを選択してください
+      </div>
+    );
   }
+  const dropShadow = { textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" } as const;
   return (
-    <div className="p-4 flex flex-col gap-0">
-      {/* ヘッダー: アイコン・タイトル・RARE表記（右寄せ・レア色＋黒ドロップシャドウ） */}
-      <div className="flex items-center gap-3 pb-3 border-b-2 border-dotted border-[#445]">
+    <div className="p-4 flex flex-col bg-[#0b101c]">
+      {/* 1. 最上段: アイコンと名前 */}
+      <div className="flex items-center gap-3">
         <div
-          className={`w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl shrink-0 ${getRarityColorClass(skill.rare)}`}
+          className={`w-16 h-16 flex items-center justify-center border border-black/50 bg-black/50 text-2xl shrink-0 ${getRarityColorClass(skill.rare)}`}
+          style={dropShadow}
         >
           <span className="font-bold">{skill.name.slice(0, 1)}</span>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-amber-100">{skill.name}</p>
-          <span
-            className={`text-sm font-bold ${getRarityColorClass(skill.rare)}`}
-            style={{ textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" }}
-          >
-            RARE {skill.rare}
-          </span>
-        </div>
+        <p
+          className="text-2xl font-bold text-[#fceeb5] min-w-0"
+          style={dropShadow}
+        >
+          {skill.name}
+        </p>
       </div>
-      {/* ステータス: ◆ 攻撃力 */}
-      <div className="flex items-center gap-3 py-2.5 border-b border-dotted border-[#334]">
-        <span className="font-adventure text-cyan-400 text-sm shrink-0">
-          <span className="text-white" aria-hidden>◆</span>
-          {" "}
-          攻撃力
+
+      {/* 2. 2段目: RARE表記（右寄せ） */}
+      <div className="flex justify-end mt-1">
+        <span
+          className={`text-sm font-bold ${getRarityColorClass(skill.rare)}`}
+          style={dropShadow}
+        >
+          RARE {skill.rare}
         </span>
-        <span className="text-amber-100/90 text-sm tabular-nums">{skill.attack}</span>
       </div>
-      {/* ステータス: ◆ 斬れ味 */}
-      <div className="flex items-center gap-3 py-2.5 border-b border-dotted border-[#223]">
-        <span className="font-adventure text-cyan-400 text-sm shrink-0">
-          <span className="text-white" aria-hidden>◆</span>
-          {" "}
-          斬れ味
+
+      {/* 3. 区切り線1 */}
+      <div className={SKILL_PANEL_DIVIDER} aria-hidden />
+
+      {/* 4. 3段目: 攻撃力 */}
+      <div className="flex justify-between items-center py-0.5">
+        <span className="text-white font-bold text-lg" style={dropShadow}>
+          ◆ 攻撃力
         </span>
+        <span className="text-white font-bold text-lg tabular-nums" style={dropShadow}>
+          {skill.attack}
+        </span>
+      </div>
+
+      {/* 5. 区切り線2 */}
+      <div className={SKILL_PANEL_DIVIDER} aria-hidden />
+
+      {/* 6. 4段目: 斬れ味ラベル */}
+      <div className="py-0.5">
+        <span className="text-white font-bold text-lg" style={dropShadow}>
+          ◆ 斬れ味
+        </span>
+      </div>
+
+      {/* 7. 区切り線3 */}
+      <div className={SKILL_PANEL_DIVIDER} aria-hidden />
+
+      {/* 8. 5段目: 斬れ味ゲージ（右寄せ） */}
+      <div className="flex justify-end py-0.5">
         <JukurenGauge level={skill.level} />
       </div>
-      <p className="pt-3 text-sm text-amber-100/90 leading-relaxed">{skill.description}</p>
+
+      {/* 9. 区切り線4 */}
+      <div className={SKILL_PANEL_DIVIDER} aria-hidden />
+
+      {/* 10. 最下段: 説明文 */}
+      <p className="text-sm text-amber-100/90 leading-relaxed pt-0.5">
+        {skill.description}
+      </p>
     </div>
   );
 }
