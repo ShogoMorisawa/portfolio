@@ -592,11 +592,11 @@ frontend/
 **表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
 **メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移。メニュー画面全体に `font-adventure`（ドットフォント）を適用  
 **グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
-**スキルデータ:** `SKILL_ENTRIES` は `rare(1〜5) / level(1〜6) / attack / iconType` を持つ構造。`attack` は開始日・取得日を年月日カンマ区切りで表す（未定は `???,???,???`）  
+**スキルデータ:** `SKILL_ENTRIES` は `rare(1〜5) / level(1〜6) / attack / url?` を持つ構造。`attack` は開始日・取得日を年月日カンマ区切りで表す（未定は `???,???,???`）。`url` はアイコン画像（未設定時は頭文字表示）  
 **アイテムデータ:** `ITEM_ENTRIES` は全113スロット（頂上混成 BAKUONSOOO8th 100 + ぶたくん1 + リプトン12）。リプトンは各スロット `quantity=12`。表示順は固定シード（`20260220`）で初期化時に1回だけシャッフル  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `#0b101c`  
-**スキル詳細表示:** 背景は `#0b101c`。ヘッダー（アイコン+名前）→ `RARE n` 右寄せ → `◆ 攻撃力` → `◆ 斬れ味` → 斬れ味ゲージ右寄せ → 説明文の順で表示し、各段は `border-b-[3px]` の破線で区切る  
+**スキル詳細表示:** 背景は `#0b101c`。ヘッダー（アイコン+名前）→ `RARE n` 右寄せ → `◆ 攻撃力` → `◆ 斬れ味` → 斬れ味ゲージ右寄せ → 説明文の順で表示し、各段は `border-b-[3px]` の破線で区切る。説明文は `line-clamp-4` で表示行数を制限  
 **PCレイアウト:** 詳細パネルは `w-64〜w-72` 幅で `h-[40%]`。グリッド側は `flex-1` で残り領域を使用  
 **モバイルレイアウト:** ルートは `h-[95dvh]` の固定領域。詳細パネルは `h-[36vh]`、グリッドは `h-[50vh]` 固定で縦積みし、グリッド内部は `containerType:size` + `100cqmin` で常に正方形を維持  
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
@@ -691,6 +691,7 @@ frontend/
 | models/coco-transformed.glb | GLB | Coco の旧変換モデル（未使用） | - |
 | models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
 | items/bakuonso.png, items/butakun.png, items/lipton.png | PNG | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | - |
+| skills/*.png | PNG | BoxUI スキルアイコン（`boxData.ts` の `url` 参照） | - |
 | textures/coco_texture.png | PNG | Coco Body の Matcap | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |

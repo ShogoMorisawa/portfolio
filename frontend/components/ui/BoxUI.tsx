@@ -166,10 +166,14 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       {/* 1. 最上段: アイコンと名前 */}
       <div className="flex items-center gap-2">
         <div
-          className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl md:text-2xl shrink-0 ${getRarityColorClass(skill.rare)}`}
+          className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl md:text-2xl shrink-0 overflow-hidden ${getRarityColorClass(skill.rare)}`}
           style={dropShadow}
         >
-          <span className="font-bold">{skill.name.slice(0, 1)}</span>
+          {skill.url ? (
+            <Image src={skill.url} alt="" width={48} height={48} className="w-full h-full object-contain p-0.5" />
+          ) : (
+            <span className="font-bold">{skill.name.slice(0, 1)}</span>
+          )}
         </div>
         <p
           className="text-xl md:text-2xl font-bold text-[#fceeb5] min-w-0 truncate"
@@ -246,7 +250,7 @@ function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
             <span className="font-bold">{item.name.slice(0, 1)}</span>
           )}
         </div>
-        <p className="font-bold text-amber-100 text-xl break-words min-w-0">{item.name}</p>
+        <p className="font-bold text-amber-100 text-xl wrap-break-word min-w-0">{item.name}</p>
       </div>
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
       <p className="text-sm text-amber-100/90 leading-tight line-clamp-4">{item.description}</p>
@@ -296,8 +300,14 @@ const BoxGridCell = memo(function BoxGridCell({
         `}
       >
         {entry ? (
-          "iconPath" in entry && entry.iconPath ? (
-            <Image src={entry.iconPath} alt="" width={64} height={64} className="w-full h-full object-contain p-0.5" />
+          ("iconPath" in entry && entry.iconPath) || ("url" in entry && entry.url) ? (
+            <Image
+              src={("iconPath" in entry ? entry.iconPath : (entry as SkillEntry).url) ?? ""}
+              alt=""
+              width={64}
+              height={64}
+              className="w-full h-full object-contain p-0.5"
+            />
           ) : (
             <span className="text-white drop-shadow-sm">{displayChar}</span>
           )

@@ -22,139 +22,147 @@ export type SkillEntry = {
   /** 攻撃力（開始日・取得日を年月日でカンマ区切り。例: 2025/2/24 → "20,250,224"。未定は "???,???,???" */
   attack: string;
   description: string;
-  iconType: string; // アイコンの出し分け用（仮）
+  /** アイコン画像URL（未設定時は名前の頭文字表示） */
+  url?: string;
 };
 
 export const SKILL_ENTRIES: SkillEntry[] = [
   {
-    id: "html-css",
-    name: "HTML / CSS",
+    id: "html",
+    name: "HTML",
     rare: 1,
-    level: 5,
-    attack: "???,???,???",
-    description:
-      "すべての始まりとなる基礎素材。これがないと何も始まらない。（※テキストは後で変更）",
-    iconType: "sword",
+    level: 3,
+    attack: "20,220,621",
+    description: "これからはプログラミングが大事と聞いてProgateで始めました。",
+    url: "/skills/html.png",
+  },
+  {
+    id: "css",
+    name: "CSS",
+    rare: 1,
+    level: 3,
+    attack: "20,220,621",
+    description: "これからはプログラミングが大事と聞いてProgateで始めました。",
+    url: "/skills/css.png",
+  },
+  {
+    id: "boki-3",
+    name: "簿記3級",
+    rare: 2,
+    level: 2,
+    attack: "20,230,618", // 2023年6月18日
+    description: "これからはお金の勉強が大事と聞いてやってみました。",
+    url: "/skills/boki3.png",
   },
   {
     id: "javascript",
     name: "JavaScript",
     rare: 2,
     level: 3,
-    attack: "???,???,???",
+    attack: "20,240,701",
     description:
-      "Webの生態系を操るための必須装備。動的なギミックを付与する。（※テキストは後で変更）",
-    iconType: "sword",
-  },
-  {
-    id: "php",
-    name: "PHP",
-    rare: 2,
-    level: 6,
-    attack: "???,???,???",
-    description:
-      "実務の荒波で鍛え上げられた業物。長年の相棒として手に馴染んでいる。（※テキストは後で変更）",
-    iconType: "greatsword",
+      "Udemyで学習。自分が描いた絵を飾るための額縁サイトを作りたくて始めました。",
+    url: "/skills/JavaScript.png",
   },
   {
     id: "ruby",
     name: "Ruby",
     rare: 2,
-    level: 2,
-    attack: "???,???,???",
+    level: 1,
+    attack: "20,250,301",
     description:
-      "美しさと書きやすさを備えた言語。かつて手にした記憶がある。（※テキストは後で変更）",
-    iconType: "sword",
-  },
-  {
-    id: "boki-3",
-    name: "簿記3級",
-    rare: 2,
-    level: 4,
-    attack: "???,???,???",
-    description:
-      "ビジネスの基礎属性を底上げする護石。お金の流れという概念を可視化する。（※テキストは後で変更）",
-    iconType: "accessory",
-  },
-  {
-    id: "typescript",
-    name: "TypeScript",
-    rare: 3,
-    level: 5,
-    attack: "???,???,???",
-    description:
-      "型という名の強固な盾を備えたJSの進化系。予期せぬエラー（事故）を未然に防ぐ。（※テキストは後で変更）",
-    iconType: "shield",
-  },
-  {
-    id: "sql",
-    name: "SQL",
-    rare: 3,
-    level: 3,
-    attack: "???,???,???",
-    description:
-      "データの地脈から必要な情報だけを抽出するピッケル的な技術。（※テキストは後で変更）",
-    iconType: "tool",
+      "Railsからいきなり使い始めたのであまり詳しくないです。",
+    url: "/skills/ruby.png",
   },
   {
     id: "react",
     name: "React",
     rare: 4,
-    level: 6,
-    attack: "???,???,???",
+    level: 3,
+    attack: "20,250,301",
     description:
-      "現代のフロントエンドにおける主力武器。コンポーネントという魔法を操る。（※テキストは後で変更）",
-    iconType: "magic",
-  },
-  {
-    id: "nextjs",
-    name: "Next.js",
-    rare: 4,
-    level: 5,
-    attack: "???,???,???",
-    description:
-      "Reactの力を極限まで引き出すフレームワーク。この世界（ポートフォリオ）を構築した要。（※テキストは後で変更）",
-    iconType: "magic",
-  },
-  {
-    id: "laravel",
-    name: "Laravel",
-    rare: 4,
-    level: 6,
-    attack: "???,???,???",
-    description:
-      "PHPの真価を発揮させる重量級フレームワーク。複雑な要求もエレガントに捌く。（※テキストは後で変更）",
-    iconType: "heavy",
+      "アプリ一個作れば就職できると思い、『Duel Practice App』を作るため勉強を始めました。",
+    url: "/skills/react.png",
   },
   {
     id: "rails",
     name: "Ruby on Rails",
     rare: 4,
     level: 1,
-    attack: "???,???,???",
+    attack: "20,250,301",
     description:
-      "レールに乗ることで爆速開発を可能にするフレームワーク。（※テキストは後で変更）",
-    iconType: "heavy",
+      "アプリ一個作れば就職できると思い、『Duel Practice App』を作るため勉強を始めました。",
+    url: "/skills/rails.png",
   },
   {
     id: "toeic",
     name: "TOEIC 795",
     rare: 4,
-    level: 4,
-    attack: "???,???,???",
+    level: 2,
+    attack: "20,250,420", // 2025年4月20日
     description:
-      "言語の壁を越えて公式ドキュメント（古文書）を読み解くための特殊スキル。（※テキストは後で変更）",
-    iconType: "book",
+      "高校時代英語が得意だったのでその残滓。今はゴミです。いつか真剣に勉強し直したいです。",
+    url: "/skills/toeic.png",
+  },
+  {
+    id: "typescript",
+    name: "TypeScript",
+    rare: 3,
+    level: 3,
+    attack: "20,250,630",
+    description:
+      "JavaScriptから成長しました。型って難しくてよくわからなかったけど、今は楽しくて好きです。",
+    url: "/skills/TypeScript.png",
+  },
+  {
+    id: "nextjs",
+    name: "Next.js",
+    rare: 4,
+    level: 3,
+    attack: "20,250,630", // 2025年6月30日
+    description:
+      "Reactの続きとして勉強しました。このポートフォリオサイトもこれで作っています。",
+    url: "/skills/nextjs.png",
   },
   {
     id: "aws-saa",
     name: "AWS SAA",
     rare: 5,
     level: 2,
-    attack: "???,???,???",
+    attack: "20,250,730", // 2025年7月30日
     description:
-      "クラウドの広大な大地を設計・構築する許可証。高可用性アーキテクチャを描く。（※テキストは後で変更）",
-    iconType: "certificate",
+      "最終面接に落ちた焦りで3日間で詰め込み、試験は徹夜で受験しました。猛烈な吐き気の中で手にした、もう二度と再現不可能な奇跡。",
+    url: "/skills/saa.png",
+  },
+  {
+    id: "php",
+    name: "PHP",
+    rare: 2,
+    level: 4,
+    attack: "20,251,009",
+    description:
+      "内定をいただいた会社でPHPを使用していると伺ったので勉強しました。インターンで修行中です。",
+    url: "/skills/php.png",
+  },
+  {
+    id: "laravel",
+    name: "Laravel",
+    rare: 4,
+    level: 3,
+    attack: "20,251,029",
+    description:
+      "内定をいただいた会社でPHPを使用していると伺ったので勉強しました。『OoX』を作るのに使いました。",
+    url: "/skills/laravel.png",
+  },
+  {
+    id: "sql",
+    name: "SQL",
+    rare: 3,
+    level: 2,
+    attack: "20,260,116",
+    description:
+      "ちゃんと勉強したことがなくてインターンでその重要性を痛感しました。近いうちに真剣に勉強したいです。",
+    url: "/skills/sql.png",
   },
 ];
 
