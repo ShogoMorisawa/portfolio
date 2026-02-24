@@ -87,20 +87,66 @@ function BoxMenuView({
   );
 }
 
-/** じゅくれんどゲージ（斬れ味ゲージのパロディ） */
+/** 剣型 clip-path（右端が尖った多角形）。枠・中身の両方で共通 */
+const SWORD_CLIP =
+  "[clip-path:polygon(0_0,calc(100%-12px)_0,100%_50%,calc(100%-12px)_100%,0_100%)]";
+
+/** 斬れ味ゲージ（モンハン風・画像なしCSSのみ）Lv1〜6で左から色を追加 */
 function JukurenGauge({ level }: { level: number }) {
-  const max = 5;
-  const segments = Array.from({ length: max }, (_, i) => i < level);
+  const clampedLevel = Math.min(6, Math.max(1, level));
+  /** Lv1=赤+橙(2色) … Lv6=全7色。表示するセグメント数 = clampedLevel + 1 */
+  const visibleCount = clampedLevel + 1;
+  const segmentWidthPercent = 100 / 7;
+  const colors = [
+    "bg-red-600",
+    "bg-orange-500",
+    "bg-yellow-400",
+    "bg-green-500",
+    "bg-blue-600",
+    "bg-white",
+    "bg-purple-500",
+  ] as const;
+
   return (
-    <div className="flex gap-0.5">
-      {segments.map((filled, i) => (
+    <div className="flex items-center gap-0">
+      {/* 取手（横長の持ち手） */}
+      <div
+        className="h-2 w-5 shrink-0 rounded-l-sm bg-gray-600 shadow-[inset_0_0_2px_rgba(0,0,0,0.5)] border border-gray-500/80 border-r-0"
+        aria-hidden
+      />
+      {/* 鍔（刃との境） */}
+      <div
+        className="h-5 w-2 shrink-0 self-center rounded-sm bg-gray-500 shadow-[inset_0_0_2px_rgba(0,0,0,0.5)]"
+        aria-hidden
+      />
+      {/* 刃部分: グレー枠 → 黒で少し小さく切り抜き → 中に色バー */}
+      <div className="relative h-4 w-48 shrink-0">
+        {/* 外枠（金属風グレー） */}
         <div
-          key={i}
-          className={`h-4 flex-1 border border-black/50 ${
-            filled ? "bg-amber-500" : "bg-gray-800"
-          }`}
+          className={`absolute inset-0 bg-gray-500 ${SWORD_CLIP}`}
+          aria-hidden
         />
-      ))}
+        {/* 内側（少し小さく＝擬似枠線） */}
+        <div
+          className={`absolute inset-[2px] bg-black ${SWORD_CLIP}`}
+          aria-hidden
+        />
+        {/* 色バー（左から level 個だけ表示） */}
+        <div
+          className={`absolute inset-[2px] flex ${SWORD_CLIP}`}
+          aria-hidden
+        >
+          {colors.map((bg, i) => (
+            <div
+              key={i}
+              className={`h-full shrink-0 ${i < visibleCount ? bg : "bg-transparent"}`}
+              style={{
+                width: i < visibleCount ? `${segmentWidthPercent}%` : 0,
+              }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -127,8 +173,8 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
           <p className={`text-xs ${RARITY_COLOR[skill.rarity]}`}>{RARITY_LABEL[skill.rarity]}</p>
         </div>
       </div>
-      <div>
-        <p className="text-xs text-amber-200/80 mb-1">じゅくれんど</p>
+      <div className="flex items-center gap-3">
+        <span className="font-adventure text-cyan-400 text-sm shrink-0">じゅくれんど</span>
         <JukurenGauge level={skill.level} />
       </div>
       <p className="text-sm text-amber-100/90 leading-relaxed">{skill.description}</p>

@@ -595,6 +595,7 @@ frontend/
 **アイテムデータ:** `ITEM_ENTRIES` は全113スロット（頂上混成 BAKUONSOOO8th 100 + ぶたくん1 + リプトン12）。リプトンは各スロット `quantity=12`。表示順は固定シード（`20260220`）で初期化時に1回だけシャッフル  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `bg-black`  
+**じゅくれんど表示:** スキル詳細のゲージは CSS だけで描画する剣型（`clip-path`）の7段バー。Lv1〜6に応じて左から色セグメント数を増やす  
 **PCレイアウト:** 詳細パネルは `w-80` 固定幅、`h-[40%]` かつ `min-h-[280px]` で高さを確保  
 **モバイルレイアウト:** 詳細パネルは `basis-[30vh] / max-h-[36vh]` の固定寄り高さ、グリッドは `aspect-square / max-h-[50vh]` で下側配置。両者の間隔は `gap-4`  
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
