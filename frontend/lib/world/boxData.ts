@@ -14,84 +14,146 @@ export const BOX_MENU_ENTRIES: BoxMenuEntry[] = [
   { id: "skills", label: "スキル一覧" },
 ];
 
-/** スキル（装備）のレア度 */
-export type SkillRarity = "common" | "rare" | "sr" | "ssr";
-
 export type SkillEntry = {
   id: string;
   name: string;
-  /** じゅくれんど（斬れ味ゲージのパロディ）1〜5 */
-  level: number;
-  rarity: SkillRarity;
+  rare: number;
+  level: number; // 1〜6（じゅくれんど）
+  startDate: string; // かいしび・取得日
   description: string;
-  /** アイコン画像パス（未設定時はプレースホルダー） */
-  iconPath?: string;
+  iconType: string; // アイコンの出し分け用（仮）
 };
 
 export const SKILL_ENTRIES: SkillEntry[] = [
   {
+    id: "html-css",
+    name: "HTML / CSS",
+    rare: 1,
+    level: 5,
+    startDate: "わすれました",
+    description:
+      "すべての始まりとなる基礎素材。これがないと何も始まらない。（※テキストは後で変更）",
+    iconType: "sword",
+  },
+  {
+    id: "javascript",
+    name: "JavaScript",
+    rare: 2,
+    level: 3,
+    startDate: "わすれました",
+    description:
+      "Webの生態系を操るための必須装備。動的なギミックを付与する。（※テキストは後で変更）",
+    iconType: "sword",
+  },
+  {
     id: "php",
     name: "PHP",
+    rare: 2,
+    level: 6,
+    startDate: "わすれました",
+    description:
+      "実務の荒波で鍛え上げられた業物。長年の相棒として手に馴染んでいる。（※テキストは後で変更）",
+    iconType: "greatsword",
+  },
+  {
+    id: "ruby",
+    name: "Ruby",
+    rare: 2,
+    level: 2,
+    startDate: "わすれました",
+    description:
+      "美しさと書きやすさを備えた言語。かつて手にした記憶がある。（※テキストは後で変更）",
+    iconType: "sword",
+  },
+  {
+    id: "boki-3",
+    name: "簿記3級",
+    rare: 2,
     level: 4,
-    rarity: "sr",
-    description: "実務でLaravelを用いたWebアプリ開発。レガシーからモダンまで。",
-    iconPath: undefined,
+    startDate: "わすれました",
+    description:
+      "ビジネスの基礎属性を底上げする護石。お金の流れという概念を可視化する。（※テキストは後で変更）",
+    iconType: "accessory",
   },
   {
     id: "typescript",
     name: "TypeScript",
-    level: 4,
-    rarity: "sr",
-    description: "フロント・バック両方で使用。型で安心。",
-    iconPath: undefined,
+    rare: 3,
+    level: 5,
+    startDate: "わすれました",
+    description:
+      "型という名の強固な盾を備えたJSの進化系。予期せぬエラー（事故）を未然に防ぐ。（※テキストは後で変更）",
+    iconType: "shield",
+  },
+  {
+    id: "sql",
+    name: "SQL",
+    rare: 3,
+    level: 3,
+    startDate: "わすれました",
+    description:
+      "データの地脈から必要な情報だけを抽出するピッケル的な技術。（※テキストは後で変更）",
+    iconType: "tool",
   },
   {
     id: "react",
     name: "React",
-    level: 4,
-    rarity: "sr",
-    description: "関数コンポーネント + Hooks。このポートフォリオもReact。",
-    iconPath: undefined,
+    rare: 4,
+    level: 6,
+    startDate: "わすれました",
+    description:
+      "現代のフロントエンドにおける主力武器。コンポーネントという魔法を操る。（※テキストは後で変更）",
+    iconType: "magic",
   },
   {
     id: "nextjs",
     name: "Next.js",
-    level: 3,
-    rarity: "rare",
-    description: "App Router / RSC で制作経験あり。",
-    iconPath: undefined,
+    rare: 4,
+    level: 5,
+    startDate: "わすれました",
+    description:
+      "Reactの力を極限まで引き出すフレームワーク。この世界（ポートフォリオ）を構築した要。（※テキストは後で変更）",
+    iconType: "magic",
   },
   {
     id: "laravel",
     name: "Laravel",
+    rare: 4,
+    level: 6,
+    startDate: "わすれました",
+    description:
+      "PHPの真価を発揮させる重量級フレームワーク。複雑な要求もエレガントに捌く。（※テキストは後で変更）",
+    iconType: "heavy",
+  },
+  {
+    id: "rails",
+    name: "Ruby on Rails",
+    rare: 4,
+    level: 1,
+    startDate: "わすれました",
+    description:
+      "レールに乗ることで爆速開発を可能にするフレームワーク。（※テキストは後で変更）",
+    iconType: "heavy",
+  },
+  {
+    id: "toeic",
+    name: "TOEIC 795",
+    rare: 4,
     level: 4,
-    rarity: "sr",
-    description: "業務システム・API開発で使用。",
-    iconPath: undefined,
+    startDate: "わすれました",
+    description:
+      "言語の壁を越えて公式ドキュメント（古文書）を読み解くための特殊スキル。（※テキストは後で変更）",
+    iconType: "book",
   },
   {
     id: "aws-saa",
     name: "AWS SAA",
-    level: 3,
-    rarity: "sr",
-    description: "認定ソリューションアーキテクト – アソシエイト取得。",
-    iconPath: undefined,
-  },
-  {
-    id: "atcoder",
-    name: "競技プログラミング（AtCoder緑）",
+    rare: 5,
     level: 2,
-    rarity: "rare",
-    description: "緑コーダー。アルゴリズムとデータ構造の基礎。",
-    iconPath: undefined,
-  },
-  {
-    id: "fe",
-    name: "基本情報技術者試験",
-    level: 3,
-    rarity: "rare",
-    description: "国家資格取得。基礎的なITの知識。",
-    iconPath: undefined,
+    startDate: "わすれました",
+    description:
+      "クラウドの広大な大地を設計・構築する許可証。高可用性アーキテクチャを描く。（※テキストは後で変更）",
+    iconType: "certificate",
   },
 ];
 

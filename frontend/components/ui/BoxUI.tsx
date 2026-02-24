@@ -11,22 +11,19 @@ import {
   type BoxMenuEntry,
   type SkillEntry,
   type ItemEntry,
-  type SkillRarity,
 } from "@/lib/world/boxData";
 
-const RARITY_LABEL: Record<SkillRarity, string> = {
-  common: "コモン",
-  rare: "レア",
-  sr: "SR",
-  ssr: "SSR",
-};
-
-const RARITY_COLOR: Record<SkillRarity, string> = {
-  common: "text-gray-400",
-  rare: "text-blue-400",
-  sr: "text-purple-400",
-  ssr: "text-amber-400",
-};
+/** レア度（1〜5）に応じたテキスト色 */
+function getRarityColorClass(rare: number): string {
+  const map: Record<number, string> = {
+    1: "text-gray-400",
+    2: "text-blue-400",
+    3: "text-purple-400",
+    4: "text-amber-400",
+    5: "text-amber-300",
+  };
+  return map[rare] ?? "text-gray-400";
+}
 
 /** モンハン風フレーム（角張った枠・暗い背景・琥珀のアクセント） */
 const FRAME_CLASS =
@@ -121,19 +118,19 @@ function JukurenGauge({ level }: { level: number }) {
       />
       {/* 刃部分: グレー枠 → 黒で少し小さく切り抜き → 中に色バー */}
       <div className="relative h-4 w-48 shrink-0">
-        {/* 外枠（金属風グレー） */}
+        {/* 外枠（金属風グレー・やや太く暗く） */}
         <div
-          className={`absolute inset-0 bg-gray-500 ${SWORD_CLIP}`}
+          className={`absolute inset-0 bg-gray-600 ${SWORD_CLIP}`}
           aria-hidden
         />
-        {/* 内側（少し小さく＝擬似枠線） */}
+        {/* 内側（少し小さく＝擬似枠線・3pxで重厚感） */}
         <div
-          className={`absolute inset-[2px] bg-black ${SWORD_CLIP}`}
+          className={`absolute inset-[3px] bg-black ${SWORD_CLIP}`}
           aria-hidden
         />
         {/* 色バー（左から level 個だけ表示） */}
         <div
-          className={`absolute inset-[2px] flex ${SWORD_CLIP}`}
+          className={`absolute inset-[3px] flex ${SWORD_CLIP}`}
           aria-hidden
         >
           {colors.map((bg, i) => (
@@ -157,27 +154,34 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
     return <div className="p-4 text-amber-200/60 text-sm">スロットを選択してください</div>;
   }
   return (
-    <div className="p-4 flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+    <div className="p-4 flex flex-col gap-0">
+      {/* ヘッダー: アイコン・タイトル・RARE表記（右寄せ・ドロップシャドウ） */}
+      <div className="flex items-center gap-3 pb-3 border-b-2 border-dashed border-[#334]">
         <div
-          className={`w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl shrink-0 ${RARITY_COLOR[skill.rarity]}`}
+          className={`w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl shrink-0 ${getRarityColorClass(skill.rare)}`}
         >
-          {skill.iconPath ? (
-            <Image src={skill.iconPath} alt="" width={80} height={80} className="w-full h-full object-contain p-0.5" />
-          ) : (
-            <span className="font-bold">{skill.name.slice(0, 1)}</span>
-          )}
+          <span className="font-bold">{skill.name.slice(0, 1)}</span>
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-bold text-amber-100">{skill.name}</p>
-          <p className={`text-xs ${RARITY_COLOR[skill.rarity]}`}>{RARITY_LABEL[skill.rarity]}</p>
         </div>
+        <span
+          className={`shrink-0 text-sm font-bold ${getRarityColorClass(skill.rare)}`}
+          style={{ textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" }}
+        >
+          RARE {skill.rare}
+        </span>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="font-adventure text-cyan-400 text-sm shrink-0">じゅくれんど</span>
+      {/* ステータス: じゅくれんど（◆付き） */}
+      <div className="flex items-center gap-3 py-3 border-b border-dashed border-[#223]">
+        <span className="font-adventure text-cyan-400 text-sm shrink-0">
+          <span className="text-white" aria-hidden>◆</span>
+          {" "}
+          じゅくれんど
+        </span>
         <JukurenGauge level={skill.level} />
       </div>
-      <p className="text-sm text-amber-100/90 leading-relaxed">{skill.description}</p>
+      <p className="pt-3 text-sm text-amber-100/90 leading-relaxed">{skill.description}</p>
     </div>
   );
 }
@@ -246,7 +250,7 @@ const BoxGridCell = memo(function BoxGridCell({
         `}
       >
         {entry ? (
-          entry.iconPath ? (
+          "iconPath" in entry && entry.iconPath ? (
             <Image src={entry.iconPath} alt="" width={64} height={64} className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="text-white drop-shadow-sm">{displayChar}</span>
