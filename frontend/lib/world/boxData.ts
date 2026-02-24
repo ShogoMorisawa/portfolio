@@ -18,8 +18,9 @@ export type SkillEntry = {
   id: string;
   name: string;
   rare: number;
-  level: number; // 1〜6（じゅくれんど）
-  startDate: string; // かいしび・取得日
+  level: number; // 1〜6（斬れ味）
+  /** 攻撃力（開始日・取得日を年月日でカンマ区切り。例: 2025/2/24 → "20,250,224"。未定は "???,???,???" */
+  attack: string;
   description: string;
   iconType: string; // アイコンの出し分け用（仮）
 };
@@ -30,7 +31,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "HTML / CSS",
     rare: 1,
     level: 5,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "すべての始まりとなる基礎素材。これがないと何も始まらない。（※テキストは後で変更）",
     iconType: "sword",
@@ -40,7 +41,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "JavaScript",
     rare: 2,
     level: 3,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "Webの生態系を操るための必須装備。動的なギミックを付与する。（※テキストは後で変更）",
     iconType: "sword",
@@ -50,7 +51,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "PHP",
     rare: 2,
     level: 6,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "実務の荒波で鍛え上げられた業物。長年の相棒として手に馴染んでいる。（※テキストは後で変更）",
     iconType: "greatsword",
@@ -60,7 +61,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "Ruby",
     rare: 2,
     level: 2,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "美しさと書きやすさを備えた言語。かつて手にした記憶がある。（※テキストは後で変更）",
     iconType: "sword",
@@ -70,7 +71,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "簿記3級",
     rare: 2,
     level: 4,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "ビジネスの基礎属性を底上げする護石。お金の流れという概念を可視化する。（※テキストは後で変更）",
     iconType: "accessory",
@@ -80,7 +81,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "TypeScript",
     rare: 3,
     level: 5,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "型という名の強固な盾を備えたJSの進化系。予期せぬエラー（事故）を未然に防ぐ。（※テキストは後で変更）",
     iconType: "shield",
@@ -90,7 +91,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "SQL",
     rare: 3,
     level: 3,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "データの地脈から必要な情報だけを抽出するピッケル的な技術。（※テキストは後で変更）",
     iconType: "tool",
@@ -100,7 +101,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "React",
     rare: 4,
     level: 6,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "現代のフロントエンドにおける主力武器。コンポーネントという魔法を操る。（※テキストは後で変更）",
     iconType: "magic",
@@ -110,7 +111,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "Next.js",
     rare: 4,
     level: 5,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "Reactの力を極限まで引き出すフレームワーク。この世界（ポートフォリオ）を構築した要。（※テキストは後で変更）",
     iconType: "magic",
@@ -120,7 +121,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "Laravel",
     rare: 4,
     level: 6,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "PHPの真価を発揮させる重量級フレームワーク。複雑な要求もエレガントに捌く。（※テキストは後で変更）",
     iconType: "heavy",
@@ -130,7 +131,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "Ruby on Rails",
     rare: 4,
     level: 1,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "レールに乗ることで爆速開発を可能にするフレームワーク。（※テキストは後で変更）",
     iconType: "heavy",
@@ -140,7 +141,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "TOEIC 795",
     rare: 4,
     level: 4,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "言語の壁を越えて公式ドキュメント（古文書）を読み解くための特殊スキル。（※テキストは後で変更）",
     iconType: "book",
@@ -150,7 +151,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     name: "AWS SAA",
     rare: 5,
     level: 2,
-    startDate: "わすれました",
+    attack: "???,???,???",
     description:
       "クラウドの広大な大地を設計・構築する許可証。高可用性アーキテクチャを描く。（※テキストは後で変更）",
     iconType: "certificate",

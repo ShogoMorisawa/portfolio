@@ -155,8 +155,8 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
   }
   return (
     <div className="p-4 flex flex-col gap-0">
-      {/* ヘッダー: アイコン・タイトル・RARE表記（右寄せ・ドロップシャドウ） */}
-      <div className="flex items-center gap-3 pb-3 border-b-2 border-dashed border-[#334]">
+      {/* ヘッダー: アイコン・タイトル・RARE表記（右寄せ・レア色＋黒ドロップシャドウ） */}
+      <div className="flex items-center gap-3 pb-3 border-b-2 border-dotted border-[#445]">
         <div
           className={`w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl shrink-0 ${getRarityColorClass(skill.rare)}`}
         >
@@ -164,20 +164,29 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-bold text-amber-100">{skill.name}</p>
+          <span
+            className={`text-sm font-bold ${getRarityColorClass(skill.rare)}`}
+            style={{ textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" }}
+          >
+            RARE {skill.rare}
+          </span>
         </div>
-        <span
-          className={`shrink-0 text-sm font-bold ${getRarityColorClass(skill.rare)}`}
-          style={{ textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" }}
-        >
-          RARE {skill.rare}
-        </span>
       </div>
-      {/* ステータス: じゅくれんど（◆付き） */}
-      <div className="flex items-center gap-3 py-3 border-b border-dashed border-[#223]">
+      {/* ステータス: ◆ 攻撃力 */}
+      <div className="flex items-center gap-3 py-2.5 border-b border-dotted border-[#334]">
         <span className="font-adventure text-cyan-400 text-sm shrink-0">
           <span className="text-white" aria-hidden>◆</span>
           {" "}
-          じゅくれんど
+          攻撃力
+        </span>
+        <span className="text-amber-100/90 text-sm tabular-nums">{skill.attack}</span>
+      </div>
+      {/* ステータス: ◆ 斬れ味 */}
+      <div className="flex items-center gap-3 py-2.5 border-b border-dotted border-[#223]">
+        <span className="font-adventure text-cyan-400 text-sm shrink-0">
+          <span className="text-white" aria-hidden>◆</span>
+          {" "}
+          斬れ味
         </span>
         <JukurenGauge level={skill.level} />
       </div>
