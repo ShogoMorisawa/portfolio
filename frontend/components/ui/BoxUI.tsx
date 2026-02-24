@@ -108,29 +108,29 @@ function JukurenGauge({ level }: { level: number }) {
     <div className="flex items-center gap-0">
       {/* 取手（横長の持ち手） */}
       <div
-        className="h-2 w-5 shrink-0 rounded-l-sm bg-gray-600 shadow-[inset_0_0_2px_rgba(0,0,0,0.5)] border border-gray-500/80 border-r-0"
+        className="h-2.5 w-4 shrink-0 rounded-l-sm bg-gray-600 shadow-[inset_0_0_2px_rgba(0,0,0,0.5)] border border-gray-500/80 border-r-0"
         aria-hidden
       />
       {/* 鍔（刃との境） */}
       <div
-        className="h-5 w-2 shrink-0 self-center rounded-sm bg-gray-500 shadow-[inset_0_0_2px_rgba(0,0,0,0.5)]"
+        className="h-4 w-1.5 shrink-0 self-center rounded-sm bg-gray-500 shadow-[inset_0_0_2px_rgba(0,0,0,0.5)]"
         aria-hidden
       />
       {/* 刃部分: グレー枠 → 黒で少し小さく切り抜き → 中に色バー */}
-      <div className="relative h-4 w-48 shrink-0">
+      <div className="relative h-3 w-40 shrink-0">
         {/* 外枠（金属風グレー・やや太く暗く） */}
         <div
           className={`absolute inset-0 bg-gray-600 ${SWORD_CLIP}`}
           aria-hidden
         />
-        {/* 内側（少し小さく＝擬似枠線・3pxで重厚感） */}
+        {/* 内側（少し小さく＝擬似枠線） */}
         <div
-          className={`absolute inset-[3px] bg-black ${SWORD_CLIP}`}
+          className={`absolute inset-[2px] bg-black ${SWORD_CLIP}`}
           aria-hidden
         />
         {/* 色バー（左から level 個だけ表示） */}
         <div
-          className={`absolute inset-[3px] flex ${SWORD_CLIP}`}
+          className={`absolute inset-[2px] flex ${SWORD_CLIP}`}
           aria-hidden
         >
           {colors.map((bg, i) => (
@@ -149,30 +149,30 @@ function JukurenGauge({ level }: { level: number }) {
 }
 
 /** スキル詳細パネル用の統一区切り線 */
-const SKILL_PANEL_DIVIDER = "border-b-[3px] border-dashed border-[#2a364f] my-2";
+const SKILL_PANEL_DIVIDER = "border-b-[3px] border-dashed border-[#2a364f] my-0.5";
 
 /** スキル用詳細パネル（モンハンステータス画面風・画像構造準拠） */
 function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
   if (!skill) {
     return (
-      <div className="p-4 bg-[#0b101c] text-amber-200/60 text-sm">
+      <div className="p-2 bg-[#0b101c] text-amber-200/60 text-xs">
         スロットを選択してください
       </div>
     );
   }
   const dropShadow = { textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" } as const;
   return (
-    <div className="p-4 flex flex-col bg-[#0b101c]">
+    <div className="p-2 flex flex-col bg-[#0b101c] min-h-0">
       {/* 1. 最上段: アイコンと名前 */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div
-          className={`w-16 h-16 flex items-center justify-center border border-black/50 bg-black/50 text-2xl shrink-0 ${getRarityColorClass(skill.rare)}`}
+          className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl md:text-2xl shrink-0 ${getRarityColorClass(skill.rare)}`}
           style={dropShadow}
         >
           <span className="font-bold">{skill.name.slice(0, 1)}</span>
         </div>
         <p
-          className="text-2xl font-bold text-[#fceeb5] min-w-0"
+          className="text-xl md:text-2xl font-bold text-[#fceeb5] min-w-0 truncate"
           style={dropShadow}
         >
           {skill.name}
@@ -180,9 +180,9 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       </div>
 
       {/* 2. 2段目: RARE表記（右寄せ） */}
-      <div className="flex justify-end mt-1">
+      <div className="flex justify-end mt-0.5">
         <span
-          className={`text-sm font-bold ${getRarityColorClass(skill.rare)}`}
+          className={`text-xs md:text-sm font-bold ${getRarityColorClass(skill.rare)}`}
           style={dropShadow}
         >
           RARE {skill.rare}
@@ -193,11 +193,11 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
 
       {/* 4. 3段目: 攻撃力 */}
-      <div className="flex justify-between items-center py-0.5">
-        <span className="text-white font-bold text-lg" style={dropShadow}>
+      <div className="flex justify-between items-center py-0">
+        <span className="text-white font-bold text-sm md:text-base" style={dropShadow}>
           ◆ 攻撃力
         </span>
-        <span className="text-white font-bold text-lg tabular-nums" style={dropShadow}>
+        <span className="text-white font-bold text-sm md:text-base tabular-nums" style={dropShadow}>
           {skill.attack}
         </span>
       </div>
@@ -206,8 +206,8 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
 
       {/* 6. 4段目: 斬れ味ラベル */}
-      <div className="py-0.5">
-        <span className="text-white font-bold text-lg" style={dropShadow}>
+      <div className="py-0">
+        <span className="text-white font-bold text-sm md:text-base" style={dropShadow}>
           ◆ 斬れ味
         </span>
       </div>
@@ -216,7 +216,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
 
       {/* 8. 5段目: 斬れ味ゲージ（右寄せ） */}
-      <div className="flex justify-end py-0.5">
+      <div className="flex justify-end py-0">
         <JukurenGauge level={skill.level} />
       </div>
 
@@ -224,31 +224,32 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
 
       {/* 10. 最下段: 説明文 */}
-      <p className="text-sm text-amber-100/90 leading-relaxed pt-0.5">
+      <p className="text-sm text-amber-100/90 leading-tight pt-0 min-h-0 overflow-hidden line-clamp-4">
         {skill.description}
       </p>
     </div>
   );
 }
 
-/** アイテム用詳細パネル */
+/** アイテム用詳細パネル（1画面収まり用に圧縮） */
 function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
   if (!item) {
-    return <div className="p-4 text-amber-200/60 text-sm">スロットを選択してください</div>;
+    return <div className="p-2 text-amber-200/60 text-xs">スロットを選択してください</div>;
   }
   return (
-    <div className="p-4 flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <div className="w-20 h-20 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200 shrink-0">
+    <div className="p-2 flex flex-col min-h-0 gap-1">
+      <div className="flex items-center gap-2">
+        <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200 shrink-0">
           {item.iconPath ? (
-            <Image src={item.iconPath} alt="" width={80} height={80} className="w-full h-full object-contain p-0.5" />
+            <Image src={item.iconPath} alt="" width={48} height={48} className="w-full h-full object-contain p-0.5" />
           ) : (
             <span className="font-bold">{item.name.slice(0, 1)}</span>
           )}
         </div>
-        <p className="font-bold text-amber-100">{item.name}</p>
+        <p className="font-bold text-amber-100 text-xl break-words min-w-0">{item.name}</p>
       </div>
-      <p className="text-sm text-amber-100/90 leading-relaxed">{item.description}</p>
+      <div className={SKILL_PANEL_DIVIDER} aria-hidden />
+      <p className="text-sm text-amber-100/90 leading-tight line-clamp-4">{item.description}</p>
     </div>
   );
 }
@@ -347,8 +348,15 @@ function BoxGridView() {
   const isSkills = activeBoxCategory === "skills";
   const entries = isSkills ? SKILL_ENTRIES : ITEM_ENTRIES;
   const slotsPerPage = isMobile ? MOBILE_SLOTS_PER_PAGE : SLOTS_PER_PAGE;
-  const gridColsClass = isMobile ? "grid-cols-6" : "grid-cols-10";
+  const gridCols = isMobile ? 6 : 10;
   const pageCount = Math.max(1, Math.ceil(entries.length / slotsPerPage));
+  /** 隙間を固定2pxにし、セルは minmax(0, 1fr) で均等割り */
+  const gridGapPx = 2;
+  const gridTemplateStyle = {
+    gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+    gridTemplateRows: `repeat(${gridCols}, minmax(0, 1fr))`,
+    gap: `${gridGapPx}px`,
+  } as const;
   const startIndex = (currentBoxPage - 1) * slotsPerPage;
 
   const selectedEntry =
@@ -442,19 +450,21 @@ function BoxGridView() {
   return (
     <div
       className={`
-        flex flex-col md:flex-row h-full w-full font-adventure gap-4
-        ${isMobile ? "justify-end" : ""}
+        flex flex-col md:flex-row flex-1 min-h-0 w-full font-adventure gap-2 md:gap-3
+        ${isMobile ? "justify-start" : ""}
       `}
     >
-      {/* 詳細パネル: PC=左 / モバイル=上 */}
+      {/* 詳細パネル: PC=左 / モバイル=上（モバイル時は高さ固定） */}
       <div
         className={`
-          ${FRAME_CLASS} rounded p-1 min-h-0 overflow-hidden font-adventure
-          ${isMobile ? "w-full shrink-0 basis-[30vh] max-h-[36vh] overflow-auto" : "w-80 shrink-0 h-[40%] min-h-[280px]"}
+          ${FRAME_CLASS} rounded p-1 min-h-0 overflow-hidden font-adventure shrink-0
+          ${isMobile ? "w-full h-[36vh] min-h-0 overflow-auto" : "w-64 md:w-72 min-w-0 shrink-0 md:h-[40%]"}
         `}
       >
-        <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-black overflow-hidden">
-          <div className="flex-1 min-h-[200px] overflow-auto">
+        <div
+          className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#0b101c] overflow-hidden"
+        >
+          <div className="flex-1 min-h-0 overflow-hidden">
             {isSkills ? (
               <SkillDetailPanel skill={selectedEntry as SkillEntry | null} />
             ) : (
@@ -464,56 +474,66 @@ function BoxGridView() {
         </div>
       </div>
 
-      {/* グリッド部分のみモンハン装備BOX風（外枠・ヘッダー・グリッド・フッター） */}
+      {/* グリッド部分（PC=flex-1 / モバイル=高さ固定の正方形） */}
       <div
         className={`
           ${FRAME_CLASS} rounded p-1 min-h-0 w-full max-w-2xl mx-auto font-adventure
-          ${isMobile ? "shrink-0 aspect-square max-h-[50vh] self-center" : "flex-1"}
+          ${isMobile ? "shrink-0 h-[50vh] max-h-[50vh] flex flex-col" : "min-w-0 flex-1 flex flex-col"}
         `}
       >
-        <div className="flex flex-col h-full border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#2e2b26] overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#2e2b26] overflow-hidden">
           {/* 上段: ヘッダー（レトロゲームUI風） */}
-          <div className="flex items-center justify-between px-2 py-1.5 border-b border-black/50 bg-[#6b672a]">
-            <span className="text-[#ffea00] font-extrabold text-xl md:text-2xl tracking-widest">
+          <div className="shrink-0 flex items-center justify-between px-2 py-1 border-b border-black/50 bg-[#6b672a]">
+            <span className="text-[#ffea00] font-extrabold text-base md:text-xl tracking-widest truncate">
               {headerTitle}
             </span>
             {pageCount > 1 ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   disabled={currentBoxPage <= 1}
                   onClick={() => setCurrentBoxPage(Math.max(1, currentBoxPage - 1))}
-                  className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1.5 py-0.5 leading-none disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
+                  className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
                 >
                   L
                 </button>
-                <span className="text-white text-xl font-bold tabular-nums px-1">
+                <span className="text-white text-sm md:text-base font-bold tabular-nums px-1">
                   {currentBoxPage} / {pageCount}
                 </span>
                 <button
                   type="button"
                   disabled={currentBoxPage >= pageCount}
                   onClick={() => setCurrentBoxPage(Math.min(pageCount, currentBoxPage + 1))}
-                  className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1.5 py-0.5 leading-none disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
+                  className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
                 >
                   R
                 </button>
               </div>
             ) : (
-              <span className="text-white text-xl font-bold tabular-nums">1 / 1</span>
+              <span className="text-white text-sm md:text-base font-bold tabular-nums">1 / 1</span>
             )}
           </div>
 
-          {/* PC:10×10 / Mobile:6×6 グリッド */}
-          <div className="flex-1 min-h-0 min-w-0 flex items-center justify-center overflow-hidden bg-black">
-            <div className={`grid ${gridColsClass} gap-2 bg-black p-2 aspect-square h-full max-w-full min-h-0 min-w-0`}>
+          {/* グリッド: コンテナクエリで「親の短い方」に完璧に追従する正方形を作る */}
+          <div
+            className="flex-1 min-h-0 min-w-0 flex items-center justify-center overflow-hidden p-1"
+            style={{ containerType: "size" as React.CSSProperties["containerType"] }}
+          >
+            <div
+              className="grid bg-black"
+              style={{
+                ...gridTemplateStyle,
+                width: "100cqmin",
+                height: "100cqmin",
+              }}
+            >
               {gridCells}
             </div>
           </div>
 
           {/* 下段: フッター（選択中アイテム名・所持数） */}
-          <div className="shrink-0 flex items-center justify-between px-2 py-1.5 border-t border-black/50 bg-[#532219] text-white text-lg md:text-xl font-bold drop-shadow-md [text-shadow:1px_1px_0_rgb(0,0,0)]">
-            <span className="truncate">{footerName || "－"}</span>
+          <div className="shrink-0 flex items-center justify-between px-2 py-1 border-t border-black/50 bg-[#532219] text-white text-sm md:text-base font-bold drop-shadow-md [text-shadow:1px_1px_0_rgb(0,0,0)]">
+            <span className="truncate min-w-0">{footerName || "－"}</span>
             {footerQuantity != null ? (
               <span className="shrink-0 tabular-nums">x {footerQuantity}</span>
             ) : (
@@ -550,8 +570,7 @@ export default function BoxUI() {
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-auto">
       <div
         className={`
-          w-[95vw] max-w-4xl h-[85vh] max-h-[800px]
-          relative
+          w-[95vw] max-w-4xl h-[95dvh] max-h-screen overflow-hidden flex flex-col relative
         `}
       >
         {boxView === "menu" && (
@@ -566,18 +585,18 @@ export default function BoxUI() {
         )}
 
         {boxView === "grid" && (
-          <>
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <button
               type="button"
               onClick={() => setBoxView("menu")}
-              className="absolute top-2 right-2 md:top-4 md:right-4 z-10 px-3 py-1.5 border border-black/60 bg-black/60 text-amber-100 text-sm font-bold hover:bg-amber-900/40 transition-colors"
+              className="absolute top-2 right-2 md:top-4 md:right-4 z-10 px-2 py-1 md:px-3 md:py-1.5 border border-black/60 bg-black/60 text-amber-100 text-xs md:text-sm font-bold hover:bg-amber-900/40 transition-colors shrink-0"
             >
               もどる
             </button>
-            <div className="h-full p-4 md:p-6 overflow-auto">
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-2 md:p-3">
               <BoxGridView />
             </div>
-          </>
+          </div>
         )}
       </div>
 

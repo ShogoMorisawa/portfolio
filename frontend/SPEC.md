@@ -595,10 +595,10 @@ frontend/
 **スキルデータ:** `SKILL_ENTRIES` は `rare(1〜5) / level(1〜6) / attack / iconType` を持つ構造。`attack` は開始日・取得日を年月日カンマ区切りで表す（未定は `???,???,???`）  
 **アイテムデータ:** `ITEM_ENTRIES` は全113スロット（頂上混成 BAKUONSOOO8th 100 + ぶたくん1 + リプトン12）。リプトンは各スロット `quantity=12`。表示順は固定シード（`20260220`）で初期化時に1回だけシャッフル  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
-**詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `bg-black`  
+**詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `#0b101c`  
 **スキル詳細表示:** 背景は `#0b101c`。ヘッダー（アイコン+名前）→ `RARE n` 右寄せ → `◆ 攻撃力` → `◆ 斬れ味` → 斬れ味ゲージ右寄せ → 説明文の順で表示し、各段は `border-b-[3px]` の破線で区切る  
-**PCレイアウト:** 詳細パネルは `w-80` 固定幅、`h-[40%]` かつ `min-h-[280px]` で高さを確保  
-**モバイルレイアウト:** 詳細パネルは `basis-[30vh] / max-h-[36vh]` の固定寄り高さ、グリッドは `aspect-square / max-h-[50vh]` で下側配置。両者の間隔は `gap-4`  
+**PCレイアウト:** 詳細パネルは `w-64〜w-72` 幅で `h-[40%]`。グリッド側は `flex-1` で残り領域を使用  
+**モバイルレイアウト:** ルートは `h-[95dvh]` の固定領域。詳細パネルは `h-[36vh]`、グリッドは `h-[50vh]` 固定で縦積みし、グリッド内部は `containerType:size` + `100cqmin` で常に正方形を維持  
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
 **軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  
 **クローズ:** menu 画面では外側クリックで閉じる。grid 画面は「もどる」で menu に戻る
