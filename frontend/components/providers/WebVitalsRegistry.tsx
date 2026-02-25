@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const decode = (s: string) => atob(s);
 const escapeRegex = (s: string) =>
@@ -8,9 +9,22 @@ const escapeRegex = (s: string) =>
 
 export const WebVitalsRegistry = () => {
   const id = process.env.NEXT_PUBLIC_REGISTRY_SIGNAL_ID;
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!id) return;
+
+    if (searchParams.get('me') === 'true') {
+      localStorage.setItem('STLTH_MODE', 'active');
+      console.log('Stealth check: YOU ARE NOW INVISIBLE.');
+    }
+    
+    if (
+      process.env.NODE_ENV === 'development' ||
+      localStorage.getItem('STLTH_MODE') === 'active'
+    ) {
+      return;
+    }
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const proxyPaths = {
@@ -75,7 +89,7 @@ export const WebVitalsRegistry = () => {
         document.head.appendChild(s);
       })
       .catch(() => {});
-  }, [id]);
+  }, [id, searchParams]);
 
   return null;
 };

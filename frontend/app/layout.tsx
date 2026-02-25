@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { DotGothic16 } from "next/font/google";
 import { WebVitalsRegistry } from "@/components/providers/WebVitalsRegistry";
@@ -35,7 +36,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dotGothic16.variable} antialiased`}
       >
-        <WebVitalsRegistry />
+        <Suspense fallback={null}>
+          <WebVitalsRegistry />
+        </Suspense>
         {children}
       </body>
     </html>
