@@ -592,7 +592,7 @@ frontend/
 **表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
 **メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移。メニュー画面全体に `font-adventure`（ドットフォント）を適用  
 **グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
-**スキルデータ:** `SKILL_ENTRIES` は `rare(1〜5) / level(1〜6) / attack / url?` を持つ構造。`attack` は開始日・取得日を年月日カンマ区切りで表す（未定は `???,???,???`）。`url` はアイコン画像（未設定時は頭文字表示）  
+**スキルデータ:** `SKILL_ENTRIES` は `rare(1〜5) / level(1〜6) / attack / url?` を持つ構造。`attack` は開始日・取得日を年月日カンマ区切りで表す（未定は `???,???,???`）。`url` はアイコン画像（未設定時は頭文字表示）。表示順は配列定義順をそのまま使用  
 **アイテムデータ:** `ITEM_ENTRIES` は全113スロット（頂上混成 BAKUONSOOO8th 100 + ぶたくん1 + リプトン12）。リプトンは各スロット `quantity=12`。表示順は固定シード（`20260220`）で初期化時に1回だけシャッフル  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `#0b101c`  

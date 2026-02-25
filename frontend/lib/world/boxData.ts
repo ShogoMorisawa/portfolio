@@ -65,16 +65,6 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     url: "/skills/JavaScript.png",
   },
   {
-    id: "ruby",
-    name: "Ruby",
-    rare: 2,
-    level: 1,
-    attack: "20,250,301",
-    description:
-      "Railsからいきなり使い始めたのであまり詳しくないです。",
-    url: "/skills/ruby.png",
-  },
-  {
     id: "react",
     name: "React",
     rare: 4,
@@ -93,6 +83,15 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     description:
       "アプリ一個作れば就職できると思い、『Duel Practice App』を作るため勉強を始めました。",
     url: "/skills/rails.png",
+  },
+  {
+    id: "ruby",
+    name: "Ruby",
+    rare: 2,
+    level: 1,
+    attack: "20,250,301",
+    description: "Railsからいきなり使い始めたのであまり詳しくないです。",
+    url: "/skills/ruby.png",
   },
   {
     id: "toeic",
