@@ -62,6 +62,7 @@
 │  ├── <InteractionUI />     ← 会話UI（Tap/メッセージ）         │
 │  ├── <AdventureBookUI />   ← ぼうけんのしょUI               │
 │  ├── <BoxUI />             ← アイテムBOX UI（動的 import）   │
+│  ├── <PostUI />            ← 手紙UI（動的 import）            │
 │  └── <Loader />            ← drei ローダー（進捗バー）         │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -112,7 +113,8 @@
 │  components/ui/InteractionUI.tsx                            │
 │  components/ui/AdventureBookUI.tsx                          │
 │  components/ui/BoxUI.tsx                                    │
-│  lib/world/store.ts (Zustand: input + dialogue + book + box) │
+│  components/ui/PostUI.tsx                                   │
+│  lib/world/store.ts (Zustand: input + dialogue + book + box + post) │
 │  lib/world/adventureBookData.ts（ぼうけんのしょ定義）        │
 │  lib/world/boxData.ts（BOX 表示データ）                     │
 └─────────────────────────────────────────────────────────────┘
@@ -146,12 +148,13 @@ frontend/
 ├── components/ui/
 │   ├── InteractionUI.tsx      # 会話UI（Tap/メッセージ + 本へのTAP導線）
 │   ├── AdventureBookUI.tsx    # ぼうけんのしょUI（スロット選択/詳細）
-│   └── BoxUI.tsx              # アイテムBOX UI（メニュー/可変グリッド）
+│   ├── BoxUI.tsx              # アイテムBOX UI（メニュー/可変グリッド）
+│   └── PostUI.tsx             # 手紙UI（ポストから開くオーバーレイ）
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
-│   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING 定数
-│   ├── store.ts              # Zustand。入力 + 対話 + 本UI + BoxUI状態
+│   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING, POST 定数
+│   ├── store.ts              # Zustand。入力 + 対話 + 本UI + BoxUI + PostUI状態
 │   ├── adventureBookData.ts  # ぼうけんのしょ表示データ
 │   └── boxData.ts            # BoxUI表示データ（スキル/アイテム）
 ├── public/
@@ -166,11 +169,13 @@ frontend/
 │   │   ├── computer-transformed.glb # コンピューター（Computer）。gltfjsx 用に変換済み
 │   │   ├── coco.glb               # プレイヤー（Coco）で使用
 │   │   ├── crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb  # 元モデル（レガシー）
-│   └── textures/
+│   ├── textures/
 │       ├── coco_texture.png   # Coco Body の Matcap
 │       ├── crystal_texture.jpg # クリスタル Matcap
 │       ├── dome_texture.jpg  # ドーム用 Matcap
 │       └── floor_texture.jpg # 床用 Matcap
+│   └── post/
+│       └── letter.png         # ポストUIで表示する手紙画像
 ├── SPEC.md                   # 本ドキュメント
 └── package.json
 ```
@@ -185,8 +190,8 @@ frontend/
 |------|------|
 | **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
 | **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
-| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post, Computer, Player, Crystal ×4 |
+| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
+| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4 |
 
 **Canvas 設定:**
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
@@ -288,13 +293,15 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | ポストモデルの表示 |
-| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存** | `FloatingWorldModel` |
+| **責務** | ポストモデルの表示、近接判定（ポストTAP表示トリガー） |
+| **Props** | R3F 標準の `group` Props + `playerRef?: RefObject<THREE.Group | null>` |
+| **依存** | `FloatingWorldModel`, `useInputStore`, `POST.NEARBY_THRESHOLD` |
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/post-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.post` を `FloatingWorldModel` へ渡して適用  
 **配置:** World から `position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.POST_SCALE}`、`rotation={[0, Math.PI, 0]}`  
+**近接判定:** `onFrame` で `playerRef`（未指定時は camera）との距離を計測し、`dist < POST.NEARBY_THRESHOLD` のとき `isPostNearby=true`  
+**開閉連動:** `isPostOpen=true` 中は近接判定を停止し、前回値との差分があるときだけ `setIsPostNearby` を更新  
 **プリロード:** `useGLTF.preload("/models/post-transformed.glb")`
 
 ---
@@ -438,6 +445,12 @@ frontend/
 |------|-----|-----|------|
 | NEARBY_THRESHOLD | number | 15 | Boxオブジェクトを「近い」と判定する閾値（TAP表示用） |
 
+### POST
+
+| キー | 型 | 値 | 説明 |
+|------|-----|-----|------|
+| NEARBY_THRESHOLD | number | 15 | Postオブジェクトを「近い」と判定する閾値（TAP表示用） |
+
 ### LAYOUT
 
 | キー | 型 | 値 | 説明 |
@@ -492,14 +505,18 @@ frontend/
       → isBookNearby を更新
 [Box] → playerRef の位置を参照して距離判定
      → isBoxNearby を更新
-[InteractionUI] → activeCrystalId/isTalking/isBookNearby/isBoxNearby を参照
-               → クリスタル優先で TAP を表示（次点で本TAP、次にBoxTAP）
+[Post] → playerRef の位置を参照して距離判定
+      → isPostNearby を更新
+[InteractionUI] → activeCrystalId/isTalking/isBookNearby/isBoxNearby/isPostNearby/isPostOpen を参照
+               → クリスタル優先で TAP を表示（次点で本TAP、次にPostTAP、次にBoxTAP）
                → setIsAdventureBookOpen(true) で本UIを開く
 [page.tsx] → boxView !== "closed" のとき BoxUI を動的表示
+[page.tsx] → isPostOpen === true のとき PostUI を動的表示
 [AdventureBookUI] → isAdventureBookOpen/selectedAdventureSlot を参照
                  → スロット選択/詳細表示/閉じる を制御
 [BoxUI] → boxView/activeBoxCategory/currentBoxPage/selectedBoxSlotIndex を参照
        → menu/grid 遷移、詳細更新、ページ切替を制御
+[PostUI] → isPostOpen を参照し、手紙画像の表示/クローズを制御
 ```
 
 **useInputStore（Zustand）:**
@@ -516,13 +533,17 @@ frontend/
 - `activeBoxCategory: "skills" | "items" | null` — BoxUI の選択カテゴリ
 - `currentBoxPage: number` — 現在ページ（1始まり）
 - `selectedBoxSlotIndex: number` — 選択中スロット（未選択は -1）
+- `isPostNearby: boolean` — Post が近距離かどうか（PostTAP表示トリガー）
+- `isPostOpen: boolean` — 手紙UI（PostUI）の開閉状態
 - JoystickControls が setJoystick で更新、Player が joystick を購読して移動に反映
 - Crystal が `activeCrystalId`/`activeMessage`/`targetPosition` を更新
 - Book が `isBookNearby` を更新
 - Box が `isBoxNearby` を更新
-- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby`/`isBoxNearby` を参照して UI を制御
+- Post が `isPostNearby` を更新
+- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby`/`isBoxNearby`/`isPostNearby`/`isPostOpen` を参照して UI を制御
 - AdventureBookUI が `isAdventureBookOpen`/`selectedAdventureSlot` を参照して表示を制御
 - BoxUI が `boxView`/`activeBoxCategory`/`currentBoxPage`/`selectedBoxSlotIndex` を参照して表示を制御
+- PostUI が `isPostOpen` を参照して表示を制御
 
 **groundRef の流れ:**
 1. World で `useRef` 作成
@@ -554,11 +575,12 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 会話開始/終了の UI 表示、メッセージ表示、本TAP導線の表示 |
+| **責務** | 会話開始/終了の UI 表示、メッセージ表示、本/ポスト/BOX のTAP導線表示 |
 | **Props** | なし |
 | **依存** | useInputStore |
 
 **Tap ボタン（クリスタル）:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
+**Tap ボタン（Post）:** `activeCrystalId` がなく `isTalking=false` かつ `isBookNearby=false` かつ `isBoxNearby=false` かつ `isPostNearby=true` かつ `isPostOpen=false` のとき表示。クリックで `setIsPostOpen(true)`  
 **Tap ボタン（Box）:** `activeCrystalId` がなく `isBookNearby=false` かつ `isBoxNearby=true` かつ `boxView==="closed"` のとき表示。クリックで `setBoxView("menu")`  
 **Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` かつ `isAdventureBookOpen=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
 **会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
@@ -602,6 +624,20 @@ frontend/
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
 **軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  
 **クローズ:** menu 画面では外側クリックで閉じる。grid 画面は「もどる」で menu に戻る
+
+---
+
+### PostUI.tsx
+
+| 項目 | 内容 |
+|------|------|
+| **責務** | 手紙オーバーレイ UI の表示・クローズ制御 |
+| **Props** | なし |
+| **依存** | useInputStore, `next/image`, `public/post/letter.png` |
+
+**表示条件:** `isPostOpen=true` のとき全画面オーバーレイを表示（`page.tsx` で動的 import）  
+**表示内容:** `/post/letter.png` を `next/image`（`fill`）で表示。モバイルは `object-cover top`、PCは `object-contain center`  
+**クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`  
 
 ---
 
@@ -692,6 +728,7 @@ frontend/
 | models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
 | items/bakuonso.png, items/butakun.png, items/lipton.png | PNG | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | - |
 | skills/*.png | PNG | BoxUI スキルアイコン（`boxData.ts` の `url` 参照） | - |
+| post/letter.png | PNG | PostUI 手紙画像 | - |
 | textures/coco_texture.png | PNG | Coco Body の Matcap | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |

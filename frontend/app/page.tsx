@@ -9,9 +9,11 @@ import AdventureBookUI from "@/components/ui/AdventureBookUI";
 import { useInputStore } from "@/lib/world/store";
 
 const BoxUI = dynamic(() => import("@/components/ui/BoxUI"), { ssr: false });
+const PostUI = dynamic(() => import("@/components/ui/PostUI"), { ssr: false });
 
 export default function Home() {
   const boxView = useInputStore((s) => s.boxView);
+  const isPostOpen = useInputStore((s) => s.isPostOpen);
 
   return (
     <main className="relative w-full h-dvh overflow-hidden bg-black">
@@ -20,6 +22,7 @@ export default function Home() {
       <InteractionUI />
       <AdventureBookUI />
       {boxView !== "closed" && <BoxUI />}
+      {isPostOpen && <PostUI />}
 
       <Loader
         containerStyles={{ background: "black" }}

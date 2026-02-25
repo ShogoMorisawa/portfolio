@@ -43,7 +43,18 @@ interface BoxState {
   setSelectedBoxSlotIndex: (index: number) => void;
 }
 
-type WorldState = InputState & DialogueState & AdventureBookState & BoxState;
+interface PostState {
+  isPostNearby: boolean;
+  isPostOpen: boolean;
+  setIsPostNearby: (nearby: boolean) => void;
+  setIsPostOpen: (open: boolean) => void;
+}
+
+type WorldState = InputState &
+  DialogueState &
+  AdventureBookState &
+  BoxState &
+  PostState;
 
 export const useInputStore = create<WorldState>((set) => ({
   joystick: { x: 0, y: 0, isMoving: false },
@@ -82,4 +93,9 @@ export const useInputStore = create<WorldState>((set) => ({
   setActiveBoxCategory: (category) => set({ activeBoxCategory: category }),
   setCurrentBoxPage: (page) => set({ currentBoxPage: page }),
   setSelectedBoxSlotIndex: (index) => set({ selectedBoxSlotIndex: index }),
+
+  isPostNearby: false,
+  isPostOpen: false,
+  setIsPostNearby: (nearby) => set({ isPostNearby: nearby }),
+  setIsPostOpen: (open) => set({ isPostOpen: open }),
 }));

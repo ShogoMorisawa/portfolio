@@ -19,6 +19,9 @@ export default function InteractionUI() {
   const isBoxNearby = useInputStore((state) => state.isBoxNearby);
   const boxView = useInputStore((state) => state.boxView);
   const setBoxView = useInputStore((state) => state.setBoxView);
+  const isPostNearby = useInputStore((state) => state.isPostNearby);
+  const isPostOpen = useInputStore((state) => state.isPostOpen);
+  const setIsPostOpen = useInputStore((state) => state.setIsPostOpen);
 
   const handleStartTalk = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -35,6 +38,11 @@ export default function InteractionUI() {
     setBoxView("menu");
   };
 
+  const handleOpenPost = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setIsPostOpen(true);
+  };
+
   const handleEndTalk = () => {
     setTargetPosition(null);
     setIsTalking(false);
@@ -47,6 +55,26 @@ export default function InteractionUI() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <button
             onClick={handleStartTalk}
+            className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
+          >
+            <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
+              TAP
+            </span>
+            <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
+          </button>
+        </div>
+      )}
+
+      {/* Post の TAP - ポストを開く */}
+      {!isTalking &&
+        !activeCrystalId &&
+        !isBookNearby &&
+        !isBoxNearby &&
+        isPostNearby &&
+        !isPostOpen && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <button
+            onClick={handleOpenPost}
             className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
           >
             <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">

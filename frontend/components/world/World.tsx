@@ -108,6 +108,7 @@ export default function World() {
             position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}
             scale={LAYOUT.POST_SCALE}
             rotation={[0, Math.PI, 0]}
+            playerRef={playerRef}
           />
           <Box
             position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}
