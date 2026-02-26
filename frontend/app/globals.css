@@ -11,6 +11,16 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-adventure: var(--font-adventure);
+  --font-dancing: var(--font-dancing);
+  --font-playfair: var(--font-playfair);
+}
+
+.font-dancing {
+  font-family: var(--font-dancing), cursive;
+}
+
+.font-playfair {
+  font-family: var(--font-playfair), serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,4 +38,17 @@ body {
 
 .font-adventure {
   font-family: var(--font-adventure), sans-serif;
+}
+
+/* Chrome autofill の白背景を透明に上書き */
+.letter-form input:-webkit-autofill,
+.letter-form input:-webkit-autofill:hover,
+.letter-form input:-webkit-autofill:focus,
+.letter-form input:-webkit-autofill:active,
+.letter-form textarea:-webkit-autofill,
+.letter-form textarea:-webkit-autofill:hover,
+.letter-form textarea:-webkit-autofill:focus,
+.letter-form textarea:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }

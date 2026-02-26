@@ -128,8 +128,8 @@
 frontend/
 ├── app/
 │   ├── page.tsx              # ルートページ。World + JoystickControls + UI群を表示
-│   ├── layout.tsx            # ルートレイアウト（Geist + DotGothic16 フォント変数）
-│   ├── globals.css           # グローバルCSS（font-adventure クラスを定義）
+│   ├── layout.tsx            # ルートレイアウト（Geist + DotGothic16 + Dancing_Script + Playfair_Display）
+│   ├── globals.css           # グローバルCSS（font-adventure/font-dancing/font-playfair + letter-form autofill対策）
 │   └── favicon.ico
 ├── components/world/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
@@ -631,12 +631,14 @@ frontend/
 
 | 項目 | 内容 |
 |------|------|
-| **責務** | 手紙オーバーレイ UI の表示・クローズ制御 |
+| **責務** | 手紙オーバーレイ UI の表示・クローズ制御・入力フォーム表示 |
 | **Props** | なし |
-| **依存** | useInputStore, `next/image`, `public/post/letter.png` |
+| **依存** | useInputStore, `next/image`, `.font-dancing`, `.font-playfair`, `public/post/*.png` |
 
 **表示条件:** `isPostOpen=true` のとき全画面オーバーレイを表示（`page.tsx` で動的 import）  
-**表示内容:** `/post/letter.png` を `next/image`（`fill`）で表示。モバイルは `object-cover top`、PCは `object-contain center`  
+**表示内容:** 背景に `/post/letter.png` を `next/image`（`fill`）で表示し、紙上にフォームを重ねる。モバイルは `object-cover top`、PCは `object-contain center`  
+**入力UI:** `name`（必須）, `email`（任意）, `message`（本文）をローカル state で保持。`form_input.png` を名前/メール入力欄の装飾背景に使用  
+**送信UI:** `stamp.png` を送信ボタン画像として表示（`handleSubmit` は TODO の仮実装）  
 **クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`  
 
 ---
@@ -728,7 +730,9 @@ frontend/
 | models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
 | items/bakuonso.png, items/butakun.png, items/lipton.png | PNG | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | - |
 | skills/*.png | PNG | BoxUI スキルアイコン（`boxData.ts` の `url` 参照） | - |
-| post/letter.png | PNG | PostUI 手紙画像 | - |
+| post/letter.png | PNG | PostUI 手紙背景画像 | - |
+| post/form_input.png | PNG | PostUI 名前/メール入力欄の装飾背景 | - |
+| post/stamp.png | PNG | PostUI 送信ボタン（シーリングスタンプ） | - |
 | textures/coco_texture.png | PNG | Coco Body の Matcap | - |
 | textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
 | textures/dome_texture.jpg | JPG | ドーム Matcap | - |
