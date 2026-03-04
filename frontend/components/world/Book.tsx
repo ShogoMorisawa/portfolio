@@ -17,7 +17,12 @@ type BookProps = FloatingModelProps & {
 };
 
 export function Model(props: BookProps) {
-  const { position = [0, 0, 0], rotation = [0, 0, 0], playerRef, ...rest } = props;
+  const {
+    position = [0, 0, 0],
+    rotation = [0, 0, 0],
+    playerRef,
+    ...rest
+  } = props;
   const setIsBookNearby = useInputStore((s) => s.setIsBookNearby);
   const isTalking = useInputStore((s) => s.isTalking);
   const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);

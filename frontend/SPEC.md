@@ -25,26 +25,28 @@
 
 ## 概要
 
-| 項目 | 内容 |
-|------|------|
-| **用途** | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ |
-| **操作** | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下） |
+| 項目       | 内容                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| **用途**   | 3D 空間内でキャラクター（ココ）を操作できるインタラクティブなポートフォリオ               |
+| **操作**   | PC: 矢印キー / Mobile: 仮想ジョイスティック（画面右下）                                   |
 | **シーン** | ドーム（壁）+ 床 + 本 + 箱 + ポスト + コンピューター + プレイヤー。第三者視点カメラで追従 |
 
 ---
 
 ## 技術スタック
 
-| カテゴリ | ライブラリ | バージョン（package.json） | 用途 |
-|----------|------------|---------------------------|------|
-| フレームワーク | Next.js | ^16.1.6 | App Router, SSR/CSR |
-| 3D レンダリング | React Three Fiber | ^9.5.0 | React 用 Three.js ラッパー |
-| 3D ユーティリティ | @react-three/drei | ^10.7.7 | useGLTF, useTexture, Environment 等 |
-| 3D ユーティリティ | three-stdlib | drei 経由 | GLTF 型、gltfjsx 生成コードで使用 |
-| 3D エンジン | Three.js | ^0.182.0 | レンダリング基盤 |
-| 状態管理 | Zustand | ^5.0.11 | 入力状態の共有（キーボード/ジョイスティック） |
-| UI コンポーネント | react-joystick-component | ^6.2.1 | 仮想ジョイスティック |
-| 言語 | TypeScript | ^5 | 型安全 |
+| カテゴリ          | ライブラリ               | バージョン（package.json） | 用途                                          |
+| ----------------- | ------------------------ | -------------------------- | --------------------------------------------- |
+| フレームワーク    | Next.js                  | ^16.1.6                    | App Router, SSR/CSR                           |
+| 3D レンダリング   | React Three Fiber        | ^9.5.0                     | React 用 Three.js ラッパー                    |
+| 3D ユーティリティ | @react-three/drei        | ^10.7.7                    | useGLTF, useTexture, Environment 等           |
+| 3D ユーティリティ | three-stdlib             | drei 経由                  | GLTF 型、gltfjsx 生成コードで使用             |
+| 3D エンジン       | Three.js                 | ^0.182.0                   | レンダリング基盤                              |
+| 状態管理          | Zustand                  | ^5.0.11                    | 入力状態の共有（キーボード/ジョイスティック） |
+| UI コンポーネント | react-joystick-component | ^6.2.1                     | 仮想ジョイスティック                          |
+| メール送信        | Resend                   | ^6.9.3                     | PostUI からの手紙送信（Route Handler 経由）   |
+| フォーマッタ      | Prettier                 | ^3.8.1                     | `format` / `format:check` スクリプトで整形    |
+| 言語              | TypeScript               | ^5                         | 型安全                                        |
 
 ### パスエイリアス
 
@@ -114,6 +116,7 @@
 │  components/ui/AdventureBookUI.tsx                          │
 │  components/ui/BoxUI.tsx                                    │
 │  components/ui/PostUI.tsx                                   │
+│  app/api/letter/route.ts（PostUI の送信先 API）             │
 │  lib/world/store.ts (Zustand: input + dialogue + book + box + post) │
 │  lib/world/adventureBookData.ts（ぼうけんのしょ定義）        │
 │  lib/world/boxData.ts（BOX 表示データ）                     │
@@ -127,6 +130,9 @@
 ```
 frontend/
 ├── app/
+│   ├── api/
+│   │   └── letter/
+│   │       └── route.ts      # PostUI送信先。Resend でメール配送する Route Handler
 │   ├── page.tsx              # ルートページ。World + JoystickControls + UI群を表示
 │   ├── layout.tsx            # ルートレイアウト（Geist + DotGothic16 + Dancing_Script + Playfair_Display）
 │   ├── globals.css           # グローバルCSS（font-adventure/font-dancing/font-playfair + letter-form autofill対策）
@@ -175,7 +181,9 @@ frontend/
 │       ├── dome_texture.jpg  # ドーム用 Matcap
 │       └── floor_texture.jpg # 床用 Matcap
 │   └── post/
-│       └── letter.png         # ポストUIで表示する手紙画像
+│       ├── letter.png         # PostUI の手紙背景
+│       ├── form_input.png     # PostUI の名前/メール入力欄背景
+│       └── stamp.png          # PostUI の送信ボタン画像
 ├── SPEC.md                   # 本ドキュメント
 └── package.json
 ```
@@ -186,14 +194,15 @@ frontend/
 
 ### World.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | Canvas の設定、環境・照明、子コンポーネントの組み立て |
-| **Props** | なし |
-| **状態** | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
-| **子** | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4 |
+| 項目      | 内容                                                                                                                                                                                                           |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **責務**  | Canvas の設定、環境・照明、子コンポーネントの組み立て                                                                                                                                                          |
+| **Props** | なし                                                                                                                                                                                                           |
+| **状態**  | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
+| **子**    | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4                                                                   |
 
 **Canvas 設定:**
+
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
@@ -211,11 +220,11 @@ frontend/
 
 ### Dome.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | ドームモデルの表示 |
-| **Props** | なし |
-| **依存** | STAGE.DOME_POSITION_Y, dome-transformed.glb（gltfjsx 生成） |
+| 項目      | 内容                                                        |
+| --------- | ----------------------------------------------------------- |
+| **責務**  | ドームモデルの表示                                          |
+| **Props** | なし                                                        |
+| **依存**  | STAGE.DOME_POSITION_Y, dome-transformed.glb（gltfjsx 生成） |
 
 **モデル:** `models/dome-transformed.glb` の `nodes.Dome`。gltfjsx で生成。`as unknown as GLTFResult` で型アサーション  
 **マテリアル:** meshMatcapMaterial（useTexture で dome_texture.jpg）, `side={DoubleSide}`, `color="#ffffff"`  
@@ -227,11 +236,11 @@ frontend/
 
 ### Floor.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 床モデルの表示、接地判定用 groundRef の設定 |
-| **Props** | `groundRef: React.RefObject<THREE.Object3D \| null>` |
-| **依存** | STAGE.DOME_SCALE, floor-transformed.glb（gltfjsx 生成） |
+| 項目      | 内容                                                    |
+| --------- | ------------------------------------------------------- |
+| **責務**  | 床モデルの表示、接地判定用 groundRef の設定             |
+| **Props** | `groundRef: React.RefObject<THREE.Object3D \| null>`    |
+| **依存**  | STAGE.DOME_SCALE, floor-transformed.glb（gltfjsx 生成） |
 
 **モデル:** `models/floor-transformed.glb` の `nodes.Floor`。gltfjsx で生成。`as unknown as GLTFResult` で型アサーション  
 **マテリアル:** meshMatcapMaterial（useTexture で floor_texture.jpg）, `color="#ffffff"`  
@@ -243,25 +252,25 @@ frontend/
 
 ### FloatingWorldModel.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 浮遊オブジェクト共通の描画処理（GLTF読込、Y浮遊、Z傾き、任意の `onFrame`） |
+| 項目      | 内容                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| **責務**  | 浮遊オブジェクト共通の描画処理（GLTF読込、Y浮遊、Z傾き、任意の `onFrame`）                        |
 | **Props** | `modelPath`, `meshNodeKey`, `floating`, `position?`, `rotation?`, `onFrame?`, + R3F `group` Props |
-| **依存** | useGLTF, useFrame |
+| **依存**  | useGLTF, useFrame                                                                                 |
 
 **モデル:** `useGLTF(modelPath)` の `nodes[meshNodeKey]` を使用  
 **浮遊+傾き:** `floating`（`FLOAT_SPEED/FLOAT_AMPLITUDE/TILT_SPEED/TILT_ANGLE`）で `useFrame` 更新  
-**拡張ポイント:** `onFrame` で近接判定など各モデル固有ロジックを注入  
+**拡張ポイント:** `onFrame` で近接判定など各モデル固有ロジックを注入
 
 ---
 
 ### Book.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 本モデルの表示、プレイヤー近接判定（本TAP表示用） |
+| 項目      | 内容                                                                          |
+| --------- | ----------------------------------------------------------------------------- |
+| **責務**  | 本モデルの表示、プレイヤー近接判定（本TAP表示用）                             |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など）+ `playerRef` |
-| **依存** | `FloatingWorldModel`, `BOOK.NEARBY_THRESHOLD`, useInputStore |
+| **依存**  | `FloatingWorldModel`, `BOOK.NEARBY_THRESHOLD`, useInputStore                  |
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/book-transformed.glb"` と `meshNodeKey="Mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.book` を `FloatingWorldModel` へ渡して適用  
@@ -274,11 +283,11 @@ frontend/
 
 ### Box.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 箱モデルの表示、プレイヤー近接判定（Box TAP表示用） |
+| 項目      | 内容                                                                          |
+| --------- | ----------------------------------------------------------------------------- |
+| **責務**  | 箱モデルの表示、プレイヤー近接判定（Box TAP表示用）                           |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など）+ `playerRef` |
-| **依存** | `FloatingWorldModel`, `BOX.NEARBY_THRESHOLD`, useInputStore |
+| **依存**  | `FloatingWorldModel`, `BOX.NEARBY_THRESHOLD`, useInputStore                   |
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/box-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.box` を `FloatingWorldModel` へ渡して適用  
@@ -291,11 +300,11 @@ frontend/
 
 ### Post.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | ポストモデルの表示、近接判定（ポストTAP表示トリガー） |
-| **Props** | R3F 標準の `group` Props + `playerRef?: RefObject<THREE.Group | null>` |
-| **依存** | `FloatingWorldModel`, `useInputStore`, `POST.NEARBY_THRESHOLD` |
+| 項目      | 内容                                                           |
+| --------- | -------------------------------------------------------------- | ------ |
+| **責務**  | ポストモデルの表示、近接判定（ポストTAP表示トリガー）          |
+| **Props** | R3F 標準の `group` Props + `playerRef?: RefObject<THREE.Group  | null>` |
+| **依存**  | `FloatingWorldModel`, `useInputStore`, `POST.NEARBY_THRESHOLD` |
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/post-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.post` を `FloatingWorldModel` へ渡して適用  
@@ -308,11 +317,11 @@ frontend/
 
 ### Computer.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | コンピューターモデルの表示 |
+| 項目      | 内容                                                             |
+| --------- | ---------------------------------------------------------------- |
+| **責務**  | コンピューターモデルの表示                                       |
 | **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存** | `FloatingWorldModel` |
+| **依存**  | `FloatingWorldModel`                                             |
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/computer-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.computer` を `FloatingWorldModel` へ渡して適用  
@@ -323,11 +332,11 @@ frontend/
 
 ### Player.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 入力処理、移動・回転、接地判定、境界制限、カメラ追従。Coco に isMoving/moveDirection を渡す |
+| 項目      | 内容                                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------ |
+| **責務**  | 入力処理、移動・回転、接地判定、境界制限、カメラ追従。Coco に isMoving/moveDirection を渡す                  |
 | **Props** | `groundRef`, `isMobile: boolean`（useDeviceType の結果。CAMERA 切り替え用）, `playerRef`（World からの参照） |
-| **依存** | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え）、Coco |
+| **依存**  | PLAYER の全定数、CAMERA（isMobile で pc/mobile を切り替え）、Coco                                            |
 
 **構造:** `<group ref={playerRef}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
 **初期位置:** `<group position={[PLAYER.INITIAL_X, PLAYER.INITIAL_Y, PLAYER.INITIAL_Z]}>` で生成  
@@ -340,11 +349,11 @@ frontend/
 
 ### Coco.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | ココモデルの表示、Body への Matcap 適用、アニメーション制御 |
+| 項目      | 内容                                                              |
+| --------- | ----------------------------------------------------------------- |
+| **責務**  | ココモデルの表示、Body への Matcap 適用、アニメーション制御       |
 | **Props** | `isMoving: boolean`, `moveDirection: number`（1: 前進, -1: 後退） |
-| **依存** | coco.glb, coco_texture.png, three-stdlib (SkeletonUtils) |
+| **依存**  | coco.glb, coco_texture.png, three-stdlib (SkeletonUtils)          |
 
 **モデル:** `models/coco.glb` を読み込み、`SkeletonUtils.clone` でシーンをクローン  
 **マテリアル:** `Body` メッシュに `MeshMatcapMaterial` を適用し、`textures/coco_texture.png` を使用  
@@ -357,11 +366,11 @@ frontend/
 
 ### JoystickControls.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 仮想ジョイスティック UI の表示、useInputStore への入力反映 |
-| **Props** | なし |
-| **依存** | useInputStore |
+| 項目      | 内容                                                       |
+| --------- | ---------------------------------------------------------- |
+| **責務**  | 仮想ジョイスティック UI の表示、useInputStore への入力反映 |
+| **Props** | なし                                                       |
+| **依存**  | useInputStore                                              |
 
 **配置:** `fixed inset-0 z-50`（全画面）。タッチ位置にジョイスティックを動的表示  
 **操作:** `basePos` をタップ地点に設定し、`onPointerMove` で `(current - base) / RADIUS` を計算  
@@ -373,10 +382,10 @@ frontend/
 
 ### useDeviceType
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | PC/Mobile の判定（画面幅ベース） |
-| **戻り値** | `isMobile: boolean` |
+| 項目         | 内容                                                         |
+| ------------ | ------------------------------------------------------------ |
+| **責務**     | PC/Mobile の判定（画面幅ベース）                             |
+| **戻り値**   | `isMobile: boolean`                                          |
 | **判定基準** | `window.innerWidth < 768`（Tailwind の md ブレークポイント） |
 
 **挙動:** 初回マウント時と resize イベントで再判定。World と Player で CAMERA の切り替えに使用。
@@ -387,92 +396,92 @@ frontend/
 
 ### STAGE
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| DOME_POSITION_Y | number | -7 | ドームの Y 位置。床の下端と揃える |
-| DOME_SCALE | number | 20 | 床のスケール |
+| キー            | 型     | 値  | 説明                              |
+| --------------- | ------ | --- | --------------------------------- |
+| DOME_POSITION_Y | number | -7  | ドームの Y 位置。床の下端と揃える |
+| DOME_SCALE      | number | 20  | 床のスケール                      |
 
 ### CAMERA
 
-| デバイス | キー | 型 | 値 | 説明 |
-|----------|------|-----|-----|------|
-| pc | fov | number | 50 | 視野角（度） |
-| pc | distance | number | 8 | カメラとプレイヤーの距離（Player で使用） |
-| pc | height | number | 5 | カメラの高さ（Player で使用） |
-| pc | lookAtOffsetY | number | 1.5 | 注視点をプレイヤーより上にずらす（空を多く写す） |
-| pc | position | [x,y,z] | [0,5,12] | 初期カメラ位置（Canvas で使用） |
-| mobile | fov | number | 55 | 視野角（度） |
-| mobile | distance | number | 6 | カメラとプレイヤーの距離 |
-| mobile | height | number | 4 | カメラの高さ |
-| mobile | lookAtOffsetY | number | 1.5 | 注視点オフセット |
-| mobile | position | [x,y,z] | [0,4,10] | 初期カメラ位置 |
+| デバイス | キー          | 型      | 値       | 説明                                             |
+| -------- | ------------- | ------- | -------- | ------------------------------------------------ |
+| pc       | fov           | number  | 50       | 視野角（度）                                     |
+| pc       | distance      | number  | 8        | カメラとプレイヤーの距離（Player で使用）        |
+| pc       | height        | number  | 5        | カメラの高さ（Player で使用）                    |
+| pc       | lookAtOffsetY | number  | 1.5      | 注視点をプレイヤーより上にずらす（空を多く写す） |
+| pc       | position      | [x,y,z] | [0,5,12] | 初期カメラ位置（Canvas で使用）                  |
+| mobile   | fov           | number  | 55       | 視野角（度）                                     |
+| mobile   | distance      | number  | 6        | カメラとプレイヤーの距離                         |
+| mobile   | height        | number  | 4        | カメラの高さ                                     |
+| mobile   | lookAtOffsetY | number  | 1.5      | 注視点オフセット                                 |
+| mobile   | position      | [x,y,z] | [0,4,10] | 初期カメラ位置                                   |
 
 ### PLAYER
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| MOVE_SPEED | number | 5.0 | 前進・後退の速度 |
-| ROTATION_SPEED | number | 3.0 | 旋回速度（rad/s） |
-| CAMERA_DISTANCE | number | 8 | （非推奨）カメラ距離は CAMERA.pc/mobile.distance を使用 |
-| CAMERA_HEIGHT | number | 5 | （非推奨）カメラ高さは CAMERA.pc/mobile.height を使用 |
-| RAYCAST_OFFSET | number | 5 | 接地レイの始点オフセット（プレイヤー頭上） |
-| GRAVITY | number | 0.2 | 落下加速度 |
-| FALL_THRESHOLD | number | -10 | これ以下で落下停止 |
-| GROUND_OFFSET | number | 0 | 接地時の Y オフセット（めり込み防止） |
-| INITIAL_X | number | 0 | 開始時の X 座標 |
-| INITIAL_Y | number | 10 | 開始時の高さ（床ロード前の落下防止） |
-| INITIAL_Z | number | 0 | 開始時の Z 座標 |
-| INITIAL_ROTATION_Y | number | 0 | 開始時の向き（Y 軸回転・rad。0 で +Z 方向） |
-| BOUNDARY_RADIUS | number | 20 | 移動可能な最大半径（XZ 平面での原点からの距離） |
+| キー               | 型     | 値  | 説明                                                    |
+| ------------------ | ------ | --- | ------------------------------------------------------- |
+| MOVE_SPEED         | number | 5.0 | 前進・後退の速度                                        |
+| ROTATION_SPEED     | number | 3.0 | 旋回速度（rad/s）                                       |
+| CAMERA_DISTANCE    | number | 8   | （非推奨）カメラ距離は CAMERA.pc/mobile.distance を使用 |
+| CAMERA_HEIGHT      | number | 5   | （非推奨）カメラ高さは CAMERA.pc/mobile.height を使用   |
+| RAYCAST_OFFSET     | number | 5   | 接地レイの始点オフセット（プレイヤー頭上）              |
+| GRAVITY            | number | 0.2 | 落下加速度                                              |
+| FALL_THRESHOLD     | number | -10 | これ以下で落下停止                                      |
+| GROUND_OFFSET      | number | 0   | 接地時の Y オフセット（めり込み防止）                   |
+| INITIAL_X          | number | 0   | 開始時の X 座標                                         |
+| INITIAL_Y          | number | 10  | 開始時の高さ（床ロード前の落下防止）                    |
+| INITIAL_Z          | number | 0   | 開始時の Z 座標                                         |
+| INITIAL_ROTATION_Y | number | 0   | 開始時の向き（Y 軸回転・rad。0 で +Z 方向）             |
+| BOUNDARY_RADIUS    | number | 20  | 移動可能な最大半径（XZ 平面での原点からの距離）         |
 
 ### CRYSTAL
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| SPEED | number | 2.0 | クリスタルの移動速度 |
-| MIN_RADIUS | number | 10 | リング内側の半径 |
-| MAX_RADIUS | number | 15 | リング外側の半径 |
+| キー       | 型     | 値  | 説明                 |
+| ---------- | ------ | --- | -------------------- |
+| SPEED      | number | 2.0 | クリスタルの移動速度 |
+| MIN_RADIUS | number | 10  | リング内側の半径     |
+| MAX_RADIUS | number | 15  | リング外側の半径     |
 
 ### BOOK
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| NEARBY_THRESHOLD | number | 15 | 本オブジェクトを「近い」と判定する閾値（TAP表示用） |
+| キー             | 型     | 値  | 説明                                                |
+| ---------------- | ------ | --- | --------------------------------------------------- |
+| NEARBY_THRESHOLD | number | 15  | 本オブジェクトを「近い」と判定する閾値（TAP表示用） |
 
 ### BOX
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| NEARBY_THRESHOLD | number | 15 | Boxオブジェクトを「近い」と判定する閾値（TAP表示用） |
+| キー             | 型     | 値  | 説明                                                 |
+| ---------------- | ------ | --- | ---------------------------------------------------- |
+| NEARBY_THRESHOLD | number | 15  | Boxオブジェクトを「近い」と判定する閾値（TAP表示用） |
 
 ### POST
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| NEARBY_THRESHOLD | number | 15 | Postオブジェクトを「近い」と判定する閾値（TAP表示用） |
+| キー             | 型     | 値  | 説明                                                  |
+| ---------------- | ------ | --- | ----------------------------------------------------- |
+| NEARBY_THRESHOLD | number | 15  | Postオブジェクトを「近い」と判定する閾値（TAP表示用） |
 
 ### LAYOUT
 
-| キー | 型 | 値 | 説明 |
-|------|-----|-----|------|
-| OBJECT_RING_RADIUS | number | 30 | オブジェクトを配置する円の半径 |
-| BOOK_HEIGHT | number | 4 | Book の高さ（Y） |
-| POST_HEIGHT | number | 5 | Post の高さ（Y） |
-| BOX_HEIGHT | number | 5 | Box の高さ（Y） |
-| COMPUTER_HEIGHT | number | 3.5 | Computer の高さ（Y） |
-| BOOK_SCALE | number | 10 | Book のスケール |
-| BOX_SCALE | number | 7 | Box のスケール |
-| POST_SCALE | number | 10 | Post のスケール |
-| COMPUTER_SCALE | number | 9 | Computer のスケール |
+| キー               | 型     | 値  | 説明                           |
+| ------------------ | ------ | --- | ------------------------------ |
+| OBJECT_RING_RADIUS | number | 30  | オブジェクトを配置する円の半径 |
+| BOOK_HEIGHT        | number | 4   | Book の高さ（Y）               |
+| POST_HEIGHT        | number | 5   | Post の高さ（Y）               |
+| BOX_HEIGHT         | number | 5   | Box の高さ（Y）                |
+| COMPUTER_HEIGHT    | number | 3.5 | Computer の高さ（Y）           |
+| BOOK_SCALE         | number | 10  | Book のスケール                |
+| BOX_SCALE          | number | 7   | Box のスケール                 |
+| POST_SCALE         | number | 10  | Post のスケール                |
+| COMPUTER_SCALE     | number | 9   | Computer のスケール            |
 
 ### FLOATING
 
 | オブジェクト | FLOAT_SPEED | FLOAT_AMPLITUDE | TILT_SPEED | TILT_ANGLE |
-|-------------|-------------|-----------------|------------|------------|
-| book | 1.0 | 0.3 | 2.5 | 0.08 |
-| post | 1.0 | 0.3 | 2.5 | 0.08 |
-| computer | 1.2 | 0.28 | 2.2 | 0.07 |
-| box | 0.9 | 0.32 | 2.8 | 0.09 |
+| ------------ | ----------- | --------------- | ---------- | ---------- |
+| book         | 1.0         | 0.3             | 2.5        | 0.08       |
+| post         | 1.0         | 0.3             | 2.5        | 0.08       |
+| computer     | 1.2         | 0.28            | 2.2        | 0.07       |
+| box          | 0.9         | 0.32            | 2.8        | 0.09       |
 
 ---
 
@@ -489,7 +498,7 @@ frontend/
                         ├→ Player (keys + joystick を統合)
 [JoystickControls] ─────┤
   → useInputStore       │
-  (joystick {x,y,isMoving}) 
+  (joystick {x,y,isMoving})
                         ↓
 [useFrame] → 移動・回転・接地判定・境界制限・カメラ更新
                 ↓
@@ -517,9 +526,13 @@ frontend/
 [BoxUI] → boxView/activeBoxCategory/currentBoxPage/selectedBoxSlotIndex を参照
        → menu/grid 遷移、詳細更新、ページ切替を制御
 [PostUI] → isPostOpen を参照し、手紙画像の表示/クローズを制御
+        → submit 時に `/api/letter` へ fetch（name/email/message + meta）
+[app/api/letter/route.ts] → Resend API へメール送信
+                         → 成功: { success: true } / 失敗: { error } を返却
 ```
 
 **useInputStore（Zustand）:**
+
 - `joystick: { x, y, isMoving }` — ジョイスティックの -1〜1 の値と操作中フラグ
 - `activeCrystalId: string | null` — 近距離で担当になったクリスタル
 - `isTalking: boolean` — 会話中フラグ
@@ -544,8 +557,10 @@ frontend/
 - AdventureBookUI が `isAdventureBookOpen`/`selectedAdventureSlot` を参照して表示を制御
 - BoxUI が `boxView`/`activeBoxCategory`/`currentBoxPage`/`selectedBoxSlotIndex` を参照して表示を制御
 - PostUI が `isPostOpen` を参照して表示を制御
+- PostUI が submit 時に `/api/letter` を呼び出し、`isSending`/`submitError` を更新
 
 **groundRef の流れ:**
+
 1. World で `useRef` 作成
 2. Floor に渡す → `<group ref={groundRef}>` で床メッシュの親に紐づく
 3. Player に渡す → レイキャストの対象として使用
@@ -554,11 +569,11 @@ frontend/
 
 ### Crystal.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | クリスタルモデルの表示、徘徊AI、距離と会話状態によるUI表示 |
+| 項目      | 内容                                                                  |
+| --------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **責務**  | クリスタルモデルの表示、徘徊AI、距離と会話状態によるUI表示            |
 | **Props** | `id: string`, `position: [x,y,z]`, `message: string`, `scale?: number | [x,y,z]`, `sectorStart: number`, `sectorSize: number`, `playerRef`, `isFrozen?: boolean` |
-| **依存** | crystal-transformed.glb, crystal_texture.jpg, useInputStore |
+| **依存**  | crystal-transformed.glb, crystal_texture.jpg, useInputStore           |
 
 **モデル:** `models/crystal-transformed.glb` の `nodes.Body`, `nodes.Left_Eye`  
 **マテリアル:** Body は `meshMatcapMaterial` + `crystal_texture.jpg`、Eye は `meshBasicMaterial`  
@@ -573,27 +588,27 @@ frontend/
 
 ### InteractionUI.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 会話開始/終了の UI 表示、メッセージ表示、本/ポスト/BOX のTAP導線表示 |
-| **Props** | なし |
-| **依存** | useInputStore |
+| 項目      | 内容                                                                 |
+| --------- | -------------------------------------------------------------------- |
+| **責務**  | 会話開始/終了の UI 表示、メッセージ表示、本/ポスト/BOX のTAP導線表示 |
+| **Props** | なし                                                                 |
+| **依存**  | useInputStore                                                        |
 
 **Tap ボタン（クリスタル）:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
 **Tap ボタン（Post）:** `activeCrystalId` がなく `isTalking=false` かつ `isBookNearby=false` かつ `isBoxNearby=false` かつ `isPostNearby=true` かつ `isPostOpen=false` のとき表示。クリックで `setIsPostOpen(true)`  
 **Tap ボタン（Box）:** `activeCrystalId` がなく `isBookNearby=false` かつ `isBoxNearby=true` かつ `boxView==="closed"` のとき表示。クリックで `setBoxView("menu")`  
 **Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` かつ `isAdventureBookOpen=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
-**会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了  
+**会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了
 
 ---
 
 ### AdventureBookUI.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | ぼうけんのしょUIの表示制御（スロット一覧/詳細画面/クローズ） |
-| **Props** | なし |
-| **依存** | useInputStore, `adventureBookData.ts`, `.font-adventure` |
+| 項目      | 内容                                                         |
+| --------- | ------------------------------------------------------------ |
+| **責務**  | ぼうけんのしょUIの表示制御（スロット一覧/詳細画面/クローズ） |
+| **Props** | なし                                                         |
+| **依存**  | useInputStore, `adventureBookData.ts`, `.font-adventure`     |
 
 **表示条件:** `isAdventureBookOpen=true` のとき全画面オーバーレイを表示  
 **スロット一覧:** `ADVENTURE_SLOTS`（1〜3）を表示し、各行のサブラベルには職業名（`job`）を表示。選択で `selectedAdventureSlot` を更新  
@@ -605,11 +620,11 @@ frontend/
 
 ### BoxUI.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | アイテムBOX UI の表示制御（menu/grid 切り替え、詳細表示、ページング） |
-| **Props** | なし |
-| **依存** | useInputStore, `boxData.ts` |
+| 項目      | 内容                                                                  |
+| --------- | --------------------------------------------------------------------- |
+| **責務**  | アイテムBOX UI の表示制御（menu/grid 切り替え、詳細表示、ページング） |
+| **Props** | なし                                                                  |
+| **依存**  | useInputStore, `boxData.ts`                                           |
 
 **表示条件:** `boxView !== "closed"` のとき表示（`page.tsx` で動的 import）  
 **メニュー:** `BOX_MENU_ENTRIES` を表示し、選択で `activeBoxCategory` をセットして `boxView="grid"` へ遷移。メニュー画面全体に `font-adventure`（ドットフォント）を適用  
@@ -629,17 +644,34 @@ frontend/
 
 ### PostUI.tsx
 
-| 項目 | 内容 |
-|------|------|
-| **責務** | 手紙オーバーレイ UI の表示・クローズ制御・入力フォーム表示 |
-| **Props** | なし |
-| **依存** | useInputStore, `next/image`, `.font-dancing`, `.font-playfair`, `public/post/*.png` |
+| 項目      | 内容                                                                                |
+| --------- | ----------------------------------------------------------------------------------- |
+| **責務**  | 手紙オーバーレイ UI の表示・クローズ制御・入力フォーム・送信処理                     |
+| **Props** | なし                                                                                |
+| **依存**  | useInputStore, `next/image`, `fetch("/api/letter")`, `.font-dancing`, `.font-playfair`, `public/post/*.png` |
 
 **表示条件:** `isPostOpen=true` のとき全画面オーバーレイを表示（`page.tsx` で動的 import）  
-**表示内容:** 背景に `/post/letter.png` を `next/image`（`fill`）で表示し、紙上にフォームを重ねる。モバイルは `object-cover top`、PCは `object-contain center`  
-**入力UI:** `name`（必須）, `email`（任意）, `message`（本文）をローカル state で保持。`form_input.png` を名前/メール入力欄の装飾背景に使用  
-**送信UI:** `stamp.png` を送信ボタン画像として表示（`handleSubmit` は TODO の仮実装）  
-**クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`  
+**表示内容:** 背景に `/post/letter.png` を `next/image`（`fill`）で表示し、紙上にフォームを重ねる。モバイルは `object-cover top`、PCは `object-contain center`。モバイルの紙面コンテナは `h-[80vh]` で中央配置  
+**入力UI:** `name`（任意）, `email`（任意）, `message`（任意）をローカル state で保持。`form_input.png` を名前/メール入力欄の装飾背景に使用  
+**送信処理:** `handleSubmit` で `/api/letter` に POST。payload は `name/email/message`（trim して空文字は `undefined`）と `meta`（`sentAt`, `userAgent`, `screenSize`, `language`）  
+**送信状態:** `isSending` で多重送信を防止し、送信中はスタンプボタンを `disabled` にする。失敗時は `submitError` を表示  
+**送信UI:** `stamp.png` を送信ボタン画像として表示。成功時は入力を初期化して `closePost()`  
+**クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`
+
+---
+
+### app/api/letter/route.ts
+
+| 項目      | 内容                                                            |
+| --------- | --------------------------------------------------------------- |
+| **責務**  | PostUI から受け取った手紙データをメール送信し、JSON で結果を返却 |
+| **依存**  | `next/server`（Route Handler）, `resend`                        |
+
+**エンドポイント:** `POST /api/letter`  
+**入力:** `name`, `email`, `message`, `meta`（送信時刻・UA・画面サイズ・言語）  
+**配送:** `Resend.emails.send` を使って `process.env.MY_EMAIL` 宛に送信（送信元は `onboarding@resend.dev`）  
+**レスポンス:** 成功時 `{ success: true, data }`。Resend/API エラー時は `500` + `{ error: string }`  
+**必要環境変数:** `RESEND_API_KEY`, `MY_EMAIL`
 
 ---
 
@@ -716,27 +748,27 @@ frontend/
 
 ## アセット
 
-| パス | 形式 | 用途 | ノード名 |
-|------|------|------|----------|
-| models/coco.glb | GLB | プレイヤー（Coco） | Scene ルートを `SkeletonUtils.clone` でクローン |
-| models/crystal-transformed.glb | GLB | クリスタル | Body, Left_Eye |
-| models/dome-transformed.glb | GLB | ドーム（Dome） | Dome |
-| models/floor-transformed.glb | GLB | 床（Floor） | Floor |
-| models/book-transformed.glb | GLB | 本（Book） | Mesh_0 |
-| models/box-transformed.glb | GLB | 箱（Box） | mesh_0 |
-| models/post-transformed.glb | GLB | ポスト（Post） | mesh_0 |
-| models/computer-transformed.glb | GLB | コンピューター（Computer） | mesh_0 |
-| models/coco-transformed.glb | GLB | Coco の旧変換モデル（未使用） | - |
-| models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB | 元モデル（レガシー） | - |
-| items/bakuonso.png, items/butakun.png, items/lipton.png | PNG | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | - |
-| skills/*.png | PNG | BoxUI スキルアイコン（`boxData.ts` の `url` 参照） | - |
-| post/letter.png | PNG | PostUI 手紙背景画像 | - |
-| post/form_input.png | PNG | PostUI 名前/メール入力欄の装飾背景 | - |
-| post/stamp.png | PNG | PostUI 送信ボタン（シーリングスタンプ） | - |
-| textures/coco_texture.png | PNG | Coco Body の Matcap | - |
-| textures/crystal_texture.jpg | JPG | クリスタル Matcap | - |
-| textures/dome_texture.jpg | JPG | ドーム Matcap | - |
-| textures/floor_texture.jpg | JPG | 床 Matcap | - |
+| パス                                                                               | 形式 | 用途                                                      | ノード名                                        |
+| ---------------------------------------------------------------------------------- | ---- | --------------------------------------------------------- | ----------------------------------------------- |
+| models/coco.glb                                                                    | GLB  | プレイヤー（Coco）                                        | Scene ルートを `SkeletonUtils.clone` でクローン |
+| models/crystal-transformed.glb                                                     | GLB  | クリスタル                                                | Body, Left_Eye                                  |
+| models/dome-transformed.glb                                                        | GLB  | ドーム（Dome）                                            | Dome                                            |
+| models/floor-transformed.glb                                                       | GLB  | 床（Floor）                                               | Floor                                           |
+| models/book-transformed.glb                                                        | GLB  | 本（Book）                                                | Mesh_0                                          |
+| models/box-transformed.glb                                                         | GLB  | 箱（Box）                                                 | mesh_0                                          |
+| models/post-transformed.glb                                                        | GLB  | ポスト（Post）                                            | mesh_0                                          |
+| models/computer-transformed.glb                                                    | GLB  | コンピューター（Computer）                                | mesh_0                                          |
+| models/coco-transformed.glb                                                        | GLB  | Coco の旧変換モデル（未使用）                             | -                                               |
+| models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB  | 元モデル（レガシー）                                      | -                                               |
+| items/bakuonso.png, items/butakun.png, items/lipton.png                            | PNG  | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | -                                               |
+| skills/\*.png                                                                      | PNG  | BoxUI スキルアイコン（`boxData.ts` の `url` 参照）        | -                                               |
+| post/letter.png                                                                    | PNG  | PostUI 手紙背景画像                                       | -                                               |
+| post/form_input.png                                                                | PNG  | PostUI 名前/メール入力欄の装飾背景                        | -                                               |
+| post/stamp.png                                                                     | PNG  | PostUI 送信ボタン（シーリングスタンプ）                   | -                                               |
+| textures/coco_texture.png                                                          | PNG  | Coco Body の Matcap                                       | -                                               |
+| textures/crystal_texture.jpg                                                       | JPG  | クリスタル Matcap                                         | -                                               |
+| textures/dome_texture.jpg                                                          | JPG  | ドーム Matcap                                             | -                                               |
+| textures/floor_texture.jpg                                                         | JPG  | 床 Matcap                                                 | -                                               |
 
 **-transformed モデル:** Dome, Floor, Book, Box, Post, Computer は変換済みの GLB を使用。Coco は `coco.glb` を使用。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
@@ -768,6 +800,12 @@ frontend/
 - Coco のアニメーションは `setEffectiveTimeScale` と `stop()` を使用。Player が isMoving, moveDirection を渡す
 - Dome, Floor, Book, Box, Post, Computer は transformed GLB を使用。Coco は `coco.glb` + `coco_texture.png` を使用
 
+### 環境変数（手紙送信）
+
+- `RESEND_API_KEY`: Resend の API キー（`app/api/letter/route.ts` で使用）
+- `MY_EMAIL`: 手紙の配送先メールアドレス
+- `.env.local` に設定し、未設定時は `/api/letter` の送信で 500 エラーになる
+
 ---
 
 ## 今後の拡張
@@ -782,18 +820,19 @@ frontend/
 
 ## トラブルシューティング
 
-| 現象 | 原因 | 対処 |
-|------|------|------|
-| プレイヤーが床をすり抜ける | 床の法線が逆 | Blender で法線を反転 |
-| ドームが浮く/沈む | DOME_POSITION_Y のずれ | 床とドームの BoundingBox を確認し調整 |
-| モデルが表示されない | パス・ノード名の誤り | public/ からの相対パス、nodes のキーを確認 |
-| カメラが追従しない | groundRef が null | Floor のロード完了を待つ。INITIAL_Y で落下を遅延 |
+| 現象                       | 原因                   | 対処                                             |
+| -------------------------- | ---------------------- | ------------------------------------------------ |
+| プレイヤーが床をすり抜ける | 床の法線が逆           | Blender で法線を反転                             |
+| ドームが浮く/沈む          | DOME_POSITION_Y のずれ | 床とドームの BoundingBox を確認し調整            |
+| モデルが表示されない       | パス・ノード名の誤り   | public/ からの相対パス、nodes のキーを確認       |
+| カメラが追従しない         | groundRef が null      | Floor のロード完了を待つ。INITIAL_Y で落下を遅延 |
+| 手紙の送信に失敗する       | 環境変数未設定/Resend側エラー | `RESEND_API_KEY` と `MY_EMAIL` を確認し、API レスポンスの `error` を確認 |
 
 ---
 
 ## ドキュメントの使い分け
 
-| ファイル | 用途 |
-|----------|------|
+| ファイル  | 用途                                        |
+| --------- | ------------------------------------------- |
 | README.md | GitHub 公開用。セットアップ、概要、デプロイ |
-| SPEC.md | 開発・AI エージェント向け。本仕様書 |
+| SPEC.md   | 開発・AI エージェント向け。本仕様書         |

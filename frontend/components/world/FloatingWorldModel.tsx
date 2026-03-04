@@ -12,7 +12,10 @@ type FloatingParams = {
   TILT_ANGLE: number;
 };
 
-export type FloatingModelProps = Omit<ComponentPropsWithoutRef<"group">, "position" | "rotation"> & {
+export type FloatingModelProps = Omit<
+  ComponentPropsWithoutRef<"group">,
+  "position" | "rotation"
+> & {
   position?: Vec3;
   rotation?: Vec3;
 };

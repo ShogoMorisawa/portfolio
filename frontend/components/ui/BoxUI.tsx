@@ -129,10 +129,7 @@ function JukurenGauge({ level }: { level: number }) {
           aria-hidden
         />
         {/* 色バー（左から level 個だけ表示） */}
-        <div
-          className={`absolute inset-[2px] flex ${SWORD_CLIP}`}
-          aria-hidden
-        >
+        <div className={`absolute inset-[2px] flex ${SWORD_CLIP}`} aria-hidden>
           {colors.map((bg, i) => (
             <div
               key={i}
@@ -149,7 +146,8 @@ function JukurenGauge({ level }: { level: number }) {
 }
 
 /** スキル詳細パネル用の統一区切り線 */
-const SKILL_PANEL_DIVIDER = "border-b-[3px] border-dashed border-[#2a364f] my-0.5";
+const SKILL_PANEL_DIVIDER =
+  "border-b-[3px] border-dashed border-[#2a364f] my-0.5";
 
 /** スキル用詳細パネル（モンハンステータス画面風・画像構造準拠） */
 function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
@@ -160,7 +158,9 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       </div>
     );
   }
-  const dropShadow = { textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)" } as const;
+  const dropShadow = {
+    textShadow: "0 2px 4px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1)",
+  } as const;
   return (
     <div className="p-2 flex flex-col bg-[#0b101c] min-h-0">
       {/* 1. 最上段: アイコンと名前 */}
@@ -170,7 +170,13 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
           style={dropShadow}
         >
           {skill.url ? (
-            <Image src={skill.url} alt="" width={48} height={48} className="w-full h-full object-contain p-0.5" />
+            <Image
+              src={skill.url}
+              alt=""
+              width={48}
+              height={48}
+              className="w-full h-full object-contain p-0.5"
+            />
           ) : (
             <span className="font-bold">{skill.name.slice(0, 1)}</span>
           )}
@@ -198,10 +204,16 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 
       {/* 4. 3段目: 攻撃力 */}
       <div className="flex justify-between items-center py-0">
-        <span className="text-white font-bold text-sm md:text-base" style={dropShadow}>
+        <span
+          className="text-white font-bold text-sm md:text-base"
+          style={dropShadow}
+        >
           ◆ 攻撃力
         </span>
-        <span className="text-white font-bold text-sm md:text-base tabular-nums" style={dropShadow}>
+        <span
+          className="text-white font-bold text-sm md:text-base tabular-nums"
+          style={dropShadow}
+        >
           {skill.attack}
         </span>
       </div>
@@ -211,7 +223,10 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 
       {/* 6. 4段目: 斬れ味ラベル */}
       <div className="py-0">
-        <span className="text-white font-bold text-sm md:text-base" style={dropShadow}>
+        <span
+          className="text-white font-bold text-sm md:text-base"
+          style={dropShadow}
+        >
           ◆ 斬れ味
         </span>
       </div>
@@ -238,22 +253,36 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 /** アイテム用詳細パネル（1画面収まり用に圧縮） */
 function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
   if (!item) {
-    return <div className="p-2 text-amber-200/60 text-xs">スロットを選択してください</div>;
+    return (
+      <div className="p-2 text-amber-200/60 text-xs">
+        スロットを選択してください
+      </div>
+    );
   }
   return (
     <div className="p-2 flex flex-col min-h-0 gap-1">
       <div className="flex items-center gap-2">
         <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200 shrink-0">
           {item.iconPath ? (
-            <Image src={item.iconPath} alt="" width={48} height={48} className="w-full h-full object-contain p-0.5" />
+            <Image
+              src={item.iconPath}
+              alt=""
+              width={48}
+              height={48}
+              className="w-full h-full object-contain p-0.5"
+            />
           ) : (
             <span className="font-bold">{item.name.slice(0, 1)}</span>
           )}
         </div>
-        <p className="font-bold text-amber-100 text-xl wrap-break-word min-w-0">{item.name}</p>
+        <p className="font-bold text-amber-100 text-xl wrap-break-word min-w-0">
+          {item.name}
+        </p>
       </div>
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
-      <p className="text-sm text-amber-100/90 leading-tight line-clamp-4">{item.description}</p>
+      <p className="text-sm text-amber-100/90 leading-tight line-clamp-4">
+        {item.description}
+      </p>
     </div>
   );
 }
@@ -272,9 +301,14 @@ const BoxGridCell = memo(function BoxGridCell({
   onMountContainer: (index: number, el: HTMLDivElement | null) => void;
   onMountButton: (index: number, el: HTMLButtonElement | null) => void;
 }) {
-  const displayName = entry ? (entry as ItemEntry).name ?? (entry as SkillEntry).name : "";
+  const displayName = entry
+    ? ((entry as ItemEntry).name ?? (entry as SkillEntry).name)
+    : "";
   const displayChar = displayName ? displayName.slice(0, 1) : "";
-  const handleClick = useCallback(() => onSelectSlot(globalIndex), [onSelectSlot, globalIndex]);
+  const handleClick = useCallback(
+    () => onSelectSlot(globalIndex),
+    [onSelectSlot, globalIndex],
+  );
   const handleContainerRef = useCallback(
     (el: HTMLDivElement | null) => onMountContainer(globalIndex, el),
     [onMountContainer, globalIndex],
@@ -300,9 +334,14 @@ const BoxGridCell = memo(function BoxGridCell({
         `}
       >
         {entry ? (
-          ("iconPath" in entry && entry.iconPath) || ("url" in entry && entry.url) ? (
+          ("iconPath" in entry && entry.iconPath) ||
+          ("url" in entry && entry.url) ? (
             <Image
-              src={("iconPath" in entry ? entry.iconPath : (entry as SkillEntry).url) ?? ""}
+              src={
+                ("iconPath" in entry
+                  ? entry.iconPath
+                  : (entry as SkillEntry).url) ?? ""
+              }
               alt=""
               width={64}
               height={64}
@@ -329,30 +368,41 @@ function BoxGridView() {
   const currentBoxPage = useInputStore((s) => s.currentBoxPage);
   const selectedBoxSlotIndex = useInputStore((s) => s.selectedBoxSlotIndex);
   const setCurrentBoxPage = useInputStore((s) => s.setCurrentBoxPage);
-  const setSelectedBoxSlotIndex = useInputStore((s) => s.setSelectedBoxSlotIndex);
+  const setSelectedBoxSlotIndex = useInputStore(
+    (s) => s.setSelectedBoxSlotIndex,
+  );
   const containerRefMap = useRef<Map<number, HTMLDivElement>>(new Map());
   const buttonRefMap = useRef<Map<number, HTMLButtonElement>>(new Map());
   const highlightedIndexRef = useRef(-1);
 
-  const handleSelectSlot = useCallback((index: number) => {
-    if (index === useInputStore.getState().selectedBoxSlotIndex) return;
-    setSelectedBoxSlotIndex(index);
-  }, [setSelectedBoxSlotIndex]);
+  const handleSelectSlot = useCallback(
+    (index: number) => {
+      if (index === useInputStore.getState().selectedBoxSlotIndex) return;
+      setSelectedBoxSlotIndex(index);
+    },
+    [setSelectedBoxSlotIndex],
+  );
 
-  const handleMountButton = useCallback((index: number, el: HTMLButtonElement | null) => {
-    if (!el) {
-      buttonRefMap.current.delete(index);
-      return;
-    }
-    buttonRefMap.current.set(index, el);
-  }, []);
-  const handleMountContainer = useCallback((index: number, el: HTMLDivElement | null) => {
-    if (!el) {
-      containerRefMap.current.delete(index);
-      return;
-    }
-    containerRefMap.current.set(index, el);
-  }, []);
+  const handleMountButton = useCallback(
+    (index: number, el: HTMLButtonElement | null) => {
+      if (!el) {
+        buttonRefMap.current.delete(index);
+        return;
+      }
+      buttonRefMap.current.set(index, el);
+    },
+    [],
+  );
+  const handleMountContainer = useCallback(
+    (index: number, el: HTMLDivElement | null) => {
+      if (!el) {
+        containerRefMap.current.delete(index);
+        return;
+      }
+      containerRefMap.current.set(index, el);
+    },
+    [],
+  );
 
   const isGridActive = boxView === "grid" && activeBoxCategory !== null;
   const isSkills = activeBoxCategory === "skills";
@@ -394,12 +444,10 @@ function BoxGridView() {
 
   const headerTitle = isSkills ? "装備BOX" : "アイテムBOX";
   const footerName = selectedEntry
-    ? (selectedEntry as ItemEntry).name ?? (selectedEntry as SkillEntry).name
+    ? ((selectedEntry as ItemEntry).name ?? (selectedEntry as SkillEntry).name)
     : "";
   const footerQuantity =
-    selectedEntry && !isSkills
-      ? (selectedEntry as ItemEntry).quantity
-      : null;
+    selectedEntry && !isSkills ? (selectedEntry as ItemEntry).quantity : null;
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -417,10 +465,14 @@ function BoxGridView() {
 
   useEffect(() => {
     if (!isGridActive) {
-      const prevContainer = containerRefMap.current.get(highlightedIndexRef.current);
+      const prevContainer = containerRefMap.current.get(
+        highlightedIndexRef.current,
+      );
       const prevButton = buttonRefMap.current.get(highlightedIndexRef.current);
-      if (prevContainer) prevContainer.classList.remove(...SELECTED_CELL_CONTAINER_CLASSES);
-      if (prevButton) prevButton.classList.remove(...SELECTED_CELL_BUTTON_CLASSES);
+      if (prevContainer)
+        prevContainer.classList.remove(...SELECTED_CELL_CONTAINER_CLASSES);
+      if (prevButton)
+        prevButton.classList.remove(...SELECTED_CELL_BUTTON_CLASSES);
       highlightedIndexRef.current = -1;
       return;
     }
@@ -435,7 +487,8 @@ function BoxGridView() {
 
     const prevContainer = containerRefMap.current.get(prevHighlightedIndex);
     const prevButton = buttonRefMap.current.get(prevHighlightedIndex);
-    if (prevContainer) prevContainer.classList.remove(...SELECTED_CELL_CONTAINER_CLASSES);
+    if (prevContainer)
+      prevContainer.classList.remove(...SELECTED_CELL_CONTAINER_CLASSES);
     if (prevButton) {
       prevButton.classList.remove(...SELECTED_CELL_BUTTON_CLASSES);
       prevButton.classList.add(BASE_CELL_BUTTON_BG_CLASS);
@@ -446,9 +499,13 @@ function BoxGridView() {
 
     const nextContainer = containerRefMap.current.get(nextHighlightedIndex);
     const nextButton = buttonRefMap.current.get(nextHighlightedIndex);
-    if (nextContainer) nextContainer.classList.add(...SELECTED_CELL_CONTAINER_CLASSES);
+    if (nextContainer)
+      nextContainer.classList.add(...SELECTED_CELL_CONTAINER_CLASSES);
     if (nextButton) {
-      nextButton.classList.remove(BASE_CELL_BUTTON_BG_CLASS, EMPTY_CELL_OPACITY_CLASS);
+      nextButton.classList.remove(
+        BASE_CELL_BUTTON_BG_CLASS,
+        EMPTY_CELL_OPACITY_CLASS,
+      );
       nextButton.classList.add(...SELECTED_CELL_BUTTON_CLASSES);
     }
 
@@ -471,9 +528,7 @@ function BoxGridView() {
           ${isMobile ? "w-full h-[36vh] min-h-0 overflow-auto" : "w-64 md:w-72 min-w-0 shrink-0 md:h-[40%]"}
         `}
       >
-        <div
-          className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#0b101c] overflow-hidden"
-        >
+        <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#0b101c] overflow-hidden">
           <div className="flex-1 min-h-0 overflow-hidden">
             {isSkills ? (
               <SkillDetailPanel skill={selectedEntry as SkillEntry | null} />
@@ -502,7 +557,9 @@ function BoxGridView() {
                 <button
                   type="button"
                   disabled={currentBoxPage <= 1}
-                  onClick={() => setCurrentBoxPage(Math.max(1, currentBoxPage - 1))}
+                  onClick={() =>
+                    setCurrentBoxPage(Math.max(1, currentBoxPage - 1))
+                  }
                   className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
                 >
                   L
@@ -513,21 +570,27 @@ function BoxGridView() {
                 <button
                   type="button"
                   disabled={currentBoxPage >= pageCount}
-                  onClick={() => setCurrentBoxPage(Math.min(pageCount, currentBoxPage + 1))}
+                  onClick={() =>
+                    setCurrentBoxPage(Math.min(pageCount, currentBoxPage + 1))
+                  }
                   className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
                 >
                   R
                 </button>
               </div>
             ) : (
-              <span className="text-white text-sm md:text-base font-bold tabular-nums">1 / 1</span>
+              <span className="text-white text-sm md:text-base font-bold tabular-nums">
+                1 / 1
+              </span>
             )}
           </div>
 
           {/* グリッド: コンテナクエリで「親の短い方」に完璧に追従する正方形を作る */}
           <div
             className="flex-1 min-h-0 min-w-0 flex items-center justify-center overflow-hidden p-1"
-            style={{ containerType: "size" as React.CSSProperties["containerType"] }}
+            style={{
+              containerType: "size" as React.CSSProperties["containerType"],
+            }}
           >
             <div
               className="grid bg-black"
@@ -561,7 +624,9 @@ export default function BoxUI() {
   const setBoxView = useInputStore((s) => s.setBoxView);
   const setActiveBoxCategory = useInputStore((s) => s.setActiveBoxCategory);
   const setCurrentBoxPage = useInputStore((s) => s.setCurrentBoxPage);
-  const setSelectedBoxSlotIndex = useInputStore((s) => s.setSelectedBoxSlotIndex);
+  const setSelectedBoxSlotIndex = useInputStore(
+    (s) => s.setSelectedBoxSlotIndex,
+  );
 
   if (boxView === "closed") return null;
 

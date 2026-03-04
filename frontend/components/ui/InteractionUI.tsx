@@ -72,18 +72,18 @@ export default function InteractionUI() {
         !isBoxNearby &&
         isPostNearby &&
         !isPostOpen && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <button
-            onClick={handleOpenPost}
-            className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
-          >
-            <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
-              TAP
-            </span>
-            <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
-          </button>
-        </div>
-      )}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <button
+              onClick={handleOpenPost}
+              className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
+            >
+              <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
+                TAP
+              </span>
+              <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
+            </button>
+          </div>
+        )}
 
       {/* Box の TAP - アイテムBOXを開く（メインメニューへ） */}
       {!isTalking &&
@@ -91,36 +91,36 @@ export default function InteractionUI() {
         !isBookNearby &&
         isBoxNearby &&
         boxView === "closed" && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <button
-            onClick={handleOpenBox}
-            className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
-          >
-            <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
-              TAP
-            </span>
-            <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
-          </button>
-        </div>
-      )}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <button
+              onClick={handleOpenBox}
+              className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
+            >
+              <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
+                TAP
+              </span>
+              <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
+            </button>
+          </div>
+        )}
 
       {/* 本の TAP - ぼうけんのしょを開く */}
       {!isTalking &&
         !activeCrystalId &&
         isBookNearby &&
         !isAdventureBookOpen && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <button
-            onClick={handleOpenAdventureBook}
-            className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
-          >
-            <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
-              TAP
-            </span>
-            <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
-          </button>
-        </div>
-      )}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <button
+              onClick={handleOpenAdventureBook}
+              className="pointer-events-auto cursor-pointer group relative flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-110 hover:bg-white/40 active:scale-95 animate-pulse"
+            >
+              <span className="text-white font-bold text-xl tracking-widest drop-shadow-md group-hover:text-yellow-200">
+                TAP
+              </span>
+              <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-50" />
+            </button>
+          </div>
+        )}
 
       {/* 会話モード (全画面オーバーレイ) */}
       {isTalking && activeMessage && (

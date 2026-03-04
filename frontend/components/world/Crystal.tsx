@@ -139,10 +139,7 @@ export function Model({
         setTarget(getNextPosition(currentPos));
       } else if (dt > 0) {
         const dest = nextTarget ?? target;
-        const direction = new THREE.Vector3().subVectors(
-          dest,
-          currentPos,
-        );
+        const direction = new THREE.Vector3().subVectors(dest, currentPos);
         const len = direction.length();
         if (len > MIN_DIRECTION_LENGTH) {
           direction.normalize();
@@ -156,8 +153,7 @@ export function Model({
       group.current.lookAt(lookTarget);
     }
 
-    currentPos.y =
-      initialPos[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
+    currentPos.y = initialPos[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
   });
 
   // モデルの「正面」が Three.js の -Z とずれているため、90度補正

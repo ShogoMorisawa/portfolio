@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import { DotGothic16, Dancing_Script, Playfair_Display } from "next/font/google";
+import {
+  DotGothic16,
+  Dancing_Script,
+  Playfair_Display,
+} from "next/font/google";
 import { WebVitalsRegistry } from "@/components/providers/WebVitalsRegistry";
 import "./globals.css";
 

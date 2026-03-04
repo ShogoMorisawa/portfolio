@@ -17,7 +17,12 @@ type BoxProps = FloatingModelProps & {
 };
 
 export function Model(props: BoxProps) {
-  const { position = [0, 0, 0], rotation = [0, 0, 0], playerRef, ...rest } = props;
+  const {
+    position = [0, 0, 0],
+    rotation = [0, 0, 0],
+    playerRef,
+    ...rest
+  } = props;
   const setIsBoxNearby = useInputStore((s) => s.setIsBoxNearby);
   const boxView = useInputStore((s) => s.boxView);
   const prevNearbyRef = useRef<boolean | null>(null);

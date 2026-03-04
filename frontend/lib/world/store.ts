@@ -74,7 +74,10 @@ export const useInputStore = create<WorldState>((set) => ({
   selectedAdventureSlot: null,
   setIsBookNearby: (nearby) => set({ isBookNearby: nearby }),
   setIsAdventureBookOpen: (open) =>
-    set({ isAdventureBookOpen: open, ...(open ? {} : { selectedAdventureSlot: null }) }),
+    set({
+      isAdventureBookOpen: open,
+      ...(open ? {} : { selectedAdventureSlot: null }),
+    }),
   setSelectedAdventureSlot: (slot) => set({ selectedAdventureSlot: slot }),
 
   isBoxNearby: false,
@@ -87,7 +90,11 @@ export const useInputStore = create<WorldState>((set) => ({
     set({
       boxView: view,
       ...(view !== "grid"
-        ? { activeBoxCategory: null, currentBoxPage: 1, selectedBoxSlotIndex: -1 }
+        ? {
+            activeBoxCategory: null,
+            currentBoxPage: 1,
+            selectedBoxSlotIndex: -1,
+          }
         : {}),
     }),
   setActiveBoxCategory: (category) => set({ activeBoxCategory: category }),

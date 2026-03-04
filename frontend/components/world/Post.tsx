@@ -17,8 +17,12 @@ type PostProps = FloatingModelProps & {
 };
 
 export function Model(props: PostProps) {
-  const { position = [0, 0, 0], rotation = [0, 0, 0], playerRef, ...rest } =
-    props;
+  const {
+    position = [0, 0, 0],
+    rotation = [0, 0, 0],
+    playerRef,
+    ...rest
+  } = props;
   const setIsPostNearby = useInputStore((s) => s.setIsPostNearby);
   const isPostOpen = useInputStore((s) => s.isPostOpen);
   const prevNearbyRef = useRef<boolean | null>(null);

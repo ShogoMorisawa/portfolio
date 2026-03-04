@@ -205,7 +205,10 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
   });
 
   return (
-    <group ref={playerRef} position={[PLAYER.INITIAL_X, PLAYER.INITIAL_Y, PLAYER.INITIAL_Z]}>
+    <group
+      ref={playerRef}
+      position={[PLAYER.INITIAL_X, PLAYER.INITIAL_Y, PLAYER.INITIAL_Z]}
+    >
       <Coco isMoving={isMoving} moveDirection={moveDirection} />
     </group>
   );
