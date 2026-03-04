@@ -209,7 +209,7 @@ export default function PostUI() {
               className="self-center relative w-20 h-20 sm:w-24 sm:h-24 hover:scale-105 active:scale-95 transition-transform mt-2 disabled:opacity-60 disabled:pointer-events-none"
             >
               <Image
-                src="/post/stamp.png"
+                src="/post/send-button.png"
                 alt="送信"
                 fill
                 className="object-contain drop-shadow-lg"

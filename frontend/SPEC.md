@@ -183,7 +183,7 @@ frontend/
 │   └── post/
 │       ├── letter.png         # PostUI の手紙背景
 │       ├── form_input.png     # PostUI の名前/メール入力欄背景
-│       └── stamp.png          # PostUI の送信ボタン画像
+│       └── send-button.png          # PostUI の送信ボタン画像
 ├── SPEC.md                   # 本ドキュメント
 └── package.json
 ```
@@ -655,7 +655,7 @@ frontend/
 **入力UI:** `name`（任意）, `email`（任意）, `message`（任意）をローカル state で保持。`form_input.png` を名前/メール入力欄の装飾背景に使用  
 **送信処理:** `handleSubmit` で `/api/letter` に POST。payload は `name/email/message`（trim して空文字は `undefined`）と `meta`（`sentAt`, `userAgent`, `screenSize`, `language`）  
 **送信状態:** `isSending` で多重送信を防止し、送信中はスタンプボタンを `disabled` にする。失敗時は `submitError` を表示  
-**送信UI:** `stamp.png` を送信ボタン画像として表示。成功時は入力を初期化して `closePost()`  
+**送信UI:** `send-button.png` を送信ボタン画像として表示。成功時は入力を初期化して `closePost()`  
 **クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`
 
 ---
@@ -764,7 +764,7 @@ frontend/
 | skills/\*.png                                                                      | PNG  | BoxUI スキルアイコン（`boxData.ts` の `url` 参照）        | -                                               |
 | post/letter.png                                                                    | PNG  | PostUI 手紙背景画像                                       | -                                               |
 | post/form_input.png                                                                | PNG  | PostUI 名前/メール入力欄の装飾背景                        | -                                               |
-| post/stamp.png                                                                     | PNG  | PostUI 送信ボタン（シーリングスタンプ）                   | -                                               |
+| post/send-button.png                                                                     | PNG  | PostUI 送信ボタン（シーリングスタンプ）                   | -                                               |
 | textures/coco_texture.png                                                          | PNG  | Coco Body の Matcap                                       | -                                               |
 | textures/crystal_texture.jpg                                                       | JPG  | クリスタル Matcap                                         | -                                               |
 | textures/dome_texture.jpg                                                          | JPG  | ドーム Matcap                                             | -                                               |
