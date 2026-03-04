@@ -122,17 +122,21 @@ export default function PostUI() {
             </div>
           ) : (
             <>
-              {/* 切手予定地（右上） */}
-              <div className="absolute top-6 right-6 sm:top-8 sm:right-8 w-14 h-16 sm:w-16 sm:h-20 bg-[#4a3728]/10 border-2 border-dashed border-[#5c4033]/60 rounded flex items-center justify-center text-[10px] sm:text-xs text-[#4a3728]">
-                切手
-                <br />
-                予定地
+              {/* 宛名 + 切手（横並び・フレックス） */}
+              <div className="flex items-center justify-between gap-4 mt-2 sm:mt-4 mb-4 sm:mb-6">
+                <h2 className="font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] drop-shadow-sm shrink-0">
+                  To: Shogo Morisawa
+                </h2>
+                <div className="relative w-24 h-20 sm:w-28 sm:h-24 shrink-0">
+                  <Image
+                    src="/post/stamp.png"
+                    alt="切手"
+                    fill
+                    className="object-contain drop-shadow-md"
+                    sizes="7rem"
+                  />
+                </div>
               </div>
-
-              {/* 宛名 */}
-              <h2 className="font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] mt-2 sm:mt-4 mb-4 sm:mb-6 drop-shadow-sm">
-                To: Shogo Morisawa
-              </h2>
 
               {/* フォーム */}
               <form

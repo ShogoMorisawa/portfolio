@@ -183,7 +183,8 @@ frontend/
 │   └── post/
 │       ├── letter.png         # PostUI の手紙背景
 │       ├── form_input.png     # PostUI の名前/メール入力欄背景
-│       └── send-button.png          # PostUI の送信ボタン画像
+│       ├── send-button.png    # PostUI の送信ボタン画像
+│       └── stamp.png          # PostUI の切手画像（宛名横）
 ├── SPEC.md                   # 本ドキュメント
 └── package.json
 ```
@@ -652,10 +653,12 @@ frontend/
 
 **表示条件:** `isPostOpen=true` のとき全画面オーバーレイを表示（`page.tsx` で動的 import）  
 **表示内容:** 背景に `/post/letter.png` を `next/image`（`fill`）で表示し、紙上にフォームを重ねる。モバイルは `object-cover top`、PCは `object-contain center`。モバイルの紙面コンテナは `h-[80vh]` で中央配置  
+**ヘッダー表示:** 宛名 (`To: Shogo Morisawa`) と切手画像 (`/post/stamp.png`) を横並びで表示  
 **入力UI:** `name`（任意）, `email`（任意）, `message`（任意）をローカル state で保持。`form_input.png` を名前/メール入力欄の装飾背景に使用  
 **送信処理:** `handleSubmit` で `/api/letter` に POST。payload は `name/email/message`（trim して空文字は `undefined`）と `meta`（`sentAt`, `userAgent`, `screenSize`, `language`）  
-**送信状態:** `isSending` で多重送信を防止し、送信中はスタンプボタンを `disabled` にする。失敗時は `submitError` を表示  
-**送信UI:** `send-button.png` を送信ボタン画像として表示。成功時は入力を初期化して `closePost()`  
+**送信状態:** `isSending` で多重送信を防止し、送信中は送信ボタンを `disabled` にする。失敗時は `submitError` を表示  
+**成功表示:** 送信成功時は `submitSuccess=true` で「Your letter has been sent. / Thank you for your message.」を表示し、約2秒後にクローズ  
+**送信UI:** `send-button.png` を送信ボタン画像として表示  
 **クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`
 
 ---
@@ -764,7 +767,8 @@ frontend/
 | skills/\*.png                                                                      | PNG  | BoxUI スキルアイコン（`boxData.ts` の `url` 参照）        | -                                               |
 | post/letter.png                                                                    | PNG  | PostUI 手紙背景画像                                       | -                                               |
 | post/form_input.png                                                                | PNG  | PostUI 名前/メール入力欄の装飾背景                        | -                                               |
-| post/send-button.png                                                                     | PNG  | PostUI 送信ボタン（シーリングスタンプ）                   | -                                               |
+| post/send-button.png                                                               | PNG  | PostUI 送信ボタン画像                                     | -                                               |
+| post/stamp.png                                                                     | PNG  | PostUI 宛名横に表示する切手画像                           | -                                               |
 | textures/coco_texture.png                                                          | PNG  | Coco Body の Matcap                                       | -                                               |
 | textures/crystal_texture.jpg                                                       | JPG  | クリスタル Matcap                                         | -                                               |
 | textures/dome_texture.jpg                                                          | JPG  | ドーム Matcap                                             | -                                               |
