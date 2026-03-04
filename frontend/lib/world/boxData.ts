@@ -239,3 +239,14 @@ export const SLOTS_PER_PAGE = 100;
 
 /** アイテム総数に必要なページ数 */
 export const ITEM_PAGE_COUNT = Math.ceil(ITEM_ENTRIES.length / SLOTS_PER_PAGE);
+
+/** BoxUI で表示する全画像URL（スキル＋アイテムのユニーク一覧）。プリロード等に利用 */
+export function getBoxImageUrls(): string[] {
+  const skillUrls = SKILL_ENTRIES.map((s) => s.url).filter((u): u is string => !!u);
+  const itemUrls = [
+    BAKUN_SOU_ENTRY.iconPath,
+    LIPTON_ENTRY.iconPath,
+    ...LOVED_ITEMS.map((i) => i.iconPath).filter(Boolean),
+  ].filter((u): u is string => !!u);
+  return [...new Set([...skillUrls, ...itemUrls])];
+}

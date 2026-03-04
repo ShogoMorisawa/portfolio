@@ -13,6 +13,7 @@ import { Model as Book } from "./Book";
 import { Model as Box } from "./Box";
 import { Model as Post } from "./Post";
 import { Model as Computer } from "./Computer";
+import { SectionImagesPreloader } from "./SectionImagesPreloader";
 import { CAMERA, CRYSTAL, LAYOUT } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
 import { useInputStore } from "@/lib/world/store";
@@ -139,6 +140,7 @@ export default function World() {
               isFrozen={shouldFreezeCrystals}
             />
           ))}
+          <SectionImagesPreloader />
         </Suspense>
       </Canvas>
     </div>

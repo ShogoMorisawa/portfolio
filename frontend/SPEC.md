@@ -139,6 +139,7 @@ frontend/
 │   └── favicon.ico
 ├── components/world/
 │   ├── World.tsx             # メイン。Canvas + シーン構成
+│   ├── SectionImagesPreloader.tsx # World 表示後に PostUI/BoxUI 画像を事前取得
 │   ├── Dome.tsx               # ドーム（壁）
 │   ├── Floor.tsx              # 床
 │   ├── FloatingWorldModel.tsx # 浮遊オブジェクト共通描画（GLTF+浮遊+傾き）
@@ -162,7 +163,8 @@ frontend/
 │   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING, POST 定数
 │   ├── store.ts              # Zustand。入力 + 対話 + 本UI + BoxUI + PostUI状態
 │   ├── adventureBookData.ts  # ぼうけんのしょ表示データ
-│   └── boxData.ts            # BoxUI表示データ（スキル/アイテム）
+│   ├── boxData.ts            # BoxUI表示データ（スキル/アイテム + 画像URL集約）
+│   └── preloadSectionImages.ts # PostUI/BoxUI 用画像のプリロード処理
 ├── public/
 │   ├── models/
 │   │   ├── coco-transformed.glb   # Coco の旧変換モデル（現状は未使用）
@@ -200,7 +202,7 @@ frontend/
 | **責務**  | Canvas の設定、環境・照明、子コンポーネントの組み立て                                                                                                                                                          |
 | **Props** | なし                                                                                                                                                                                                           |
 | **状態**  | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
-| **子**    | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4                                                                   |
+| **子**    | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4, SectionImagesPreloader                                               |
 
 **Canvas 設定:**
 
@@ -216,6 +218,7 @@ frontend/
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
 **レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。90°ごとの円形配置を使用。
 **クリスタル配置:** `useMemo` で 4体を生成。リング（半径 10〜15）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
+**UI画像プリロード:** `SectionImagesPreloader` を `<Suspense>` 配下に置き、ワールド操作可能になった直後に PostUI/BoxUI 用画像の先読みを開始。
 
 ---
 
@@ -517,6 +520,8 @@ frontend/
      → isBoxNearby を更新
 [Post] → playerRef の位置を参照して距離判定
       → isPostNearby を更新
+[SectionImagesPreloader] → mount 時に `preloadSectionImages()` を 1 回実行
+                         → `POST_UI_IMAGE_URLS` と `getBoxImageUrls()` を順に preload
 [InteractionUI] → activeCrystalId/isTalking/isBookNearby/isBoxNearby/isPostNearby/isPostOpen を参照
                → クリスタル優先で TAP を表示（次点で本TAP、次にPostTAP、次にBoxTAP）
                → setIsAdventureBookOpen(true) で本UIを開く
@@ -559,6 +564,7 @@ frontend/
 - BoxUI が `boxView`/`activeBoxCategory`/`currentBoxPage`/`selectedBoxSlotIndex` を参照して表示を制御
 - PostUI が `isPostOpen` を参照して表示を制御
 - PostUI が submit 時に `/api/letter` を呼び出し、`isSending`/`submitError` を更新
+- SectionImagesPreloader が `preloadSectionImages()` を呼び出し、Post/Box の画像を先読み
 
 **groundRef の流れ:**
 
@@ -632,6 +638,7 @@ frontend/
 **グリッド:** PC は `SLOTS_PER_PAGE=100` の 10×10、モバイルは 6×6（36）に切り替え。`skills/items` でデータソースを切り替え、`currentBoxPage` でページング  
 **スキルデータ:** `SKILL_ENTRIES` は `rare(1〜5) / level(1〜6) / attack / url?` を持つ構造。`attack` は開始日・取得日を年月日カンマ区切りで表す（未定は `???,???,???`）。`url` はアイコン画像（未設定時は頭文字表示）。表示順は配列定義順をそのまま使用  
 **アイテムデータ:** `ITEM_ENTRIES` は全113スロット（頂上混成 BAKUONSOOO8th 100 + ぶたくん1 + リプトン12）。リプトンは各スロット `quantity=12`。表示順は固定シード（`20260220`）で初期化時に1回だけシャッフル  
+**画像URL集約:** `boxData.ts` の `getBoxImageUrls()` が `SKILL_ENTRIES.url` とアイテム画像 (`iconPath`) をユニーク化して返し、プリロード元として利用  
 **デバイス判定:** 初回描画時に `window.innerWidth < 768` で `isMobile` を即時判定し、`resize` 監視で更新（初回の 10×10 → 6×6 ジャンプを回避）  
 **詳細パネル:** `selectedBoxSlotIndex` に応じて `SkillDetailPanel` / `ItemDetailPanel` を表示。詳細側もグリッド同様に「外枠 + 内枠（左右のみ）」の二重枠構成。内側背景は `#0b101c`  
 **スキル詳細表示:** 背景は `#0b101c`。ヘッダー（アイコン+名前）→ `RARE n` 右寄せ → `◆ 攻撃力` → `◆ 斬れ味` → 斬れ味ゲージ右寄せ → 説明文の順で表示し、各段は `border-b-[3px]` の破線で区切る。説明文は `line-clamp-4` で表示行数を制限  
@@ -640,6 +647,20 @@ frontend/
 **ページ数計算:** `entries.length / slotsPerPage` から動的算出し、`currentBoxPage` を有効範囲にクランプ  
 **軽量化:** セル選択ハイライトは `classList` の直接更新（前回セル/今回セルのみ）で O(1) 更新し、100セル全再描画を回避  
 **クローズ:** menu 画面では外側クリックで閉じる。grid 画面は「もどる」で menu に戻る
+
+---
+
+### SectionImagesPreloader.tsx
+
+| 項目      | 内容                                                                 |
+| --------- | -------------------------------------------------------------------- |
+| **責務**  | World 表示直後に PostUI/BoxUI 用画像のプリロードを 1 回開始する      |
+| **Props** | なし                                                                 |
+| **依存**  | `preloadSectionImages`（`lib/world/preloadSectionImages.ts`）        |
+
+**配置:** `World.tsx` の `<Suspense>` 内に配置  
+**実行タイミング:** マウント時の `useEffect` で 1 回だけ `preloadSectionImages()` を呼び出す  
+**描画:** R3F ツリー内で副作用だけ実行するため、`<group />` を返す
 
 ---
 
