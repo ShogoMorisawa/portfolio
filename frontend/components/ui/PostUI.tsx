@@ -14,6 +14,7 @@ export default function PostUI() {
   const [isSending, setIsSending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isStampModalOpen, setIsStampModalOpen] = useState(false);
 
   const closePost = useCallback(() => {
     setIsPostOpen(false);
@@ -22,11 +23,14 @@ export default function PostUI() {
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closePost();
+      if (e.key === "Escape") {
+        if (isStampModalOpen) setIsStampModalOpen(false);
+        else closePost();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, closePost]);
+  }, [isOpen, closePost, isStampModalOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,16 +131,89 @@ export default function PostUI() {
                 <h2 className="font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] drop-shadow-sm shrink-0">
                   To: Shogo Morisawa
                 </h2>
-                <div className="relative w-24 h-20 sm:w-28 sm:h-24 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsStampModalOpen(true)}
+                  className="relative w-24 h-20 sm:w-28 sm:h-24 shrink-0 hover:scale-105 transition-transform duration-300 cursor-pointer drop-shadow-md"
+                >
                   <Image
                     src="/post/stamp.png"
-                    alt="切手"
+                    alt="SNS一覧を開く"
                     fill
-                    className="object-contain drop-shadow-md"
+                    className="object-contain"
                     sizes="7rem"
                   />
-                </div>
+                </button>
               </div>
+
+              {/* SNSモーダル（切手クリックで表示） */}
+              {isStampModalOpen && (
+                <div
+                  className="absolute inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+                  onClick={() => setIsStampModalOpen(false)}
+                >
+                  <div
+                    className="relative w-full max-w-sm bg-[#f4ebd8] p-6 sm:p-8 rounded-md shadow-2xl border border-[#c1a68d] text-neutral-800"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setIsStampModalOpen(false)}
+                      aria-label="閉じる"
+                      className="absolute top-3 right-4 text-2xl text-neutral-500 hover:text-neutral-800 transition-colors"
+                    >
+                      ✕
+                    </button>
+
+                    <h3 className="font-playfair text-xl text-center mb-6 border-b border-neutral-400/50 pb-2">
+                      My Connections
+                    </h3>
+
+                    <div className="grid grid-cols-4 gap-y-6 gap-x-4">
+                      <a
+                        href="https://github.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center gap-2 hover:opacity-70 transition-opacity"
+                      >
+                        <div className="w-12 h-12 bg-neutral-800 text-[#f4ebd8] rounded-full flex items-center justify-center text-lg font-bold shadow-md">
+                          G
+                        </div>
+                        <span className="text-xs font-playfair">GitHub</span>
+                      </a>
+                      <a
+                        href="#"
+                        className="flex flex-col items-center gap-2 hover:opacity-70 transition-opacity"
+                      >
+                        <div className="w-12 h-12 bg-linear-to-tr from-yellow-400 via-red-500 to-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
+                          IG
+                        </div>
+                        <span className="text-xs font-playfair">Main</span>
+                      </a>
+                      <a
+                        href="#"
+                        className="flex flex-col items-center gap-2 hover:opacity-70 transition-opacity"
+                      >
+                        <div className="w-12 h-12 bg-neutral-400 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
+                          IG
+                        </div>
+                        <span className="text-xs font-playfair">Sub</span>
+                      </a>
+                      {[...Array(5)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="flex flex-col items-center gap-2 opacity-30"
+                        >
+                          <div className="w-12 h-12 border-2 border-dashed border-neutral-400 rounded-full flex items-center justify-center text-sm">
+                            ?
+                          </div>
+                          <span className="text-xs font-playfair">Coming</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* フォーム */}
               <form

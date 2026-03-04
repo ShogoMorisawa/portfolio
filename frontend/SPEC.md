@@ -674,13 +674,14 @@ frontend/
 
 **表示条件:** `isPostOpen=true` のとき全画面オーバーレイを表示（`page.tsx` で動的 import）  
 **表示内容:** 背景に `/post/letter.png` を `next/image`（`fill`）で表示し、紙上にフォームを重ねる。モバイルは `object-cover top`、PCは `object-contain center`。モバイルの紙面コンテナは `h-[80vh]` で中央配置  
-**ヘッダー表示:** 宛名 (`To: Shogo Morisawa`) と切手画像 (`/post/stamp.png`) を横並びで表示  
+**ヘッダー表示:** 宛名 (`To: Shogo Morisawa`) と切手画像 (`/post/stamp.png`) を横並びで表示。切手はボタン化されている  
+**切手モーダル:** 切手クリックで `isStampModalOpen=true` になり、SNSリンクモーダル（`My Connections`）を表示。背景クリックまたは右上 `✕` で閉じる  
 **入力UI:** `name`（任意）, `email`（任意）, `message`（任意）をローカル state で保持。`form_input.png` を名前/メール入力欄の装飾背景に使用  
 **送信処理:** `handleSubmit` で `/api/letter` に POST。payload は `name/email/message`（trim して空文字は `undefined`）と `meta`（`sentAt`, `userAgent`, `screenSize`, `language`）  
 **送信状態:** `isSending` で多重送信を防止し、送信中は送信ボタンを `disabled` にする。失敗時は `submitError` を表示  
 **成功表示:** 送信成功時は `submitSuccess=true` で「Your letter has been sent. / Thank you for your message.」を表示し、約2秒後にクローズ  
 **送信UI:** `send-button.png` を送信ボタン画像として表示  
-**クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`
+**クローズ:** 背景クリック、`Esc` キー、右上 `×` ボタンで `setIsPostOpen(false)`。ただし `Esc` は `isStampModalOpen=true` の場合にまずモーダルを閉じる
 
 ---
 
