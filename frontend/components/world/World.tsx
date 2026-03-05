@@ -24,7 +24,9 @@ export default function World() {
   const isMobile = useDeviceType();
   const boxView = useInputStore((s) => s.boxView);
   const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);
-  const shouldFreezeCrystals = boxView !== "closed" || isAdventureBookOpen;
+  const isPostOpen = useInputStore((s) => s.isPostOpen);
+  const shouldFreezeCrystals =
+    boxView !== "closed" || isAdventureBookOpen || isPostOpen;
 
   // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
   const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;

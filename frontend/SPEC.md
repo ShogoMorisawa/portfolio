@@ -202,7 +202,7 @@ frontend/
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **責務**  | Canvas の設定、環境・照明、子コンポーネントの組み立て                                                                                                                                                          |
 | **Props** | なし                                                                                                                                                                                                           |
-| **状態**  | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` と `isAdventureBookOpen`（Crystal停止判定） |
+| **状態**  | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` / `isAdventureBookOpen` / `isPostOpen`（Crystal停止判定） |
 | **子**    | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4, SectionImagesPreloader                                               |
 
 **Canvas 設定:**
@@ -705,7 +705,7 @@ frontend/
 
 1. **シーン描画** → 画面へ直接出力（Environment + ambientLight + Sparkles を含む）
 2. **Canvas flat:** 物理ベースライティングを無効化。EffectComposer/Bloom は使用していない
-3. **Overlay最適化:** Canvas は `frameloop="always"` を維持し、BoxUI/AdventureBookUI 表示中は `Crystal` のみ `isFrozen` で停止。Book/Box/Post/Computer の動きは継続
+3. **Overlay最適化:** Canvas は `frameloop="always"` を維持し、BoxUI/AdventureBookUI/PostUI 表示中は `Crystal` のみ `isFrozen` で停止。Book/Box/Post/Computer の動きは継続
 
 ---
 
