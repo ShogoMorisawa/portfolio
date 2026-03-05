@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { FaGithub, FaInstagram } from "react-icons/fa";
 import { useInputStore } from "@/lib/world/store";
 
 export default function PostUI() {
@@ -171,33 +172,41 @@ export default function PostUI() {
 
                     <div className="grid grid-cols-4 gap-y-6 gap-x-4">
                       <a
-                        href="https://github.com/"
+                        href="https://github.com/shogomorisawa"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex flex-col items-center gap-2 hover:opacity-70 transition-opacity"
                       >
-                        <div className="w-12 h-12 bg-neutral-800 text-[#f4ebd8] rounded-full flex items-center justify-center text-lg font-bold shadow-md">
-                          G
+                        <div className="w-12 h-12 bg-neutral-800 text-[#f4ebd8] rounded-full flex items-center justify-center text-2xl shadow-md">
+                          <FaGithub />
                         </div>
                         <span className="text-xs font-playfair">GitHub</span>
                       </a>
                       <a
-                        href="#"
+                        href="https://www.instagram.com/ggg.glasspo/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex flex-col items-center gap-2 hover:opacity-70 transition-opacity"
                       >
-                        <div className="w-12 h-12 bg-linear-to-tr from-yellow-400 via-red-500 to-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                          IG
+                        <div className="w-12 h-12 bg-linear-to-tr from-yellow-400 via-red-500 to-purple-500 text-white rounded-full flex items-center justify-center shadow-md">
+                          <FaInstagram className="text-2xl" />
                         </div>
-                        <span className="text-xs font-playfair">Main</span>
+                        <span className="text-xs font-playfair">
+                          Instagram 1
+                        </span>
                       </a>
                       <a
-                        href="#"
+                        href="https://www.instagram.com/pkpk_mst/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex flex-col items-center gap-2 hover:opacity-70 transition-opacity"
                       >
-                        <div className="w-12 h-12 bg-neutral-400 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                          IG
+                        <div className="w-12 h-12 bg-neutral-400 text-white rounded-full flex items-center justify-center shadow-md">
+                          <FaInstagram className="text-2xl" />
                         </div>
-                        <span className="text-xs font-playfair">Sub</span>
+                        <span className="text-xs font-playfair">
+                          Instagram 2
+                        </span>
                       </a>
                       {[...Array(5)].map((_, i) => (
                         <div
@@ -217,87 +226,89 @@ export default function PostUI() {
 
               {/* フォーム */}
               <form
-            onSubmit={handleSubmit}
-            className="letter-form font-playfair flex-1 flex flex-col gap-4 sm:gap-5 min-h-0"
-          >
-            <div className="flex flex-col gap-0.5">
-              <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
-                おなまえ
-              </label>
-              <div className="relative w-full h-12 sm:h-14">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: "url(/post/form_input.png)",
-                    backgroundSize: "100% 100%",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="あなたのお名前"
-                  className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
-                />
-              </div>
-            </div>
+                onSubmit={handleSubmit}
+                className="letter-form font-playfair flex-1 flex flex-col gap-4 sm:gap-5 min-h-0"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
+                    おなまえ
+                  </label>
+                  <div className="relative w-full h-12 sm:h-14">
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: "url(/post/form_input.png)",
+                        backgroundSize: "100% 100%",
+                        backgroundRepeat: "no-repeat",
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="あなたのお名前"
+                      required
+                      className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
+                    />
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-0.5">
-              <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
-                メールアドレス
-              </label>
-              <div className="relative w-full h-12 sm:h-14">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: "url(/post/form_input.png)",
-                    backgroundSize: "100% 100%",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="sample@email.com"
-                  className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
-                />
-              </div>
-            </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
+                    メールアドレス
+                  </label>
+                  <div className="relative w-full h-12 sm:h-14">
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: "url(/post/form_input.png)",
+                        backgroundSize: "100% 100%",
+                        backgroundRepeat: "no-repeat",
+                      }}
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="返信が必要な場合のみ（空欄でも届きます）"
+                      className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
+                    />
+                  </div>
+                </div>
 
-            <div className="flex flex-col gap-0.5 flex-1 min-h-16">
-              <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
-                メッセージ
-              </label>
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="あいうえお〜〜"
-                className="bg-transparent border-b border-[#5c4033] outline-none px-1 py-1 text-[#3d2817] placeholder-[#7d6b5a] focus:border-[#3d2817] transition-colors resize-none flex-1 min-h-20 text-sm sm:text-base"
-              />
-            </div>
+                <div className="flex flex-col gap-0.5 flex-1 min-h-16">
+                  <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
+                    メッセージ
+                  </label>
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="あいうえお〜〜メッセージをどうぞ。なんでもお気軽に書いてください。"
+                    required
+                    className="bg-transparent border-b border-[#5c4033] outline-none px-1 py-1 text-[#3d2817] placeholder-[#7d6b5a] focus:border-[#3d2817] transition-colors resize-none flex-1 min-h-20 text-sm sm:text-base"
+                  />
+                </div>
 
-            {submitError && (
-              <p className="text-sm text-red-600 text-center mt-1">
-                {submitError}
-              </p>
-            )}
-            {/* SENDボタン（シーリングスタンプ） */}
-            <button
-              type="submit"
-              disabled={isSending}
-              className="self-center relative w-20 h-20 sm:w-24 sm:h-24 hover:scale-105 active:scale-95 transition-transform mt-2 disabled:opacity-60 disabled:pointer-events-none"
-            >
-              <Image
-                src="/post/send-button.png"
-                alt="送信"
-                fill
-                className="object-contain drop-shadow-lg"
-                sizes="6rem"
-              />
-            </button>
-          </form>
+                {submitError && (
+                  <p className="text-sm text-red-600 text-center mt-1">
+                    {submitError}
+                  </p>
+                )}
+                {/* SENDボタン（シーリングスタンプ） */}
+                <button
+                  type="submit"
+                  disabled={isSending}
+                  className="self-center relative w-20 h-20 sm:w-24 sm:h-24 hover:scale-105 active:scale-95 transition-transform mt-2 disabled:opacity-60 disabled:pointer-events-none"
+                >
+                  <Image
+                    src="/post/send-button.png"
+                    alt="送信"
+                    fill
+                    className="object-contain drop-shadow-lg"
+                    sizes="6rem"
+                  />
+                </button>
+              </form>
             </>
           )}
         </div>
