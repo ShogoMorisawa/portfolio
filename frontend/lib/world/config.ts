@@ -58,6 +58,11 @@ export const POST = {
   NEARBY_THRESHOLD: 15,
 };
 
+/** Computerオブジェクトに「近い」とみなす距離（TAP 表示用） */
+export const COMPUTER = {
+  NEARBY_THRESHOLD: 15,
+};
+
 /** ステージ上のオブジェクト配置（90°ごとに円形） */
 export const LAYOUT = {
   /** オブジェクトの円の半径（外側に配置） */
@@ -72,6 +77,37 @@ export const LAYOUT = {
   BOX_SCALE: 7,
   POST_SCALE: 10,
   COMPUTER_SCALE: 9,
+  /** コンピューターセクション表示時のタブレット（カメラとコンピューターの間・画面中央） */
+  TABLET_HEIGHT: 4.25,
+  TABLET_OFFSET_Z: 3,
+  TABLET_SCALE: 0.75,
+  /** タブレットの回転 [X, Y, Z] ラジアン。例: [0, Math.PI, 0] で180度向きを反転 */
+  TABLET_ROTATION: [Math.PI / 2.8, Math.PI / 2.2, Math.PI / 14] as [
+    number,
+    number,
+    number,
+  ],
+  /** タブレット画面に表示する画像（public からのパス、例: "/works/tablet-screen.jpg"）。空なら表示しない */
+  TABLET_SCREEN_IMAGE: "",
+  /** タブレット画面で切り替える画像のリスト。2枚以上で左右ボタンが表示される。空なら TABLET_SCREEN_IMAGE のみ使用 */
+  TABLET_SCREEN_IMAGES: [
+    "/items/bakuonso.png",
+    "/items/lipton.png",
+    "/items/butakun.png",
+  ] as string[],
+  /** 画面プレーンのサイズ（モデルローカル）。幅・高さ */
+  TABLET_SCREEN_WIDTH: 1,
+  TABLET_SCREEN_HEIGHT: 0.65,
+  /** 画面の位置オフセット（モデルローカル）。X,Y,Z で微調整 */
+  TABLET_SCREEN_OFFSET_X: 0,
+  TABLET_SCREEN_OFFSET_Y: 0,
+  TABLET_SCREEN_OFFSET_Z: 0.02,
+  /** 画面プレーンの回転 [X, Y, Z] ラジアン。モデルの画面面に合わせて調整。例: 画面が裏向きなら [0, Math.PI, 0] */
+  TABLET_SCREEN_ROTATION: [Math.PI/2,Math.PI,Math.PI] as [
+    number,
+    number,
+    number,
+  ],
 } as const;
 
 /** 浮遊オブジェクトのふわふわ・横傾き（オブジェクトごとに差をつけて同期しない） */

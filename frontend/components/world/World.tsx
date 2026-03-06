@@ -13,6 +13,7 @@ import { Model as Book } from "./Book";
 import { Model as Box } from "./Box";
 import { Model as Post } from "./Post";
 import { Model as Computer } from "./Computer";
+import { Model as Tablet } from "./Tablet";
 import { SectionImagesPreloader } from "./SectionImagesPreloader";
 import { CAMERA, CRYSTAL, LAYOUT } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
@@ -25,8 +26,12 @@ export default function World() {
   const boxView = useInputStore((s) => s.boxView);
   const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);
   const isPostOpen = useInputStore((s) => s.isPostOpen);
+  const isComputerOpen = useInputStore((s) => s.isComputerOpen);
   const shouldFreezeCrystals =
-    boxView !== "closed" || isAdventureBookOpen || isPostOpen;
+    boxView !== "closed" ||
+    isAdventureBookOpen ||
+    isPostOpen ||
+    isComputerOpen;
 
   // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
   const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
@@ -122,7 +127,9 @@ export default function World() {
           <Computer
             position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}
             scale={LAYOUT.COMPUTER_SCALE}
+            playerRef={playerRef}
           />
+          <Tablet />
           <Player
             groundRef={groundRef}
             isMobile={isMobile}

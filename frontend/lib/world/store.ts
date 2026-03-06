@@ -50,11 +50,23 @@ interface PostState {
   setIsPostOpen: (open: boolean) => void;
 }
 
+interface ComputerState {
+  isComputerNearby: boolean;
+  isComputerOpen: boolean;
+  tabletScreenImageIndex: number;
+  setIsComputerNearby: (nearby: boolean) => void;
+  setIsComputerOpen: (open: boolean) => void;
+  setTabletScreenImageIndex: (
+    index: number | ((prevIndex: number) => number),
+  ) => void;
+}
+
 type WorldState = InputState &
   DialogueState &
   AdventureBookState &
   BoxState &
-  PostState;
+  PostState &
+  ComputerState;
 
 export const useInputStore = create<WorldState>((set) => ({
   joystick: { x: 0, y: 0, isMoving: false },
@@ -105,4 +117,21 @@ export const useInputStore = create<WorldState>((set) => ({
   isPostOpen: false,
   setIsPostNearby: (nearby) => set({ isPostNearby: nearby }),
   setIsPostOpen: (open) => set({ isPostOpen: open }),
+
+  isComputerNearby: false,
+  isComputerOpen: false,
+  tabletScreenImageIndex: 0,
+  setIsComputerNearby: (nearby) => set({ isComputerNearby: nearby }),
+  setIsComputerOpen: (open) =>
+    set({
+      isComputerOpen: open,
+      ...(open ? {} : { tabletScreenImageIndex: 0 }),
+    }),
+  setTabletScreenImageIndex: (index) =>
+    set((state) => ({
+      tabletScreenImageIndex:
+        typeof index === "function"
+          ? index(state.tabletScreenImageIndex)
+          : index,
+    })),
 }));

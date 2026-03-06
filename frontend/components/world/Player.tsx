@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { useInputStore } from "@/lib/world/store";
-import { PLAYER, CAMERA } from "@/lib/world/config";
+import { PLAYER, CAMERA, LAYOUT } from "@/lib/world/config";
 import { Model as Coco } from "./Coco";
 
 interface PlayerProps {
@@ -24,6 +24,7 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
   const joystick = useInputStore((state) => state.joystick);
   const isTalking = useInputStore((state) => state.isTalking);
   const targetPosition = useInputStore((state) => state.targetPosition);
+  const isComputerOpen = useInputStore((state) => state.isComputerOpen);
   const cameraSettings = isMobile ? CAMERA.mobile : CAMERA.pc;
 
   const [keys, setKeys] = useState({
@@ -91,7 +92,7 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
     let rawX = 0;
     let rawY = 0;
 
-    if (!isTalking) {
+    if (!isTalking && !isComputerOpen) {
       if (keys.up) rawY += 1;
       if (keys.down) rawY -= 1;
       if (keys.left) rawX -= 1;
@@ -162,7 +163,15 @@ const Player = ({ groundRef, isMobile, playerRef }: PlayerProps) => {
     const desiredCameraPos = new THREE.Vector3();
     const lookAtTarget = new THREE.Vector3();
 
-    if (isTalking && targetPosition) {
+    if (isComputerOpen) {
+      // コンピューターセクション: カメラをコンピューター正面（画面側）に寄せる
+      const cx = 0;
+      const cy = LAYOUT.COMPUTER_HEIGHT;
+      const cz = -LAYOUT.OBJECT_RING_RADIUS;
+      const cameraDistance = 6;
+      desiredCameraPos.set(cx, cy + 0.5, cz + cameraDistance);
+      lookAtTarget.set(cx, cy, cz);
+    } else if (isTalking && targetPosition) {
       // 会話モード: クリスタルの真正面にカメラを置く
       const [tx, ty, tz] = targetPosition;
       const targetVec = new THREE.Vector3(tx, ty, tz);
