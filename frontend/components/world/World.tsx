@@ -13,7 +13,6 @@ import { Model as Book } from "./Book";
 import { Model as Box } from "./Box";
 import { Model as Post } from "./Post";
 import { Model as Computer } from "./Computer";
-import { Model as Tablet } from "./Tablet";
 import { SectionImagesPreloader } from "./SectionImagesPreloader";
 import { CAMERA, CRYSTAL, LAYOUT } from "@/lib/world/config";
 import { useDeviceType } from "@/hooks/useDeviceType";
@@ -129,7 +128,6 @@ export default function World() {
             scale={LAYOUT.COMPUTER_SCALE}
             playerRef={playerRef}
           />
-          <Tablet />
           <Player
             groundRef={groundRef}
             isMobile={isMobile}

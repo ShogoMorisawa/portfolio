@@ -78,9 +78,9 @@ export const LAYOUT = {
   POST_SCALE: 10,
   COMPUTER_SCALE: 9,
   /** コンピューターセクション表示時のタブレット（カメラとコンピューターの間・画面中央） */
-  TABLET_HEIGHT: 4.25,
+  TABLET_HEIGHT: 3.8,
   TABLET_OFFSET_Z: 3,
-  TABLET_SCALE: 0.75,
+  TABLET_SCALE: 1.2,
   /** タブレットの回転 [X, Y, Z] ラジアン。例: [0, Math.PI, 0] で180度向きを反転 */
   TABLET_ROTATION: [Math.PI / 2.8, Math.PI / 2.2, Math.PI / 14] as [
     number,
@@ -90,20 +90,16 @@ export const LAYOUT = {
   /** タブレット画面に表示する画像（public からのパス、例: "/works/tablet-screen.jpg"）。空なら表示しない */
   TABLET_SCREEN_IMAGE: "",
   /** タブレット画面で切り替える画像のリスト。2枚以上で左右ボタンが表示される。空なら TABLET_SCREEN_IMAGE のみ使用 */
-  TABLET_SCREEN_IMAGES: [
-    "/items/bakuonso.png",
-    "/items/lipton.png",
-    "/items/butakun.png",
-  ] as string[],
+  TABLET_SCREEN_IMAGES: ["/computer/oox.png", "/computer/cat.png"] as string[],
   /** 画面プレーンのサイズ（モデルローカル）。幅・高さ */
-  TABLET_SCREEN_WIDTH: 1,
-  TABLET_SCREEN_HEIGHT: 0.65,
+  TABLET_SCREEN_WIDTH: 0.95,
+  TABLET_SCREEN_HEIGHT: 0.95,
   /** 画面の位置オフセット（モデルローカル）。X,Y,Z で微調整 */
-  TABLET_SCREEN_OFFSET_X: 0,
+  TABLET_SCREEN_OFFSET_X: 0.275,
   TABLET_SCREEN_OFFSET_Y: 0,
   TABLET_SCREEN_OFFSET_Z: 0.02,
   /** 画面プレーンの回転 [X, Y, Z] ラジアン。モデルの画面面に合わせて調整。例: 画面が裏向きなら [0, Math.PI, 0] */
-  TABLET_SCREEN_ROTATION: [Math.PI/2,Math.PI,Math.PI] as [
+  TABLET_SCREEN_ROTATION: [Math.PI / 2, Math.PI, Math.PI] as [
     number,
     number,
     number,

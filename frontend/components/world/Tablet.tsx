@@ -8,6 +8,7 @@ import { useInputStore } from "@/lib/world/store";
 
 /** tablet-transformed.glb を使う場合は "/models/tablet-transformed.glb" に変更。変換: gltf-transform optimize tablet.glb tablet-transformed.glb */
 const TABLET_MODEL_PATH = "/models/tablet.glb";
+const TABLET_SCREEN_IMAGE_ROTATION = Math.PI / 2;
 
 type GLTFResult = {
   nodes: Record<string, THREE.Mesh>;
@@ -33,12 +34,41 @@ function TabletScreen({
         textureArray.length
       : 0;
   const texture = textureArray[normalizedIndex] ?? null;
+  const currentImageRotation = TABLET_SCREEN_IMAGE_ROTATION;
+
+  const screenSize = useMemo(() => {
+    const maxWidth = LAYOUT.TABLET_SCREEN_WIDTH;
+    const maxHeight = LAYOUT.TABLET_SCREEN_HEIGHT;
+    const maxAspect = maxWidth / maxHeight;
+    const image = texture?.image as
+      | { width?: number; videoWidth?: number; height?: number; videoHeight?: number }
+      | undefined;
+    const rawWidth = image?.width ?? image?.videoWidth;
+    const rawHeight = image?.height ?? image?.videoHeight;
+
+    if (!rawWidth || !rawHeight) return [maxWidth, maxHeight] as const;
+
+    let imageAspect = rawWidth / rawHeight;
+    const quarterTurns = Math.round(currentImageRotation / (Math.PI / 2));
+    const isOddQuarterTurn = Math.abs(quarterTurns % 2) === 1;
+    if (isOddQuarterTurn) imageAspect = 1 / imageAspect;
+
+    if (imageAspect >= maxAspect) {
+      return [maxWidth, maxWidth / imageAspect] as const;
+    }
+    return [maxHeight * imageAspect, maxHeight] as const;
+  }, [currentImageRotation, texture]);
 
   useEffect(() => {
     textureArray.forEach((tex) => {
       if (!tex) return;
       tex.flipY = false;
       tex.colorSpace = THREE.SRGBColorSpace;
+      tex.center.set(0.5, 0.5);
+      tex.rotation = TABLET_SCREEN_IMAGE_ROTATION;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.x = -1;
+      tex.offset.x = 1;
       tex.needsUpdate = true;
     });
   }, [textureArray]);
@@ -50,16 +80,16 @@ function TabletScreen({
       position={[
         LAYOUT.TABLET_SCREEN_OFFSET_X,
         LAYOUT.TABLET_SCREEN_OFFSET_Y,
-        LAYOUT.TABLET_SCREEN_OFFSET_Z,
+        -LAYOUT.TABLET_SCREEN_OFFSET_Z,
       ]}
       rotation={[rx, ry, rz]}
     >
-      <planeGeometry args={[LAYOUT.TABLET_SCREEN_WIDTH, LAYOUT.TABLET_SCREEN_HEIGHT]} />
+      <planeGeometry args={screenSize} />
       <meshBasicMaterial
         map={texture}
         toneMapped={false}
         transparent={false}
-        side={THREE.DoubleSide}
+        side={THREE.FrontSide}
       />
     </mesh>
   );

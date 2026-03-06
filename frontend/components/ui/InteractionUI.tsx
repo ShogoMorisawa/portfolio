@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { useInputStore } from "@/lib/world/store";
 import { LAYOUT } from "@/lib/world/config";
 
@@ -26,9 +27,14 @@ export default function InteractionUI() {
   const isComputerNearby = useInputStore((state) => state.isComputerNearby);
   const isComputerOpen = useInputStore((state) => state.isComputerOpen);
   const setIsComputerOpen = useInputStore((state) => state.setIsComputerOpen);
+  const tabletScreenImageIndex = useInputStore(
+    (state) => state.tabletScreenImageIndex,
+  );
   const setTabletScreenImageIndex = useInputStore(
     (state) => state.setTabletScreenImageIndex,
   );
+  const [showComputerWhitePanel, setShowComputerWhitePanel] = useState(false);
+  const [showComputerFrame, setShowComputerFrame] = useState(false);
 
   const handleStartTalk = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -61,6 +67,8 @@ export default function InteractionUI() {
   };
 
   const handleCloseComputer = useCallback(() => {
+    setShowComputerWhitePanel(false);
+    setShowComputerFrame(false);
     setIsComputerOpen(false);
   }, [setIsComputerOpen]);
 
@@ -72,6 +80,19 @@ export default function InteractionUI() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [handleCloseComputer, isComputerOpen]);
+
+  useEffect(() => {
+    if (!isComputerOpen) return;
+    const whitePanelTimer = window.setTimeout(
+      () => setShowComputerWhitePanel(true),
+      250,
+    );
+    const frameTimer = window.setTimeout(() => setShowComputerFrame(true), 600);
+    return () => {
+      window.clearTimeout(whitePanelTimer);
+      window.clearTimeout(frameTimer);
+    };
+  }, [isComputerOpen]);
 
   return (
     <div className="absolute inset-0 pointer-events-none z-9999">
@@ -168,61 +189,167 @@ export default function InteractionUI() {
           </div>
         )}
 
-      {/* コンピューターセクション: タブレットのみ表示。タップ or Escape で閉じる。左右で画像切り替え */}
-      {isComputerOpen && (() => {
-        const imageList =
-          LAYOUT.TABLET_SCREEN_IMAGES.length > 0
-            ? LAYOUT.TABLET_SCREEN_IMAGES
-            : LAYOUT.TABLET_SCREEN_IMAGE
-              ? [LAYOUT.TABLET_SCREEN_IMAGE]
-              : [];
-        const canSwitch = imageList.length >= 2;
-        return (
-          <div
-            className="absolute inset-0 z-10000 pointer-events-auto cursor-pointer"
-            onClick={handleCloseComputer}
-            aria-label="閉じる"
-          >
-            {canSwitch && (
-              <>
+      {/* コンピューターセクション: 白い画面 + 額縁 + 作品情報 */}
+      {isComputerOpen &&
+        (() => {
+          const imageList =
+            LAYOUT.TABLET_SCREEN_IMAGES.length > 0
+              ? LAYOUT.TABLET_SCREEN_IMAGES
+              : LAYOUT.TABLET_SCREEN_IMAGE
+                ? [LAYOUT.TABLET_SCREEN_IMAGE]
+                : ["/computer/oox.png"];
+          const computerWorks = imageList.map((imageSrc, index) => {
+            if (imageSrc.includes("oox")) {
+              return {
+                imageSrc,
+                title: "OoX",
+                description:
+                  "ユングの心理機能8種類を判断の優先順で羅列して、4つの階層に分けて、さらに各機能の健全度まで測る。そうすることで、人の性格をより詳しく記述できる気がして作り始めた、まだまだこれからの試作品です。",
+                href: "https://oox-seven.vercel.app/",
+              };
+            }
+            if (/(cat|neko|kitty|猫)/i.test(imageSrc)) {
+              return {
+                imageSrc,
+                title: "猫ちゃん",
+                description:
+                  "webデザイナーにでもなろうかと思って、絵描いて飾る額縁としてサイトを作ろうと思ったのが、プログラミングを本格的に始めるきっかけでした。",
+                href: undefined,
+              };
+            }
+            return {
+              imageSrc,
+              title: `Work ${index + 1}`,
+              description: "準備中の作品です。",
+              href: undefined,
+            };
+          });
+          const currentIndex =
+            imageList.length > 0
+              ? ((tabletScreenImageIndex % imageList.length) +
+                  imageList.length) %
+                imageList.length
+              : 0;
+          const currentWork = computerWorks[currentIndex] ?? computerWorks[0];
+          const canSwitch = computerWorks.length >= 2;
+          return (
+            <div
+              className="absolute inset-0 z-10000 pointer-events-auto cursor-pointer"
+              onClick={handleCloseComputer}
+              aria-label="閉じる"
+            >
+              <div
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[82dvh] md:h-full md:w-[min(90vw,760px)] md:rounded-xl px-3 md:px-10 pt-6 md:pt-10 pb-8 md:pb-8 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  className={`absolute z-0 left-1/2 top-[35%] -translate-x-1/2 -translate-y-1/2 w-full h-[50%] bg-white rounded-lg md:rounded-xl transition-opacity duration-400 ${
+                    showComputerWhitePanel ? "opacity-100" : "opacity-0"
+                  }`}
+                />
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTabletScreenImageIndex(
-                      (i) =>
-                        (i - 1 + imageList.length) % imageList.length,
-                    );
-                  }}
-                  className="absolute left-[12%] top-1/2 -translate-y-1/2 min-w-14 min-h-14 flex items-center justify-center pointer-events-auto cursor-pointer rounded-full hover:bg-white/10 transition-colors"
-                  aria-label="前の画像"
+                  onClick={handleCloseComputer}
+                  className="absolute z-20 top-3 right-3 md:top-4 md:right-4 w-10 h-10 flex items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-800 text-2xl leading-none hover:bg-neutral-100 cursor-pointer"
+                  aria-label="閉じる"
                 >
-                  <span
-                    className="w-0 h-0 border-y-[20px] border-y-transparent border-r-[28px] border-r-white/90 drop-shadow-lg pointer-events-none"
-                    aria-hidden
-                  />
+                  ×
                 </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTabletScreenImageIndex(
-                      (i) => (i + 1) % imageList.length,
-                    );
-                  }}
-                  className="absolute right-[12%] top-1/2 -translate-y-1/2 min-w-14 min-h-14 flex items-center justify-center pointer-events-auto cursor-pointer rounded-full hover:bg-white/10 transition-colors"
-                  aria-label="次の画像"
+                <div
+                  className={`relative z-10 w-full max-w-[90vw] md:max-w-[520px] mx-auto aspect-square transition-opacity duration-1200 ease-out ${
+                    showComputerFrame ? "opacity-100" : "opacity-0"
+                  }`}
                 >
-                  <span
-                    className="w-0 h-0 border-y-[20px] border-y-transparent border-l-[28px] border-l-white/90 drop-shadow-lg pointer-events-none"
-                    aria-hidden
+                  <Image
+                    src="/computer/frame.png"
+                    alt="frame"
+                    fill
+                    className="object-contain"
+                    priority
                   />
-                </button>
-              </>
-            )}
-          </div>
-        );
-      })()}
+                  {canSwitch && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTabletScreenImageIndex(
+                            (i) =>
+                              (i - 1 + computerWorks.length) %
+                              computerWorks.length,
+                          );
+                        }}
+                        className="absolute z-20 left-[-6px] md:left-[-10px] top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/55 hover:bg-black/70 transition-colors cursor-pointer"
+                        aria-label="前の作品"
+                      >
+                        <span
+                          className="w-0 h-0 border-y-[9px] md:border-y-[10px] border-y-transparent border-r-[14px] md:border-r-[16px] border-r-white"
+                          aria-hidden
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTabletScreenImageIndex(
+                            (i) => (i + 1) % computerWorks.length,
+                          );
+                        }}
+                        className="absolute z-20 right-[-6px] md:right-[-10px] top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/55 hover:bg-black/70 transition-colors cursor-pointer"
+                        aria-label="次の作品"
+                      >
+                        <span
+                          className="w-0 h-0 border-y-[9px] md:border-y-[10px] border-y-transparent border-l-[14px] md:border-l-[16px] border-l-white"
+                          aria-hidden
+                        />
+                      </button>
+                    </>
+                  )}
+                  <div className="absolute inset-[18.6%] -translate-y-[1px]">
+                    {currentWork.href ? (
+                      <a
+                        href={currentWork.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 block cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`${currentWork.title} のサイトを開く`}
+                      >
+                        <Image
+                          src={currentWork.imageSrc}
+                          alt={currentWork.title}
+                          fill
+                          className="object-cover"
+                          priority
+                        />
+                      </a>
+                    ) : (
+                      <Image
+                        src={currentWork.imageSrc}
+                        alt={currentWork.title}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                    )}
+                  </div>
+                </div>
+                <div
+                  className={`relative z-10 mt-5 text-center text-neutral-900 transition-opacity duration-1200 ease-out ${
+                    showComputerFrame ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <h3 className="text-2xl md:text-3xl font-bold tracking-wide">
+                    {currentWork.title}
+                  </h3>
+                  <p className="mt-3 text-sm md:text-base leading-relaxed text-neutral-700">
+                    {currentWork.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {/* 会話モード (全画面オーバーレイ) */}
       {isTalking && activeMessage && (

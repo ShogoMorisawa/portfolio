@@ -11,6 +11,12 @@ import {
 /** GLB のメッシュノード名（computer-transformed.glb のノード名） */
 const COMPUTER_MESH_NODE_KEY = "mesh_0";
 const COMPUTER_MODEL_PATH = "/models/computer-transformed.glb";
+const STATIC_FLOATING = {
+  FLOAT_SPEED: 0,
+  FLOAT_AMPLITUDE: 0,
+  TILT_SPEED: 0,
+  TILT_ANGLE: 0,
+} as const;
 
 type ComputerProps = FloatingModelProps & {
   playerRef?: RefObject<THREE.Group | null>;
@@ -34,7 +40,7 @@ export function Model(props: ComputerProps) {
       rotation={rotation}
       modelPath={COMPUTER_MODEL_PATH}
       meshNodeKey={COMPUTER_MESH_NODE_KEY}
-      floating={FLOATING.computer}
+      floating={isComputerOpen ? STATIC_FLOATING : FLOATING.computer}
       onFrame={({ state, group }) => {
         if (isComputerOpen) return;
         const playerPos = playerRef?.current?.position ?? state.camera.position;
