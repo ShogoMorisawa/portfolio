@@ -1,5 +1,19 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## GLB モデルの変換（-transformed.glb）
+
+`computer-transformed.glb` や `tablet-transformed.glb` のように最適化した GLB を作るには [glTF Transform CLI](https://gltf-transform.donmccurdy.com/cli.html) を使います。
+
+```bash
+# CLI をグローバルにインストール
+npm install --global @gltf-transform/cli
+
+# 変換（例: tablet.glb → tablet-transformed.glb）
+gltf-transform optimize public/models/tablet.glb public/models/tablet-transformed.glb
+```
+
+`optimize` で Draco 圧縮などを使う場合は `--compress draco` などを付けてください。まずは上記のままでも動きます。変換後、コードで `tablet-transformed.glb` を参照するようにパスを変えれば OK です（現在の Tablet コンポーネントは `tablet.glb` をそのまま参照しています）。
+
 ## Getting Started
 
 First, run the development server:

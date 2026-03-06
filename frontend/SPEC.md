@@ -62,7 +62,7 @@
 │  app/page.tsx                                               │
 │  ├── <World />                                              │
 │  ├── <JoystickControls />  ← 仮想ジョイスティック（画面右下）  │
-│  ├── <InteractionUI />     ← 会話UI（Tap/メッセージ）         │
+│  ├── <InteractionUI />     ← 会話+Computer操作UI（Tap/矢印）    │
 │  ├── <AdventureBookUI />   ← ぼうけんのしょUI               │
 │  ├── <BoxUI />             ← アイテムBOX UI（動的 import）   │
 │  ├── <PostUI />            ← 手紙UI（動的 import）            │
@@ -82,7 +82,8 @@
 │  │  ├── Book (浮遊表示 + 近接判定)                     │   │
 │  │  ├── Box (左側配置)                                 │   │
 │  │  ├── Post (奥側配置)                                │   │
-│  │  ├── Computer (手前側配置)                          │   │
+│  │  ├── Computer (手前側配置 + 近接判定)               │   │
+│  │  ├── Tablet (Computer開時のみ中央表示)              │   │
 │  │  ├── Player ─────────── groundRef ────────────────┤ │   │
 │  │  │    └── Coco (モデル+アニメーション)               │   │
 │  │  └── Crystal ×4  ← ランダム配置/吹き出し              │   │
@@ -118,7 +119,7 @@
 │  components/ui/BoxUI.tsx                                    │
 │  components/ui/PostUI.tsx                                   │
 │  app/api/letter/route.ts（PostUI の送信先 API）             │
-│  lib/world/store.ts (Zustand: input + dialogue + book + box + post) │
+│  lib/world/store.ts (Zustand: input + dialogue + book + box + post + computer) │
 │  lib/world/adventureBookData.ts（ぼうけんのしょ定義）        │
 │  lib/world/boxData.ts（BOX 表示データ）                     │
 └─────────────────────────────────────────────────────────────┘
@@ -148,23 +149,26 @@ frontend/
 │   ├── Box.tsx                # 箱モデル
 │   ├── Post.tsx               # ポストモデル
 │   ├── Computer.tsx           # コンピューターモデル
+│   ├── Tablet.tsx             # コンピューター表示中に前面表示するタブレットモデル
 │   ├── Player.tsx             # プレイヤー（移動・入力・接地・カメラ）
 │   ├── Coco.tsx               # ココモデル表示・アニメーション（gltfjsx 生成）
 │   ├── Crystal.tsx            # クリスタル（徘徊・対話）
 │   └── ui/
 │       └── JoystickControls.tsx  # 仮想ジョイスティック（動的配置）
 ├── components/ui/
-│   ├── InteractionUI.tsx      # 会話UI（Tap/メッセージ + 本へのTAP導線）
+│   ├── InteractionUI.tsx      # 会話UI + Book/Box/Post/Computer のTAP導線 + タブレット画像切替UI
 │   ├── AdventureBookUI.tsx    # ぼうけんのしょUI（スロット選択/詳細）
 │   ├── BoxUI.tsx              # アイテムBOX UI（メニュー/可変グリッド）
-│   └── PostUI.tsx             # 手紙UI（ポストから開くオーバーレイ）
+│   ├── PostUI.tsx             # 手紙UI（ポストから開くオーバーレイ）
+│   └── ComputerUI.tsx         # 作品情報オーバーレイ（現在は page.tsx 未接続）
 ├── hooks/
 │   └── useDeviceType.ts      # PC/Mobile 判定（768px 未満でモバイル）
 ├── lib/world/
-│   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING, POST 定数
-│   ├── store.ts              # Zustand。入力 + 対話 + 本UI + BoxUI + PostUI状態
+│   ├── config.ts             # STAGE, CAMERA, PLAYER, LAYOUT, FLOATING, POST, COMPUTER 定数
+│   ├── store.ts              # Zustand。入力 + 対話 + 本UI + BoxUI + PostUI + Computer状態
 │   ├── adventureBookData.ts  # ぼうけんのしょ表示データ
 │   ├── boxData.ts            # BoxUI表示データ（スキル/アイテム + 画像URL集約）
+│   ├── computerWorksData.ts  # ComputerUI の作品データ（未接続UI用）
 │   └── preloadSectionImages.ts # PostUI/BoxUI 用画像のプリロード処理
 ├── public/
 │   ├── models/
@@ -176,6 +180,7 @@ frontend/
 │   │   ├── box-transformed.glb # 箱（Box）。gltfjsx 用に変換済み
 │   │   ├── post-transformed.glb # ポスト（Post）。gltfjsx 用に変換済み
 │   │   ├── computer-transformed.glb # コンピューター（Computer）。gltfjsx 用に変換済み
+│   │   ├── tablet.glb             # タブレット（Tablet）で使用
 │   │   ├── coco.glb               # プレイヤー（Coco）で使用
 │   │   ├── crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb  # 元モデル（レガシー）
 │   ├── textures/
@@ -202,22 +207,22 @@ frontend/
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **責務**  | Canvas の設定、環境・照明、子コンポーネントの組み立て                                                                                                                                                          |
 | **Props** | なし                                                                                                                                                                                                           |
-| **状態**  | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` / `isAdventureBookOpen` / `isPostOpen`（Crystal停止判定） |
-| **子**    | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer, Player, Crystal ×4, SectionImagesPreloader                                               |
+| **状態**  | `groundRef`（Floor と Player に渡す）、`playerRef`（Player/Book/Box/Post/Computer/Crystal に渡す）、`useDeviceType()` で isMobile、`crystals`（4体のリング配置）、`boxView` / `isAdventureBookOpen` / `isPostOpen` / `isComputerOpen`（Crystal停止判定） |
+| **子**    | Dome, Environment, ambientLight, Sparkles, Floor, Book（`playerRef`）, Box（`playerRef`）, Post（`playerRef`）, Computer（`playerRef`）, Tablet, Player, Crystal ×4, SectionImagesPreloader                                               |
 
 **Canvas 設定:**
 
 - `flat`: 物理ベースのライティングを無効化（フラットシェーディング）
 - `dpr={[1, 2]}`: デバイスピクセル比 1〜2 で自動調整
 - `key={isMobile ? "mobile" : "pc"}`: デバイス切り替え時に Canvas を再マウントしてカメラ設定を反映
-- `frameloop`: 常時 `"always"`。UIオーバーレイ表示中も Book/Box/Post/Computer などの3D更新は継続
+- `frameloop`: 常時 `"always"`。UIオーバーレイ表示中も Book/Box/Post/Computer/Tablet などの3D更新は継続
 - `camera`: useDeviceType で isMobile を取得し、CAMERA.mobile / CAMERA.pc から fov, position を取得
 - `Environment`: `environmentIntensity={2}`
 - `ambientLight`: `intensity={2}`
 - `Sparkles`: `count=1000`, `scale=35`, `position={[0,6,0]}` の白パーティクルを常時描画
 
 **背景:** 親 div の `bg-black`（Tailwind）で黒背景。Canvas 内に `<color attach="background">` はなし。
-**レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。90°ごとの円形配置を使用。
+**レイアウト定数:** Book/Box/Post/Computer の位置・スケールは `LAYOUT`（`lib/world/config.ts`）から取得。90°ごとの円形配置を使用。Tablet は `TABLET_*` と `TABLET_SCREEN_*` で位置・画面平面を調整。
 **クリスタル配置:** `useMemo` で 4体を生成。リング（半径 10〜15）を 4 等分し、各セクター内で初期位置を生成。`id` を付与して Crystal に渡し、メッセージは固定4文を順番に割り当て。
 **UI画像プリロード:** `SectionImagesPreloader` を `<Suspense>` 配下に置き、ワールド操作可能になった直後に PostUI/BoxUI 用画像の先読みを開始。
 
@@ -324,14 +329,33 @@ frontend/
 
 | 項目      | 内容                                                             |
 | --------- | ---------------------------------------------------------------- |
-| **責務**  | コンピューターモデルの表示                                       |
-| **Props** | R3F 標準の `group` Props（`position`, `scale`, `rotation` など） |
-| **依存**  | `FloatingWorldModel`                                             |
+| **責務**  | コンピューターモデルの表示、プレイヤー近接判定（Computer TAP表示用） |
+| **Props** | R3F 標準の `group` Props + `playerRef?: RefObject<THREE.Group \| null>` |
+| **依存**  | `FloatingWorldModel`, `COMPUTER.NEARBY_THRESHOLD`, useInputStore |
 
 **描画:** `FloatingWorldModel` に `modelPath="/models/computer-transformed.glb"` と `meshNodeKey="mesh_0"` を渡して描画  
 **浮遊+傾き:** `FLOATING.computer` を `FloatingWorldModel` へ渡して適用  
 **配置:** World から `position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}`、`scale={LAYOUT.COMPUTER_SCALE}`（回転指定なし）  
+**近接判定:** `onFrame` で `playerRef`（未指定時は camera）との距離を計測し、`dist < COMPUTER.NEARBY_THRESHOLD` のとき `isComputerNearby=true`  
+**開閉連動:** `isComputerOpen=true` 中は近接判定を停止し、前回値との差分があるときだけ `setIsComputerNearby` を更新  
 **プリロード:** `useGLTF.preload("/models/computer-transformed.glb")`
+
+---
+
+### Tablet.tsx
+
+| 項目      | 内容                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------- |
+| **責務**  | コンピューターセクション表示中のタブレット本体と画面プレーン描画、画像インデックス切替反映 |
+| **Props** | なし                                                                                      |
+| **依存**  | `useGLTF`, `useTexture`, `LAYOUT.TABLET_*`, `LAYOUT.TABLET_SCREEN_*`, useInputStore     |
+
+**表示条件:** `isComputerOpen=true` のときのみ表示  
+**本体モデル:** `models/tablet.glb` を読み込み、ガラス風 `MeshPhysicalMaterial` を適用  
+**画面画像:** `TABLET_SCREEN_IMAGES`（空なら `TABLET_SCREEN_IMAGE`）を `useTexture` で読み込み、`tabletScreenImageIndex` で選択  
+**切替安定化:** `meshBasicMaterial` 1枚に対して `map` を差し替える方式を採用。インデックスは剰余で正規化し、`flipY=false` + `SRGBColorSpace` を適用  
+**画面平面:** `TABLET_SCREEN_WIDTH/HEIGHT`, `TABLET_SCREEN_OFFSET_*`, `TABLET_SCREEN_ROTATION` で調整  
+**プリロード:** `useGLTF.preload("/models/tablet.glb")`
 
 ---
 
@@ -346,9 +370,9 @@ frontend/
 **構造:** `<group ref={playerRef}>` 内に `<Coco />` を配置。移動・接地・カメラは Player が担当し、モデル表示・アニメーションは Coco に委譲  
 **初期位置:** `<group position={[PLAYER.INITIAL_X, PLAYER.INITIAL_Y, PLAYER.INITIAL_Z]}>` で生成  
 **初期向き:** `useFrame` 内で初回のみ `player.rotation.y = PLAYER.INITIAL_ROTATION_Y` を適用  
-**入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用。会話中（`isTalking`）は入力無効化  
+**入力:** キーボード（ArrowUp/Down/Left/Right）+ ジョイスティック（useInputStore 経由）。両方を合算して適用。`isTalking` または `isComputerOpen` 中は入力無効化  
 **接地:** `hitPoint.y + PLAYER_HEIGHT_OFFSET (0.5) + GROUND_OFFSET` で Y 位置を設定（BoundingBox 計算は廃止）  
-**カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視（距離 5）
+**カメラ:** 通常は isMobile に応じて CAMERA.mobile / CAMERA.pc を使用。会話中は targetPosition を正面から見る位置に移動して注視（距離 5）。`isComputerOpen=true` 中はコンピューター正面へ固定
 
 ---
 
@@ -465,19 +489,37 @@ frontend/
 | ---------------- | ------ | --- | ----------------------------------------------------- |
 | NEARBY_THRESHOLD | number | 15  | Postオブジェクトを「近い」と判定する閾値（TAP表示用） |
 
+### COMPUTER
+
+| キー             | 型     | 値  | 説明                                                      |
+| ---------------- | ------ | --- | --------------------------------------------------------- |
+| NEARBY_THRESHOLD | number | 15  | Computerオブジェクトを「近い」と判定する閾値（TAP表示用） |
+
 ### LAYOUT
 
-| キー               | 型     | 値  | 説明                           |
-| ------------------ | ------ | --- | ------------------------------ |
-| OBJECT_RING_RADIUS | number | 30  | オブジェクトを配置する円の半径 |
-| BOOK_HEIGHT        | number | 4   | Book の高さ（Y）               |
-| POST_HEIGHT        | number | 5   | Post の高さ（Y）               |
-| BOX_HEIGHT         | number | 5   | Box の高さ（Y）                |
-| COMPUTER_HEIGHT    | number | 3.5 | Computer の高さ（Y）           |
-| BOOK_SCALE         | number | 10  | Book のスケール                |
-| BOX_SCALE          | number | 7   | Box のスケール                 |
-| POST_SCALE         | number | 10  | Post のスケール                |
-| COMPUTER_SCALE     | number | 9   | Computer のスケール            |
+| キー                   | 型            | 値                                                        | 説明                                                        |
+| ---------------------- | ------------- | --------------------------------------------------------- | ----------------------------------------------------------- |
+| OBJECT_RING_RADIUS     | number        | 30                                                        | オブジェクトを配置する円の半径                              |
+| BOOK_HEIGHT            | number        | 4                                                         | Book の高さ（Y）                                            |
+| POST_HEIGHT            | number        | 5                                                         | Post の高さ（Y）                                            |
+| BOX_HEIGHT             | number        | 5                                                         | Box の高さ（Y）                                             |
+| COMPUTER_HEIGHT        | number        | 3.5                                                       | Computer の高さ（Y）                                        |
+| BOOK_SCALE             | number        | 10                                                        | Book のスケール                                             |
+| BOX_SCALE              | number        | 7                                                         | Box のスケール                                              |
+| POST_SCALE             | number        | 10                                                        | Post のスケール                                             |
+| COMPUTER_SCALE         | number        | 9                                                         | Computer のスケール                                         |
+| TABLET_HEIGHT          | number        | 4.25                                                      | コンピューター表示時に出す Tablet の高さ                    |
+| TABLET_OFFSET_Z        | number        | 3                                                         | Tablet の Z オフセット（Computer 前方へ）                  |
+| TABLET_SCALE           | number        | 0.75                                                      | Tablet のスケール                                           |
+| TABLET_ROTATION        | [number, number, number] | `[Math.PI/2.8, Math.PI/2.2, Math.PI/14]`                 | Tablet 本体回転                                             |
+| TABLET_SCREEN_IMAGE    | string        | `""`                                                      | 単体表示時の画面画像パス（未設定時は空）                    |
+| TABLET_SCREEN_IMAGES   | string[]      | `["/items/bakuonso.png","/items/lipton.png","/items/butakun.png"]` | 画面切替用画像リスト（2枚以上で矢印UI表示）                 |
+| TABLET_SCREEN_WIDTH    | number        | 1                                                         | 画面プレーン幅                                              |
+| TABLET_SCREEN_HEIGHT   | number        | 0.65                                                      | 画面プレーン高さ                                            |
+| TABLET_SCREEN_OFFSET_X | number        | 0                                                         | 画面プレーン X オフセット                                   |
+| TABLET_SCREEN_OFFSET_Y | number        | 0                                                         | 画面プレーン Y オフセット                                   |
+| TABLET_SCREEN_OFFSET_Z | number        | 0.02                                                      | 画面プレーン Z オフセット                                   |
+| TABLET_SCREEN_ROTATION | [number, number, number] | `[Math.PI/2, Math.PI, Math.PI]`                          | 画面プレーン回転                                            |
 
 ### FLOATING
 
@@ -521,11 +563,16 @@ frontend/
      → isBoxNearby を更新
 [Post] → playerRef の位置を参照して距離判定
       → isPostNearby を更新
+[Computer] → playerRef の位置を参照して距離判定
+          → isComputerNearby を更新
+[Tablet] → isComputerOpen / tabletScreenImageIndex / TABLET_SCREEN_IMAGES を参照
+        → タブレット画面へ現在画像を描画
 [SectionImagesPreloader] → mount 時に `preloadSectionImages()` を 1 回実行
                          → `POST_UI_IMAGE_URLS` と `getBoxImageUrls()` を順に preload
-[InteractionUI] → activeCrystalId/isTalking/isBookNearby/isBoxNearby/isPostNearby/isPostOpen を参照
-               → クリスタル優先で TAP を表示（次点で本TAP、次にPostTAP、次にBoxTAP）
+[InteractionUI] → activeCrystalId/isTalking/isBookNearby/isBoxNearby/isPostNearby/isPostOpen/isComputerNearby/isComputerOpen を参照
+               → クリスタル優先で TAP を表示（次点で本、未近接時は Computer/Post/Box を条件に応じて表示）
                → setIsAdventureBookOpen(true) で本UIを開く
+               → setIsComputerOpen(true/false) と setTabletScreenImageIndex((i)=>...) でタブレット切替を制御
 [page.tsx] → boxView !== "closed" のとき BoxUI を動的表示
 [page.tsx] → isPostOpen === true のとき PostUI を動的表示
 [AdventureBookUI] → isAdventureBookOpen/selectedAdventureSlot を参照
@@ -555,12 +602,18 @@ frontend/
 - `selectedBoxSlotIndex: number` — 選択中スロット（未選択は -1）
 - `isPostNearby: boolean` — Post が近距離かどうか（PostTAP表示トリガー）
 - `isPostOpen: boolean` — 手紙UI（PostUI）の開閉状態
+- `isComputerNearby: boolean` — Computer が近距離かどうか（Computer TAP表示トリガー）
+- `isComputerOpen: boolean` — コンピューターセクション（Tablet表示）の開閉状態
+- `tabletScreenImageIndex: number` — タブレット画面に表示中の画像インデックス
+- `setTabletScreenImageIndex(index | updater)` — 数値または updater 関数で画面インデックスを更新
+- `setIsComputerOpen(false)` 時に `tabletScreenImageIndex` を 0 にリセット
 - JoystickControls が setJoystick で更新、Player が joystick を購読して移動に反映
 - Crystal が `activeCrystalId`/`activeMessage`/`targetPosition` を更新
 - Book が `isBookNearby` を更新
 - Box が `isBoxNearby` を更新
 - Post が `isPostNearby` を更新
-- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby`/`isBoxNearby`/`isPostNearby`/`isPostOpen` を参照して UI を制御
+- Computer が `isComputerNearby` を更新
+- InteractionUI が `activeCrystalId`/`isTalking`/`isBookNearby`/`isBoxNearby`/`isPostNearby`/`isPostOpen`/`isComputerNearby`/`isComputerOpen` を参照して UI を制御
 - AdventureBookUI が `isAdventureBookOpen`/`selectedAdventureSlot` を参照して表示を制御
 - BoxUI が `boxView`/`activeBoxCategory`/`currentBoxPage`/`selectedBoxSlotIndex` を参照して表示を制御
 - PostUI が `isPostOpen` を参照して表示を制御
@@ -598,14 +651,17 @@ frontend/
 
 | 項目      | 内容                                                                 |
 | --------- | -------------------------------------------------------------------- |
-| **責務**  | 会話開始/終了の UI 表示、メッセージ表示、本/ポスト/BOX のTAP導線表示 |
+| **責務**  | 会話開始/終了の UI 表示、メッセージ表示、本/ポスト/BOX/Computer のTAP導線、タブレット画像切替 |
 | **Props** | なし                                                                 |
 | **依存**  | useInputStore                                                        |
 
 **Tap ボタン（クリスタル）:** `activeCrystalId` があり `isTalking=false` のとき表示。クリック時に `stopPropagation()`  
+**Tap ボタン（Computer）:** `activeCrystalId` がなく `isTalking=false` かつ `isBookNearby=false` かつ `isBoxNearby=false` かつ `isPostNearby=false` かつ `isComputerNearby=true` かつ `isComputerOpen=false` のとき表示。クリックで `setIsComputerOpen(true)`  
 **Tap ボタン（Post）:** `activeCrystalId` がなく `isTalking=false` かつ `isBookNearby=false` かつ `isBoxNearby=false` かつ `isPostNearby=true` かつ `isPostOpen=false` のとき表示。クリックで `setIsPostOpen(true)`  
 **Tap ボタン（Box）:** `activeCrystalId` がなく `isBookNearby=false` かつ `isBoxNearby=true` かつ `boxView==="closed"` のとき表示。クリックで `setBoxView("menu")`  
 **Tap ボタン（本）:** `activeCrystalId` がない状態で `isBookNearby=true` かつ `isTalking=false` かつ `isAdventureBookOpen=false` のとき表示。クリックで `setIsAdventureBookOpen(true)`  
+**Computerオーバーレイ:** `isComputerOpen=true` で全画面透明オーバーレイを表示。背景クリックまたは `Esc` で閉じる  
+**左右切替UI:** `TABLET_SCREEN_IMAGES.length >= 2` のとき左右三角ボタンを表示し、`setTabletScreenImageIndex((i)=>...)` で巡回切替  
 **会話モード:** `isTalking=true` で全画面オーバーレイ + メッセージ表示。クリックで終了
 
 ---
@@ -705,7 +761,7 @@ frontend/
 
 1. **シーン描画** → 画面へ直接出力（Environment + ambientLight + Sparkles を含む）
 2. **Canvas flat:** 物理ベースライティングを無効化。EffectComposer/Bloom は使用していない
-3. **Overlay最適化:** Canvas は `frameloop="always"` を維持し、BoxUI/AdventureBookUI/PostUI 表示中は `Crystal` のみ `isFrozen` で停止。Book/Box/Post/Computer の動きは継続
+3. **Overlay最適化:** Canvas は `frameloop="always"` を維持し、BoxUI/AdventureBookUI/PostUI/Computer 表示中は `Crystal` のみ `isFrozen` で停止。Book/Box/Post/Computer/Tablet の動きは継続
 
 ---
 
@@ -770,6 +826,14 @@ frontend/
 - **選択更新:** `selectedBoxSlotIndex` 変更時、ハイライトは `classList` で前回セル/今回セルのみ更新（O(1)）
 - **意図:** 100セル全体の再描画を避け、スマホでのタップ応答を改善
 
+### Tablet 画像切替
+
+- **画像読込:** `useTexture(TABLET_SCREEN_IMAGES)` で全画像を読み込み
+- **インデックス正規化:** `((index % length) + length) % length` で負数/範囲外を補正
+- **表示:** `meshBasicMaterial` の `map` を現在テクスチャへ差し替えて描画
+- **更新方式:** `setTabletScreenImageIndex((prev) => next)` の updater 関数に対応し、連続クリック時も index を安全更新
+- **閉じる時の初期化:** `setIsComputerOpen(false)` 時に `tabletScreenImageIndex` を `0` に戻す
+
 ---
 
 ## アセット
@@ -784,9 +848,10 @@ frontend/
 | models/box-transformed.glb                                                         | GLB  | 箱（Box）                                                 | mesh_0                                          |
 | models/post-transformed.glb                                                        | GLB  | ポスト（Post）                                            | mesh_0                                          |
 | models/computer-transformed.glb                                                    | GLB  | コンピューター（Computer）                                | mesh_0                                          |
+| models/tablet.glb                                                                  | GLB  | タブレット（Tablet）                                      | mesh_0 / Mesh_0（モデル差異を吸収して探索）    |
 | models/coco-transformed.glb                                                        | GLB  | Coco の旧変換モデル（未使用）                             | -                                               |
 | models/crystal.glb, dome.glb, floor.glb, book.glb, box.glb, post.glb, computer.glb | GLB  | 元モデル（レガシー）                                      | -                                               |
-| items/bakuonso.png, items/butakun.png, items/lipton.png                            | PNG  | BoxUI アイテムアイコン（`boxData.ts` の `iconPath` 参照） | -                                               |
+| items/bakuonso.png, items/butakun.png, items/lipton.png                            | PNG  | BoxUI アイテムアイコン + Tablet 画面切替画像              | -                                               |
 | skills/\*.png                                                                      | PNG  | BoxUI スキルアイコン（`boxData.ts` の `url` 参照）        | -                                               |
 | post/letter.png                                                                    | PNG  | PostUI 手紙背景画像                                       | -                                               |
 | post/form_input.png                                                                | PNG  | PostUI 名前/メール入力欄の装飾背景                        | -                                               |
@@ -797,7 +862,7 @@ frontend/
 | textures/dome_texture.jpg                                                          | JPG  | ドーム Matcap                                             | -                                               |
 | textures/floor_texture.jpg                                                         | JPG  | 床 Matcap                                                 | -                                               |
 
-**-transformed モデル:** Dome, Floor, Book, Box, Post, Computer は変換済みの GLB を使用。Coco は `coco.glb` を使用。  
+**-transformed モデル:** Dome, Floor, Book, Box, Post, Computer は変換済みの GLB を使用。Tablet は `tablet.glb`、Coco は `coco.glb` を使用。  
 **Matcap:** meshMatcapMaterial + useTexture でライティングをテクスチャで疑似的に表現。
 
 ---
@@ -853,6 +918,7 @@ frontend/
 | ドームが浮く/沈む          | DOME_POSITION_Y のずれ | 床とドームの BoundingBox を確認し調整            |
 | モデルが表示されない       | パス・ノード名の誤り   | public/ からの相対パス、nodes のキーを確認       |
 | カメラが追従しない         | groundRef が null      | Floor のロード完了を待つ。INITIAL_Y で落下を遅延 |
+| Tablet 画像が透明になる    | `tabletScreenImageIndex` が数値でなく関数化され `NaN` 参照になる | `setTabletScreenImageIndex` を updater 関数対応にし、index を剰余で正規化する |
 | 手紙の送信に失敗する       | 環境変数未設定/Resend側エラー | `RESEND_API_KEY` と `MY_EMAIL` を確認し、API レスポンスの `error` を確認 |
 
 ---
