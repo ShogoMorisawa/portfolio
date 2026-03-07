@@ -168,7 +168,7 @@ export default function PostOverlay() {
                     </button>
 
                     <h3 className="font-playfair text-xl text-center mb-6 border-b border-neutral-400/50 pb-2">
-                      My Connections
+                      Links
                     </h3>
 
                     <div className="grid grid-cols-4 gap-y-6 gap-x-4">
@@ -276,7 +276,7 @@ export default function PostOverlay() {
                   <textarea
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
-                    placeholder="あいうえお〜〜メッセージをどうぞ。なんでもお気軽に書いてください。"
+                    placeholder="お気軽にメッセージをどうぞ。ひとことでも嬉しいです。"
                     required
                     className="bg-transparent border-b border-[#5c4033] outline-none px-1 py-1 text-[#3d2817] placeholder-[#7d6b5a] focus:border-[#3d2817] transition-colors resize-none flex-1 min-h-20 text-sm sm:text-base"
                   />

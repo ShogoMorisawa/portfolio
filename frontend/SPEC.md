@@ -607,6 +607,7 @@ frontend/
 - `fetch("/api/letter")` に POST
 - body: `name`, `email`, `message`, `meta.sentAt`, `meta.userAgent`, `meta.screenSize`, `meta.language`
 - 成功時はメッセージ表示後、約 2 秒で自動クローズ
+- 送信成功メッセージは `Your letter has been sent.` / `Thank you for your message.`
 
 **閉じ方:** 背景クリック、`Esc`、手紙の外側に配置した `×` ボタン。
 
@@ -614,6 +615,8 @@ frontend/
 
 - Mobile では手紙全体を `top: 52%` に下げ、上側の余白を確保する。
 - 閉じるボタンは切手と干渉しないよう、手紙画像の外側上部に配置する。
+- 切手から開くリンク一覧モーダルの見出しは `Links`。
+- メッセージ欄 placeholder は `お気軽にメッセージをどうぞ。ひとことでも嬉しいです。`。
 
 ---
 
@@ -960,7 +963,6 @@ frontend/
 | `models/box-transformed.glb`      | GLB  | 箱                        | `mesh_0`                                |
 | `models/post-transformed.glb`     | GLB  | ポスト                    | `mesh_0`                                |
 | `models/computer-transformed.glb` | GLB  | コンピューター            | `mesh_0`                                |
-| `models/tablet.glb`               | GLB  | 旧試作アセット            | 現行コードでは未使用                    |
 | `models/*.glb`（非 transformed）  | GLB  | 元モデル                  | レガシー保持                            |
 | `computer/frame.png`              | PNG  | Computer オーバーレイ額縁 | -                                       |
 | `computer/oox.png`                | PNG  | 作品画像                  | 外部リンクあり                          |
