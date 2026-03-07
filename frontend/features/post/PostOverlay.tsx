@@ -98,9 +98,18 @@ export default function PostOverlay() {
       }}
     >
       <div
-        className="relative max-md:absolute max-md:inset-x-0 max-md:top-1/2 max-md:-translate-y-1/2 max-md:h-[80vh] max-md:w-full md:h-[98vh] md:aspect-1294/1493 md:max-w-[90vw]"
+        className="relative max-md:absolute max-md:inset-x-0 max-md:top-[52%] max-md:-translate-y-1/2 max-md:h-[80vh] max-md:w-full md:h-[98vh] md:aspect-1294/1493 md:max-w-[90vw]"
         onClick={(event) => event.stopPropagation()}
       >
+        <button
+          type="button"
+          onClick={handleClose}
+          aria-label="閉じる"
+          className="absolute -top-12 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[#f4ebd8]/95 text-2xl text-[#4a3728]/80 shadow-md transition-colors hover:text-[#3d2817] md:-top-3 md:-right-3"
+        >
+          ×
+        </button>
+
         <Image
           src="/post/letter.png"
           alt="Letter"
@@ -108,15 +117,6 @@ export default function PostOverlay() {
           className="max-md:object-cover max-md:object-top md:object-contain md:object-center -z-10"
           sizes="(max-width: 768px) 100vw, min(90vw, 84.5vh)"
         />
-
-        <button
-          type="button"
-          onClick={handleClose}
-          aria-label="閉じる"
-          className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center text-[#4a3728]/80 hover:text-[#3d2817] text-2xl transition-colors drop-shadow-sm"
-        >
-          ×
-        </button>
 
         <div className="absolute inset-0 flex flex-col p-6 sm:p-10 md:p-12 pt-8 sm:pt-12 md:pt-14">
           {submitSuccess ? (

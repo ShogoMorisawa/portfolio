@@ -584,7 +584,12 @@ frontend/
 - body: `name`, `email`, `message`, `meta.sentAt`, `meta.userAgent`, `meta.screenSize`, `meta.language`
 - 成功時はメッセージ表示後、約 2 秒で自動クローズ
 
-**閉じ方:** 背景クリック、`Esc`、右上 `×`。
+**閉じ方:** 背景クリック、`Esc`、手紙の外側に配置した `×` ボタン。
+
+**レイアウト補足:**
+
+- Mobile では手紙全体を `top: 52%` に下げ、上側の余白を確保する。
+- 閉じるボタンは切手と干渉しないよう、手紙画像の外側上部に配置する。
 
 ---
 
