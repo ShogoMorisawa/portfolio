@@ -131,7 +131,9 @@ frontend/
 │   │   └── letter/
 │   │       └── route.ts                # 手紙送信 API
 │   ├── globals.css                     # 全体スタイルとフォントユーティリティ
+│   ├── icon.png                        # ブラウザタブ / Apple touch icon 用画像
 │   ├── layout.tsx                      # フォント定義 + ルートレイアウト + metadata
+│   ├── opengraph-image.jpg             # Open Graph / Twitter Card 用画像
 │   └── page.tsx                        # World / IntroOverlay / Prompt / OverlayRoot / Loader
 ├── features/
 │   ├── world/
@@ -210,10 +212,15 @@ frontend/
 - `title`: `Shogo Morisawa Portfolio`
 - `description`: `森澤翔吾のポートフォリオサイト。`
 - `alternates.canonical`: `/`
-- `openGraph`: `title`, `description`, `siteName`, `locale`, `type`
-- `twitter`: `summary`
+- `openGraph`: `title`, `description`, `url`, `siteName`, `locale`, `type`
+- `twitter`: `summary_large_image`, `title`, `description`
 - `robots`: `index`, `follow`
-- `icons`: `favicon.ico`
+- `icons`: `app/icon.png`
+
+**metadata 用アセット:**
+
+- `app/icon.png`: タブアイコン、ショートカットアイコン、Apple touch icon に利用
+- `app/opengraph-image.jpg`: Next.js App Router の metadata file convention により OG/Twitter 画像として利用
 
 ---
 

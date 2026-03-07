@@ -38,8 +38,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 const siteTitle = "Shogo Morisawa Portfolio";
-const siteDescription =
-  "森澤翔吾のポートフォリオサイト。";
+const siteDescription = "森澤翔吾のポートフォリオサイト。";
 const siteUrl = "https://shogomorisawa.me";
 
 export const metadata: Metadata = {
@@ -59,7 +58,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
   },
@@ -68,9 +67,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
 };
 
