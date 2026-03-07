@@ -263,7 +263,7 @@ export default function PostOverlay() {
                       type="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      placeholder="返信が必要な場合のみ（空欄でも届きます）"
+                      placeholder="よければメールアドレスも"
                       className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
                     />
                   </div>
