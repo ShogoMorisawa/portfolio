@@ -34,7 +34,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     level: 3,
     attack: "20,220,621",
     description: "これからはプログラミングが大事と聞いてProgateで始めました。",
-    url: "/skills/html.png",
+    url: "/skills/html.webp",
   },
   {
     id: "css",
@@ -43,7 +43,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     level: 3,
     attack: "20,220,621",
     description: "これからはプログラミングが大事と聞いてProgateで始めました。",
-    url: "/skills/css.png",
+    url: "/skills/css.webp",
   },
   {
     id: "boki-3",
@@ -52,7 +52,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     level: 2,
     attack: "20,230,618", // 2023年6月18日
     description: "これからはお金の勉強が大事と聞いてやってみました。",
-    url: "/skills/boki3.png",
+    url: "/skills/boki3.webp",
   },
   {
     id: "javascript",
@@ -62,7 +62,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,240,701",
     description:
       "Udemyで学習。自分が描いた絵を飾るための額縁サイトを作りたくて始めました。",
-    url: "/skills/JavaScript.png",
+    url: "/skills/JavaScript.webp",
   },
   {
     id: "react",
@@ -72,7 +72,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,250,301",
     description:
       "アプリ一個作れば就職できると思い、『Duel Practice App』を作るため勉強を始めました。",
-    url: "/skills/react.png",
+    url: "/skills/react.webp",
   },
   {
     id: "rails",
@@ -82,7 +82,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,250,301",
     description:
       "アプリ一個作れば就職できると思い、『Duel Practice App』を作るため勉強を始めました。",
-    url: "/skills/rails.png",
+    url: "/skills/rails.webp",
   },
   {
     id: "ruby",
@@ -91,7 +91,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     level: 1,
     attack: "20,250,301",
     description: "Railsからいきなり使い始めたのであまり詳しくないです。",
-    url: "/skills/ruby.png",
+    url: "/skills/ruby.webp",
   },
   {
     id: "toeic",
@@ -101,7 +101,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,250,420", // 2025年4月20日
     description:
       "高校時代英語が得意だったのでその残滓。今はゴミです。いつか真剣に勉強し直したいです。",
-    url: "/skills/toeic.png",
+    url: "/skills/toeic.webp",
   },
   {
     id: "typescript",
@@ -111,7 +111,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,250,630",
     description:
       "JavaScriptから成長しました。型って難しくてよくわからなかったけど、今は楽しくて好きです。",
-    url: "/skills/TypeScript.png",
+    url: "/skills/TypeScript.webp",
   },
   {
     id: "nextjs",
@@ -121,7 +121,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,250,630", // 2025年6月30日
     description:
       "Reactの続きとして勉強しました。このポートフォリオサイトもこれで作っています。",
-    url: "/skills/nextjs.png",
+    url: "/skills/nextjs.webp",
   },
   {
     id: "aws-saa",
@@ -131,7 +131,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,250,730", // 2025年7月30日
     description:
       "最終面接に落ちた焦りで3日間で詰め込み、試験は徹夜で受験しました。猛烈な吐き気の中で手にした、もう二度と再現不可能な奇跡。",
-    url: "/skills/saa.png",
+    url: "/skills/saa.webp",
   },
   {
     id: "php",
@@ -141,7 +141,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,251,009",
     description:
       "内定をいただいた会社でPHPを使用していると伺ったので勉強しました。インターンで修行中です。",
-    url: "/skills/php.png",
+    url: "/skills/php.webp",
   },
   {
     id: "laravel",
@@ -151,7 +151,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,251,029",
     description:
       "内定をいただいた会社でPHPを使用していると伺ったので勉強しました。『OoX』を作るのに使いました。",
-    url: "/skills/laravel.png",
+    url: "/skills/laravel.webp",
   },
   {
     id: "sql",
@@ -161,7 +161,7 @@ export const SKILL_ENTRIES: SkillEntry[] = [
     attack: "20,260,116",
     description:
       "ちゃんと勉強したことがなくてインターンでその重要性を痛感しました。近いうちに真剣に勉強したいです。",
-    url: "/skills/sql.png",
+    url: "/skills/sql.webp",
   },
 ];
 
@@ -176,7 +176,7 @@ export type ItemEntry = {
 };
 
 const BAKUN_SOU_DESCRIPTION =
-  "「こいつ強すぎ！絶対値上がりするやろ」と思って一枚1200円で100枚買ったカード。合計130,000円。今は4枚セットで300円。";
+  "「こいつ強すぎ！絶対値上がりするやろ」と思って一枚1200円で100枚の在庫を抱えたカード。合計130,000円。今は4枚セットで300円。";
 
 /** バクオンソー × 100（100要素をDOMに描画するため、実際に100個用意） */
 const BAKUN_SOU_ENTRY: ItemEntry = {
@@ -184,7 +184,7 @@ const BAKUN_SOU_ENTRY: ItemEntry = {
   name: "頂上混成 BAKUONSOOO8th",
   description: BAKUN_SOU_DESCRIPTION,
   quantity: 100,
-  iconPath: "/items/bakuonso.png",
+  iconPath: "/items/bakuonso.webp",
 };
 
 const BAKUN_SOU_SLOTS: ItemEntry[] = Array.from({ length: 100 }, () => ({
@@ -194,45 +194,29 @@ const BAKUN_SOU_SLOTS: ItemEntry[] = Array.from({ length: 100 }, () => ({
 const LIPTON_ENTRY: ItemEntry = {
   id: "lipton-lemon",
   name: "リプトンのレモンティー",
-  description: "小学生の頃から一生飲んでる。血液多分この色。",
+  description: "小学生の頃からずっと飲んでる。血液多分この色。",
   quantity: 12,
-  iconPath: "/items/lipton.png",
+  iconPath: "/items/lipton.webp",
 };
 
 const LIPTON_SLOTS: ItemEntry[] = Array.from({ length: 12 }, () => ({
   ...LIPTON_ENTRY,
 }));
 
-const LOVED_ITEMS: ItemEntry[] = [
-  {
-    id: "buta-kun",
-    name: "ぶたくん",
-    description: "幼い頃どこ行くにも連れていったぬいぐるみ。",
-    quantity: 1,
-    iconPath: "/items/butakun.png",
-  },
+const BUTAKUN_ENTRY: ItemEntry = {
+  id: "buta-kun",
+  name: "ぶたくん",
+  description: "幼い頃どこ行くにも連れていったぬいぐるみ。",
+  quantity: 1,
+  iconPath: "/items/butakun.webp",
+};
+
+/** 全113スロットを固定順で配置 */
+export const ITEM_ENTRIES: ItemEntry[] = [
+  ...BAKUN_SOU_SLOTS,
   ...LIPTON_SLOTS,
+  BUTAKUN_ENTRY,
 ];
-
-function shuffleWithSeed<T>(source: readonly T[], initialSeed: number): T[] {
-  const result = [...source];
-  let seed = initialSeed >>> 0;
-  const nextRandom = () => {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    return seed / 0x100000000;
-  };
-  for (let i = result.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(nextRandom() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-/** 全113スロットを固定シードで一度だけシャッフルして配置 */
-export const ITEM_ENTRIES: ItemEntry[] = shuffleWithSeed(
-  [...BAKUN_SOU_SLOTS, ...LOVED_ITEMS],
-  20260220,
-);
 
 /** 1ページあたりのスロット数（10×10固定） */
 export const SLOTS_PER_PAGE = 100;
@@ -246,7 +230,7 @@ export function getBoxImageUrls(): string[] {
   const itemUrls = [
     BAKUN_SOU_ENTRY.iconPath,
     LIPTON_ENTRY.iconPath,
-    ...LOVED_ITEMS.map((i) => i.iconPath).filter(Boolean),
+    BUTAKUN_ENTRY.iconPath,
   ].filter((u): u is string => !!u);
   return [...new Set([...skillUrls, ...itemUrls])];
 }

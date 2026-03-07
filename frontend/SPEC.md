@@ -552,10 +552,13 @@ frontend/
 **データ:**
 
 - `SKILL_ENTRIES`: レア度、斬れ味レベル、攻撃力文字列、説明、画像 URL
-- `ITEM_ENTRIES`: 113 スロットを固定シード `20260220` でシャッフルした配列
+- `ITEM_ENTRIES`: `バクオンソー x100 → リプトン x12 → ぶたくん x1` の固定順配列
 - `getBoxImageUrls()`: スキルとアイテムの画像 URL をユニーク化して返す
 
-**補足:** 選択セルのハイライトは `classList` の直接更新で O(1) 反映する。
+**補足:**
+
+- 選択セルのハイライトは `classList` の直接更新で O(1) 反映する。
+- Grid と詳細パネルの画像は `webp` を参照する。
 
 ---
 
@@ -933,10 +936,10 @@ frontend/
 | `computer/frame.png`              | PNG  | Computer オーバーレイ額縁 | -                                       |
 | `computer/oox.png`                | PNG  | 作品画像                  | 外部リンクあり                          |
 | `computer/cat.png`                | PNG  | 作品画像                  | 外部リンクなし                          |
-| `items/bakuonso.png`              | PNG  | BOX アイテム画像          | -                                       |
-| `items/butakun.png`               | PNG  | BOX アイテム画像          | -                                       |
-| `items/lipton.png`                | PNG  | BOX アイテム画像          | -                                       |
-| `skills/*.png`                    | PNG  | BOX スキル画像            | `boxData.ts` 参照                       |
+| `items/bakuonso.webp`             | WebP | BOX アイテム画像          | -                                       |
+| `items/butakun.webp`              | WebP | BOX アイテム画像          | -                                       |
+| `items/lipton.webp`               | WebP | BOX アイテム画像          | -                                       |
+| `skills/*.webp`                   | WebP | BOX スキル画像            | `boxData.ts` 参照                       |
 | `post/letter.png`                 | PNG  | 手紙 UI 背景              | -                                       |
 | `post/form_input.png`             | PNG  | 入力欄背景                | -                                       |
 | `post/send-button.png`            | PNG  | 送信ボタン画像            | -                                       |

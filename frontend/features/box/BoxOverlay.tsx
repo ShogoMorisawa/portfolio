@@ -41,6 +41,22 @@ const EMPTY_CELL_OPACITY_CLASS = "opacity-50";
 const MOBILE_GRID_SIZE = 6;
 const MOBILE_SLOTS_PER_PAGE = MOBILE_GRID_SIZE * MOBILE_GRID_SIZE;
 
+function getGridIconSrc(entry: SkillEntry | ItemEntry): string {
+  if ("iconPath" in entry && entry.iconPath) {
+    return entry.iconPath;
+  }
+
+  if ("url" in entry) {
+    return entry.url ?? "";
+  }
+
+  return "";
+}
+
+function getDetailIconSrc(entry: SkillEntry | ItemEntry): string {
+  return getGridIconSrc(entry);
+}
+
 /** メインメニュー: 左側縦並びメニュー */
 function BoxMenuView({
   onSelect,
@@ -171,7 +187,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
         >
           {skill.url ? (
             <Image
-              src={skill.url}
+              src={getDetailIconSrc(skill)}
               alt=""
               width={48}
               height={48}
@@ -265,7 +281,7 @@ function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
         <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center border border-black/50 bg-black/50 text-xl text-amber-200 shrink-0">
           {item.iconPath ? (
             <Image
-              src={item.iconPath}
+              src={getDetailIconSrc(item)}
               alt=""
               width={48}
               height={48}
@@ -337,11 +353,7 @@ const BoxGridCell = memo(function BoxGridCell({
           ("iconPath" in entry && entry.iconPath) ||
           ("url" in entry && entry.url) ? (
             <Image
-              src={
-                ("iconPath" in entry
-                  ? entry.iconPath
-                  : (entry as SkillEntry).url) ?? ""
-              }
+              src={getGridIconSrc(entry)}
               alt=""
               width={64}
               height={64}
