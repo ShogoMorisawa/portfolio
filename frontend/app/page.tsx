@@ -1,28 +1,18 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Loader } from "@react-three/drei";
-import World from "@/components/world/World";
-import JoystickControls from "@/components/world/ui/JoystickControls";
-import InteractionUI from "@/components/ui/InteractionUI";
-import AdventureBookUI from "@/components/ui/AdventureBookUI";
-import { useInputStore } from "@/lib/world/store";
-
-const BoxUI = dynamic(() => import("@/components/ui/BoxUI"), { ssr: false });
-const PostUI = dynamic(() => import("@/components/ui/PostUI"), { ssr: false });
+import World from "@/features/world/World";
+import JoystickControls from "@/features/world/JoystickControls";
+import { InteractionPrompt } from "@/shared/InteractionPrompt";
+import { OverlayRoot } from "@/shared/OverlayRoot";
 
 export default function Home() {
-  const boxView = useInputStore((s) => s.boxView);
-  const isPostOpen = useInputStore((s) => s.isPostOpen);
-
   return (
     <main className="relative w-full h-dvh overflow-hidden bg-black">
       <World />
       <JoystickControls />
-      <InteractionUI />
-      <AdventureBookUI />
-      {boxView !== "closed" && <BoxUI />}
-      {isPostOpen && <PostUI />}
+      <InteractionPrompt />
+      <OverlayRoot />
 
       <Loader
         containerStyles={{ background: "black" }}

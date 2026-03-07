@@ -4,36 +4,27 @@ import React, { Suspense, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
-
+import BookObject from "@/features/book/BookObject";
+import BoxObject from "@/features/box/BoxObject";
+import ComputerObject from "@/features/computer/ComputerObject";
+import PostObject from "@/features/post/PostObject";
+import { useUIStore } from "@/shared/uiStore";
+import { useDeviceType } from "@/shared/useDeviceType";
+import Crystal from "./Crystal";
 import Dome from "./Dome";
 import Floor from "./Floor";
 import Player from "./Player";
-import { Model as Crystal } from "./Crystal";
-import { Model as Book } from "./Book";
-import { Model as Box } from "./Box";
-import { Model as Post } from "./Post";
-import { Model as Computer } from "./Computer";
 import { SectionImagesPreloader } from "./SectionImagesPreloader";
-import { CAMERA, CRYSTAL, LAYOUT } from "@/lib/world/config";
-import { useDeviceType } from "@/hooks/useDeviceType";
-import { useInputStore } from "@/lib/world/store";
+import { CAMERA, CRYSTAL, LAYOUT } from "./worldConfig";
 
 export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
   const playerRef = useRef<THREE.Group>(null);
   const isMobile = useDeviceType();
-  const boxView = useInputStore((s) => s.boxView);
-  const isAdventureBookOpen = useInputStore((s) => s.isAdventureBookOpen);
-  const isPostOpen = useInputStore((s) => s.isPostOpen);
-  const isComputerOpen = useInputStore((s) => s.isComputerOpen);
-  const shouldFreezeCrystals =
-    boxView !== "closed" ||
-    isAdventureBookOpen ||
-    isPostOpen ||
-    isComputerOpen;
-
-  // スマホなら CAMERA.mobile、PCなら CAMERA.pc を使う
+  const activeOverlay = useUIStore((state) => state.activeOverlay);
+  const shouldFreezeCrystals = activeOverlay !== "none";
   const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
+
   const crystals = useMemo(() => {
     const seedHolder = { value: 1337 };
     const rand = () => {
@@ -52,17 +43,18 @@ export default function World() {
       const sectorSize = (Math.PI * 2) / messages.length;
       const sectorStart = index * sectorSize;
       const theta = sectorStart + rand() * sectorSize;
-      const r =
+      const radius =
         CRYSTAL.MIN_RADIUS + (CRYSTAL.MAX_RADIUS - CRYSTAL.MIN_RADIUS) * rand();
-      const x = Math.cos(theta) * r;
-      const y = 2;
-      const z = Math.sin(theta) * r;
-      const scale = 1;
+
       return {
         key: `crystal-${index}`,
         id: `crystal-${index}`,
-        position: [x, y, z] as [number, number, number],
-        scale,
+        position: [Math.cos(theta) * radius, 2, Math.sin(theta) * radius] as [
+          number,
+          number,
+          number,
+        ],
+        scale: 1,
         message,
         sectorStart,
         sectorSize,
@@ -84,14 +76,8 @@ export default function World() {
       >
         <Suspense fallback={null}>
           <Dome />
-
-          <Environment
-            preset="city"
-            background={false}
-            environmentIntensity={2}
-          />
+          <Environment preset="city" background={false} environmentIntensity={2} />
           <ambientLight intensity={2} />
-
           <Sparkles
             count={1000}
             scale={35}
@@ -104,35 +90,30 @@ export default function World() {
           />
 
           <Floor groundRef={groundRef} />
-          {/* 90°ごとに円形配置: 0°=+X, 90°=+Z, 180°=-X, 270°=-Z */}
-          <Book
+          <BookObject
             position={[LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOOK_HEIGHT, 0]}
             scale={LAYOUT.BOOK_SCALE}
             rotation={[0, 0, 0]}
             playerRef={playerRef}
           />
-          <Post
+          <PostObject
             position={[0, LAYOUT.POST_HEIGHT, LAYOUT.OBJECT_RING_RADIUS]}
             scale={LAYOUT.POST_SCALE}
             rotation={[0, Math.PI, 0]}
             playerRef={playerRef}
           />
-          <Box
+          <BoxObject
             position={[-LAYOUT.OBJECT_RING_RADIUS, LAYOUT.BOX_HEIGHT, 0]}
             scale={LAYOUT.BOX_SCALE}
             rotation={[0, Math.PI / 2, 0]}
             playerRef={playerRef}
           />
-          <Computer
+          <ComputerObject
             position={[0, LAYOUT.COMPUTER_HEIGHT, -LAYOUT.OBJECT_RING_RADIUS]}
             scale={LAYOUT.COMPUTER_SCALE}
             playerRef={playerRef}
           />
-          <Player
-            groundRef={groundRef}
-            isMobile={isMobile}
-            playerRef={playerRef}
-          />
+          <Player groundRef={groundRef} isMobile={isMobile} playerRef={playerRef} />
 
           {crystals.map((crystal) => (
             <Crystal
@@ -147,6 +128,7 @@ export default function World() {
               isFrozen={shouldFreezeCrystals}
             />
           ))}
+
           <SectionImagesPreloader />
         </Suspense>
       </Canvas>

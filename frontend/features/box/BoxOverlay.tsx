@@ -2,7 +2,7 @@
 
 import React, { useCallback, memo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useInputStore } from "@/lib/world/store";
+import { useUIStore } from "@/shared/uiStore";
 import {
   BOX_MENU_ENTRIES,
   SKILL_ENTRIES,
@@ -11,7 +11,7 @@ import {
   type BoxMenuEntry,
   type SkillEntry,
   type ItemEntry,
-} from "@/lib/world/boxData";
+} from "@/features/box/boxData";
 
 /** レア度（1〜5）に応じたテキスト色 */
 function getRarityColorClass(rare: number): string {
@@ -363,12 +363,13 @@ function BoxGridView() {
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
-  const boxView = useInputStore((s) => s.boxView);
-  const activeBoxCategory = useInputStore((s) => s.activeBoxCategory);
-  const currentBoxPage = useInputStore((s) => s.currentBoxPage);
-  const selectedBoxSlotIndex = useInputStore((s) => s.selectedBoxSlotIndex);
-  const setCurrentBoxPage = useInputStore((s) => s.setCurrentBoxPage);
-  const setSelectedBoxSlotIndex = useInputStore(
+  const isOpen = useUIStore((s) => s.activeOverlay === "box");
+  const boxView = useUIStore((s) => s.boxView);
+  const activeBoxCategory = useUIStore((s) => s.activeBoxCategory);
+  const currentBoxPage = useUIStore((s) => s.currentBoxPage);
+  const selectedBoxSlotIndex = useUIStore((s) => s.selectedBoxSlotIndex);
+  const setCurrentBoxPage = useUIStore((s) => s.setCurrentBoxPage);
+  const setSelectedBoxSlotIndex = useUIStore(
     (s) => s.setSelectedBoxSlotIndex,
   );
   const containerRefMap = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -377,7 +378,7 @@ function BoxGridView() {
 
   const handleSelectSlot = useCallback(
     (index: number) => {
-      if (index === useInputStore.getState().selectedBoxSlotIndex) return;
+      if (index === useUIStore.getState().selectedBoxSlotIndex) return;
       setSelectedBoxSlotIndex(index);
     },
     [setSelectedBoxSlotIndex],
@@ -404,7 +405,7 @@ function BoxGridView() {
     [],
   );
 
-  const isGridActive = boxView === "grid" && activeBoxCategory !== null;
+  const isGridActive = isOpen && boxView === "grid" && activeBoxCategory !== null;
   const isSkills = activeBoxCategory === "skills";
   const entries = isSkills ? SKILL_ENTRIES : ITEM_ENTRIES;
   const slotsPerPage = isMobile ? MOBILE_SLOTS_PER_PAGE : SLOTS_PER_PAGE;
@@ -619,19 +620,21 @@ function BoxGridView() {
   );
 }
 
-export default function BoxUI() {
-  const boxView = useInputStore((s) => s.boxView);
-  const setBoxView = useInputStore((s) => s.setBoxView);
-  const setActiveBoxCategory = useInputStore((s) => s.setActiveBoxCategory);
-  const setCurrentBoxPage = useInputStore((s) => s.setCurrentBoxPage);
-  const setSelectedBoxSlotIndex = useInputStore(
+export default function BoxOverlay() {
+  const isOpen = useUIStore((s) => s.activeOverlay === "box");
+  const boxView = useUIStore((s) => s.boxView);
+  const closeBox = useUIStore((s) => s.closeBox);
+  const setBoxView = useUIStore((s) => s.setBoxView);
+  const setActiveBoxCategory = useUIStore((s) => s.setActiveBoxCategory);
+  const setCurrentBoxPage = useUIStore((s) => s.setCurrentBoxPage);
+  const setSelectedBoxSlotIndex = useUIStore(
     (s) => s.setSelectedBoxSlotIndex,
   );
 
-  if (boxView === "closed") return null;
+  if (!isOpen) return null;
 
   const handleClose = () => {
-    setBoxView("closed");
+    closeBox();
   };
 
   const handleMenuSelect = (id: BoxMenuEntry["id"]) => {

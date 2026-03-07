@@ -3,11 +3,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { FaGithub, FaInstagram } from "react-icons/fa";
-import { useInputStore } from "@/lib/world/store";
+import { useUIStore } from "@/shared/uiStore";
 
-export default function PostUI() {
-  const isOpen = useInputStore((s) => s.isPostOpen);
-  const setIsPostOpen = useInputStore((s) => s.setIsPostOpen);
+export default function PostOverlay() {
+  const isOpen = useUIStore((state) => state.activeOverlay === "post");
+  const closePost = useUIStore((state) => state.closePost);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,30 +17,36 @@ export default function PostUI() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isStampModalOpen, setIsStampModalOpen] = useState(false);
 
-  const closePost = useCallback(() => {
-    setIsPostOpen(false);
-  }, [setIsPostOpen]);
+  const handleClose = useCallback(() => {
+    closePost();
+  }, [closePost]);
 
   useEffect(() => {
     if (!isOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (isStampModalOpen) setIsStampModalOpen(false);
-        else closePost();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (isStampModalOpen) {
+        setIsStampModalOpen(false);
+        return;
       }
+      handleClose();
     };
+
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, closePost, isStampModalOpen]);
+  }, [handleClose, isOpen, isStampModalOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (isSending) return;
+
     setIsSending(true);
     setSubmitError(null);
     setSubmitSuccess(false);
+
     try {
-      const res = await fetch("/api/letter", {
+      const response = await fetch("/api/letter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -50,9 +56,7 @@ export default function PostUI() {
           meta: {
             sentAt: new Date().toISOString(),
             userAgent:
-              typeof navigator !== "undefined"
-                ? navigator.userAgent
-                : undefined,
+              typeof navigator !== "undefined" ? navigator.userAgent : undefined,
             screenSize:
               typeof window !== "undefined"
                 ? `${window.innerWidth}x${window.innerHeight}`
@@ -62,20 +66,22 @@ export default function PostUI() {
           },
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await response.json();
+
+      if (!response.ok) {
         throw new Error(data.error ?? "送信に失敗しました");
       }
+
       setName("");
       setEmail("");
       setMessage("");
       setSubmitSuccess(true);
-      setTimeout(() => {
-        closePost();
+      window.setTimeout(() => {
+        handleClose();
         setSubmitSuccess(false);
       }, 2000);
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "送信に失敗しました");
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "送信に失敗しました");
     } finally {
       setIsSending(false);
     }
@@ -87,15 +93,14 @@ export default function PostUI() {
     <div
       ref={overlayRef}
       className="absolute inset-0 z-10000 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) closePost();
+      onClick={(event) => {
+        if (event.target === overlayRef.current) handleClose();
       }}
     >
       <div
         className="relative max-md:absolute max-md:inset-x-0 max-md:top-1/2 max-md:-translate-y-1/2 max-md:h-[80vh] max-md:w-full md:h-[98vh] md:aspect-1294/1493 md:max-w-[90vw]"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
-        {/* 背景画像 */}
         <Image
           src="/post/letter.png"
           alt="Letter"
@@ -104,17 +109,15 @@ export default function PostUI() {
           sizes="(max-width: 768px) 100vw, min(90vw, 84.5vh)"
         />
 
-        {/* 閉じるボタン */}
         <button
           type="button"
-          onClick={closePost}
+          onClick={handleClose}
           aria-label="閉じる"
           className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center text-[#4a3728]/80 hover:text-[#3d2817] text-2xl transition-colors drop-shadow-sm"
         >
           ×
         </button>
 
-        {/* 手紙コンテンツ（紙の上にオーバーレイ） */}
         <div className="absolute inset-0 flex flex-col p-6 sm:p-10 md:p-12 pt-8 sm:pt-12 md:pt-14">
           {submitSuccess ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-1">
@@ -127,7 +130,6 @@ export default function PostUI() {
             </div>
           ) : (
             <>
-              {/* 宛名 + 切手（横並び・フレックス） */}
               <div className="flex items-center justify-between gap-4 mt-2 sm:mt-4 mb-4 sm:mb-6">
                 <h2 className="font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] drop-shadow-sm shrink-0">
                   To: Shogo Morisawa
@@ -147,7 +149,6 @@ export default function PostUI() {
                 </button>
               </div>
 
-              {/* SNSモーダル（切手クリックで表示） */}
               {isStampModalOpen && (
                 <div
                   className="absolute inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
@@ -155,7 +156,7 @@ export default function PostUI() {
                 >
                   <div
                     className="relative w-full max-w-sm bg-[#f4ebd8] p-6 sm:p-8 rounded-md shadow-2xl border border-[#c1a68d] text-neutral-800"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
                   >
                     <button
                       type="button"
@@ -191,9 +192,7 @@ export default function PostUI() {
                         <div className="w-12 h-12 bg-linear-to-tr from-yellow-400 via-red-500 to-purple-500 text-white rounded-full flex items-center justify-center shadow-md">
                           <FaInstagram className="text-2xl" />
                         </div>
-                        <span className="text-xs font-playfair">
-                          Instagram 1
-                        </span>
+                        <span className="text-xs font-playfair">Instagram 1</span>
                       </a>
                       <a
                         href="https://www.instagram.com/pkpk_mst/"
@@ -204,15 +203,10 @@ export default function PostUI() {
                         <div className="w-12 h-12 bg-neutral-400 text-white rounded-full flex items-center justify-center shadow-md">
                           <FaInstagram className="text-2xl" />
                         </div>
-                        <span className="text-xs font-playfair">
-                          Instagram 2
-                        </span>
+                        <span className="text-xs font-playfair">Instagram 2</span>
                       </a>
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="flex flex-col items-center gap-2 opacity-30"
-                        >
+                      {[...Array(5)].map((_, index) => (
+                        <div key={index} className="flex flex-col items-center gap-2 opacity-30">
                           <div className="w-12 h-12 border-2 border-dashed border-neutral-400 rounded-full flex items-center justify-center text-sm">
                             ?
                           </div>
@@ -224,7 +218,6 @@ export default function PostUI() {
                 </div>
               )}
 
-              {/* フォーム */}
               <form
                 onSubmit={handleSubmit}
                 className="letter-form font-playfair flex-1 flex flex-col gap-4 sm:gap-5 min-h-0"
@@ -245,7 +238,7 @@ export default function PostUI() {
                     <input
                       type="text"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(event) => setName(event.target.value)}
                       placeholder="あなたのお名前"
                       required
                       className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
@@ -269,7 +262,7 @@ export default function PostUI() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(event) => setEmail(event.target.value)}
                       placeholder="返信が必要な場合のみ（空欄でも届きます）"
                       className="absolute inset-0 bg-transparent border-0 outline-none pl-[8%] pr-[8%] py-2 text-[#3d2817] placeholder-[#7d6b5a] text-sm sm:text-base"
                     />
@@ -282,7 +275,7 @@ export default function PostUI() {
                   </label>
                   <textarea
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(event) => setMessage(event.target.value)}
                     placeholder="あいうえお〜〜メッセージをどうぞ。なんでもお気軽に書いてください。"
                     required
                     className="bg-transparent border-b border-[#5c4033] outline-none px-1 py-1 text-[#3d2817] placeholder-[#7d6b5a] focus:border-[#3d2817] transition-colors resize-none flex-1 min-h-20 text-sm sm:text-base"
@@ -290,11 +283,9 @@ export default function PostUI() {
                 </div>
 
                 {submitError && (
-                  <p className="text-sm text-red-600 text-center mt-1">
-                    {submitError}
-                  </p>
+                  <p className="text-sm text-red-600 text-center mt-1">{submitError}</p>
                 )}
-                {/* SENDボタン（シーリングスタンプ） */}
+
                 <button
                   type="submit"
                   disabled={isSending}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { preloadSectionImages } from "@/lib/world/preloadSectionImages";
+import { preloadSectionImages } from "@/features/world/preloadWorldImages";
 
 /**
  * ワールド（3D）の初期ロードが終わり、このコンポーネントがマウントされたタイミングで

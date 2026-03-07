@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { useInputStore } from "@/lib/world/store";
+import { useUIStore } from "@/shared/uiStore";
 import {
   ADVENTURE_SLOTS,
   getAdventureSlot,
   type AdventureSlotId,
-} from "@/lib/world/adventureBookData";
+} from "@/features/book/bookData";
 
 const FONT_CLASS = "font-adventure";
 
@@ -112,26 +112,16 @@ function DetailView({
         <span className={FONT_CLASS}>{slot.location}</span>
       </div>
 
-      <GaugeBar
-        label="HP"
-        current={slot.hp}
-        max={slot.hpMax}
-        className="text-white"
-      />
-      <GaugeBar
-        label="MP"
-        current={slot.mp}
-        max={slot.mpMax}
-        className="text-white"
-      />
+      <GaugeBar label="HP" current={slot.hp} max={slot.hpMax} className="text-white" />
+      <GaugeBar label="MP" current={slot.mp} max={slot.mpMax} className="text-white" />
 
       {slot.skills.length > 0 && (
         <div>
           <p className={`${FONT_CLASS} text-white text-sm mb-2`}>とくぎ</p>
           <ul className="list-disc list-inside text-white text-sm space-y-1">
-            {slot.skills.map((s, i) => (
-              <li key={i} className={FONT_CLASS}>
-                {s}
+            {slot.skills.map((skill, index) => (
+              <li key={index} className={FONT_CLASS}>
+                {skill}
               </li>
             ))}
           </ul>
@@ -162,19 +152,14 @@ function DetailView({
   );
 }
 
-export default function AdventureBookUI() {
-  const isOpen = useInputStore((s) => s.isAdventureBookOpen);
-  const selectedSlot = useInputStore((s) => s.selectedAdventureSlot);
-  const setIsAdventureBookOpen = useInputStore((s) => s.setIsAdventureBookOpen);
-  const setSelectedAdventureSlot = useInputStore(
-    (s) => s.setSelectedAdventureSlot,
+export default function BookOverlay() {
+  const isOpen = useUIStore((state) => state.activeOverlay === "book");
+  const selectedSlot = useUIStore((state) => state.selectedAdventureSlot);
+  const closeBook = useUIStore((state) => state.closeBook);
+  const setSelectedAdventureSlot = useUIStore(
+    (state) => state.setSelectedAdventureSlot,
   );
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  const closeBook = useCallback(() => {
-    setIsAdventureBookOpen(false);
-    setSelectedAdventureSlot(null);
-  }, [setIsAdventureBookOpen, setSelectedAdventureSlot]);
 
   const handleBack = useCallback(() => {
     setSelectedAdventureSlot(null);
@@ -182,18 +167,19 @@ export default function AdventureBookUI() {
 
   useEffect(() => {
     if (!isOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (selectedSlot) {
-          setSelectedAdventureSlot(null);
-        } else {
-          closeBook();
-        }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (selectedSlot) {
+        setSelectedAdventureSlot(null);
+        return;
       }
+      closeBook();
     };
+
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, selectedSlot, closeBook, setSelectedAdventureSlot]);
+  }, [closeBook, isOpen, selectedSlot, setSelectedAdventureSlot]);
 
   if (!isOpen) return null;
 
@@ -201,8 +187,8 @@ export default function AdventureBookUI() {
     <div
       ref={overlayRef}
       className="absolute inset-0 z-10000 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) closeBook();
+      onClick={(event) => {
+        if (event.target === overlayRef.current) closeBook();
       }}
     >
       <div
@@ -213,7 +199,7 @@ export default function AdventureBookUI() {
           shadow-[0_0_0_4px_black,0_0_0_8px_white]
           ${FONT_CLASS}
         `}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         {selectedSlot === null ? (
           <SlotList onSelect={setSelectedAdventureSlot} onClose={closeBook} />

@@ -2,17 +2,17 @@
 Coco モデル: coco.glb をそのまま表示（変換済み用の骨・目アタッチ等は行わない）
 */
 
-import * as THREE from "three";
 import React, { useEffect, useImperativeHandle, useLayoutEffect } from "react";
-import { useGLTF, useAnimations, useTexture } from "@react-three/drei";
+import * as THREE from "three";
+import { useAnimations, useGLTF, useTexture } from "@react-three/drei";
 import { SkeletonUtils } from "three-stdlib";
 
 interface CocoProps {
   isMoving: boolean;
-  moveDirection: number; // 1: 前進, -1: 後退
+  moveDirection: number;
 }
 
-export const Model = React.forwardRef<
+const Coco = React.forwardRef<
   THREE.Group,
   React.ComponentPropsWithoutRef<"group"> & CocoProps
 >(({ isMoving, moveDirection, ...props }, ref) => {
@@ -24,11 +24,10 @@ export const Model = React.forwardRef<
 
   useImperativeHandle(ref, () => group.current!);
 
-  // Body に coco_texture の matcap を適用
   useLayoutEffect(() => {
-    clone.traverse((obj) => {
-      if ((obj as THREE.Mesh).isMesh && obj.name === "Body") {
-        (obj as THREE.Mesh).material = new THREE.MeshMatcapMaterial({
+    clone.traverse((object) => {
+      if ((object as THREE.Mesh).isMesh && object.name === "Body") {
+        (object as THREE.Mesh).material = new THREE.MeshMatcapMaterial({
           matcap,
           color: 0xffffff,
         });
@@ -39,15 +38,16 @@ export const Model = React.forwardRef<
   useEffect(() => {
     const actionName = Object.keys(actions)[0];
     const action = actions[actionName];
-    if (action) {
-      if (isMoving) {
-        action.setEffectiveTimeScale(moveDirection);
-        action.play();
-      } else {
-        action.stop();
-      }
+    if (!action) return;
+
+    if (isMoving) {
+      action.setEffectiveTimeScale(moveDirection);
+      action.play();
+      return;
     }
-  }, [isMoving, moveDirection, actions]);
+
+    action.stop();
+  }, [actions, isMoving, moveDirection]);
 
   return (
     <group ref={group} {...props} dispose={null}>
@@ -56,6 +56,8 @@ export const Model = React.forwardRef<
   );
 });
 
-Model.displayName = "Coco";
+Coco.displayName = "Coco";
 
 useGLTF.preload("/models/coco.glb");
+
+export default Coco;
