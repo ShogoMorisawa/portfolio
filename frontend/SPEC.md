@@ -131,11 +131,8 @@ frontend/
 │   │   └── letter/
 │   │       └── route.ts                # 手紙送信 API
 │   ├── globals.css                     # 全体スタイルとフォントユーティリティ
-│   ├── layout.tsx                      # フォント定義 + ルートレイアウト
+│   ├── layout.tsx                      # フォント定義 + ルートレイアウト + metadata
 │   └── page.tsx                        # World / IntroOverlay / Prompt / OverlayRoot / Loader
-├── components/
-│   └── providers/
-│       └── WebVitalsRegistry.tsx       # ルートレイアウトから読むクライアント provider
 ├── features/
 │   ├── world/
 │   │   ├── World.tsx                   # 3D シーンの組み立て
@@ -197,6 +194,26 @@ frontend/
 | **子**   | `World`, `JoystickControls`, `IntroOverlay`, `InteractionPrompt`, `OverlayRoot`, `Loader` |
 
 **補足:** `BoxOverlay` や `PostOverlay` の動的 import は廃止し、`OverlayRoot` が一元的に切り替える。
+
+---
+
+### app/layout.tsx
+
+| 項目     | 内容                                                       |
+| -------- | ---------------------------------------------------------- |
+| **責務** | ルートレイアウト、フォント定義、ページ共通 metadata の設定 |
+| **依存** | `next/font/google`, `Metadata`                             |
+
+**metadata:**
+
+- `metadataBase`: `https://shogomorisawa.me`
+- `title`: `Shogo Morisawa Portfolio`
+- `description`: `森澤翔吾のポートフォリオサイト。`
+- `alternates.canonical`: `/`
+- `openGraph`: `title`, `description`, `siteName`, `locale`, `type`
+- `twitter`: `summary`
+- `robots`: `index`, `follow`
+- `icons`: `favicon.ico`
 
 ---
 
