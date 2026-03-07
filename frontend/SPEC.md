@@ -69,6 +69,7 @@
 │  app/page.tsx                                               │
 │  ├── <World />                                              │
 │  ├── <JoystickControls />   ← 仮想ジョイスティック          │
+│  ├── <IntroOverlay />      ← 開始演出メッセージ            │
 │  ├── <InteractionPrompt /> ← 中央 TAP 導線                 │
 │  ├── <OverlayRoot />       ← overlay を 1 つだけ切替表示    │
 │  └── <Loader />            ← drei ローダー                 │
@@ -88,7 +89,7 @@
 │  │  ├── ComputerObject                               │ │   │
 │  │  ├── Player ────────────── playerRef ────────────┤ │   │
 │  │  │    └── Coco                                     │ │   │
-│  │  ├── Crystal x4                                    │ │   │
+│  │  ├── IntroCrystal + Crystal x3                     │ │   │
 │  │  └── SectionImagesPreloader                        │ │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
@@ -99,6 +100,7 @@
 │  - joystick                                                 │
 │  - activeOverlay: none | dialogue | book | box | post | computer │
 │  - nearbyTarget: crystal | book | box | post | computer | null   │
+│  - introSequence / interactionTarget selector               │
 │  - overlay 個別 state（book / box / computer）              │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -106,7 +108,7 @@
           ▼                                        ▼
 ┌─────────────────────────────┐      ┌─────────────────────────────┐
 │ shared/InteractionPrompt.tsx│      │ shared/OverlayRoot.tsx      │
-│ - nearbyTarget を読む       │      │ - activeOverlay を読む      │
+│ - interactionTarget を読む │      │ - activeOverlay を読む      │
 │ - TAP から open action 実行 │      │ - 各 Overlay を 1つだけ描画 │
 └─────────────────────────────┘      └─────────────────────────────┘
 ```
@@ -130,7 +132,7 @@ frontend/
 │   │       └── route.ts                # 手紙送信 API
 │   ├── globals.css                     # 全体スタイルとフォントユーティリティ
 │   ├── layout.tsx                      # フォント定義 + ルートレイアウト
-│   └── page.tsx                        # World / Prompt / OverlayRoot / Loader
+│   └── page.tsx                        # World / IntroOverlay / Prompt / OverlayRoot / Loader
 ├── components/
 │   └── providers/
 │       └── WebVitalsRegistry.tsx       # ルートレイアウトから読むクライアント provider
@@ -140,10 +142,13 @@ frontend/
 │   │   ├── Player.tsx                  # 移動・接地・カメラ追従
 │   │   ├── Coco.tsx                    # プレイヤーモデルとアニメーション
 │   │   ├── Crystal.tsx                 # クリスタルの徘徊と会話担当制
+│   │   ├── IntroCrystal.tsx            # 開始演出専用クリスタル
+│   │   ├── IntroOverlay.tsx            # 開始メッセージ
 │   │   ├── DialogueOverlay.tsx         # 会話オーバーレイ
 │   │   ├── JoystickControls.tsx        # 仮想ジョイスティック
 │   │   ├── SectionImagesPreloader.tsx  # Box / Post / Computer 画像のプリロード
 │   │   ├── preloadWorldImages.ts       # 画像プリロード処理
+│   │   ├── crystalInteraction.ts       # crystal の近接・会話対象化ロジック
 │   │   ├── FloatingWorldModel.tsx      # 浮遊オブジェクト共通描画
 │   │   ├── Dome.tsx                    # ドーム
 │   │   ├── Floor.tsx                   # 床
@@ -186,10 +191,10 @@ frontend/
 
 ### app/page.tsx
 
-| 項目     | 内容                                                                      |
-| -------- | ------------------------------------------------------------------------- |
-| **責務** | ルートページの組み立て                                                    |
-| **子**   | `World`, `JoystickControls`, `InteractionPrompt`, `OverlayRoot`, `Loader` |
+| 項目     | 内容                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------- |
+| **責務** | ルートページの組み立て                                                                    |
+| **子**   | `World`, `JoystickControls`, `IntroOverlay`, `InteractionPrompt`, `OverlayRoot`, `Loader` |
 
 **補足:** `BoxOverlay` や `PostOverlay` の動的 import は廃止し、`OverlayRoot` が一元的に切り替える。
 
@@ -221,12 +226,14 @@ frontend/
 - `Floor`
 - `BookObject`, `PostObject`, `BoxObject`, `ComputerObject`
 - `Player`
-- `Crystal` x4
+- `IntroCrystal` x1
+- `Crystal` x3
 - `SectionImagesPreloader`
 
 **挙動:**
 
 - `activeOverlay !== "none"` の間は `shouldFreezeCrystals=true` とし、全クリスタルの `useFrame` を停止。
+- 開始時は 1 体だけ `IntroCrystal` としてプレイヤーへ接近し、クリック待ちの導入演出を担当する。
 - 本・ポスト・箱・コンピューターは `LAYOUT` の円周 4 点に固定配置。
 
 ---
@@ -390,8 +397,40 @@ frontend/
 
 - 各クリスタルは自分の担当セクター内で次の目標位置をサンプリングして移動。
 - 近距離で担当になった個体だけが `activeCrystalId`, `activeMessage`, `targetPosition` を更新する。
+- 近接判定と会話対象化は `crystalInteraction.ts` の helper に集約している。
 - `setNearbyState("crystal", ...)` を通じて TAP 導線の最優先対象になる。
 - `isFrozen=true` の間は徘徊・注視・浮遊をすべて停止。
+
+---
+
+### IntroCrystal.tsx
+
+| 項目      | 内容                                                                                                                   |
+| --------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **責務**  | 初回導入用 crystal の接近、クリック待ち、帰投、通常徘徊への合流                                                        |
+| **Props** | `id`, `initialPosition`, `releasePosition`, `message`, `scale?`, `sectorStart`, `sectorSize`, `playerRef`, `isFrozen?` |
+| **依存**  | `useUIStore`, `crystalInteraction.ts`, `CRYSTAL`                                                                       |
+
+**実装:**
+
+- `introSequence` が `approach` の間はプレイヤーへ接近し、一定距離で停止する。
+- `message` の間は `introFocusPosition` を更新し、カメラ演出と `IntroOverlay` の表示を支える。
+- クリックで `release` に進み、自分の担当セクター内の `releasePosition` へ戻る。
+- 帰投完了後は通常の crystal と同じ近接判定・会話・徘徊ロジックへ合流する。
+
+---
+
+### IntroOverlay.tsx
+
+| 項目      | 内容                                           |
+| --------- | ---------------------------------------------- |
+| **責務**  | 開始演出中の `Welcome!` 表示と継続クリック待ち |
+| **Props** | なし                                           |
+| **依存**  | `useUIStore`                                   |
+
+**表示条件:** `introSequence === "message"` かつ `introMessage` が存在するとき。
+
+**閉じ方:** 全画面クリックで `introSequence = "release"`。
 
 ---
 
@@ -418,12 +457,12 @@ frontend/
 | --------- | -------------------------------------------------- |
 | **責務**  | 近接対象に応じて中央の `TAP` ボタンを 1 つだけ表示 |
 | **Props** | なし                                               |
-| **依存**  | `useUIStore`                                       |
+| **依存**  | `useUIStore`, `selectInteractionTarget()`          |
 
 **実装:**
 
-- `activeOverlay !== "none"` または `nearbyTarget === null` のときは非表示。
-- `nearbyTarget` に応じて以下の action を実行:
+- `uiStore` の selector が `interactionTarget` を返せないときは非表示。
+- `interactionTarget` に応じて以下の action を実行:
   - `crystal` → `startDialogue()`
   - `book` → `openBook()`
   - `box` → `openBox()`
@@ -733,6 +772,9 @@ frontend/
 - `activeCrystalId`
 - `activeMessage`
 - `targetPosition`
+- `introSequence: "approach" | "message" | "release" | "done"`
+- `introMessage`
+- `introFocusPosition`
 
 **Book 状態:**
 
@@ -755,6 +797,10 @@ frontend/
 - `setNearbyState`
 - `setActiveCrystal`
 - `setTargetPosition`
+- `setIntroSequence`
+- `setIntroMessage`
+- `setIntroFocusPosition`
+- `finishIntro`
 - `startDialogue` / `closeDialogue`
 - `openBook` / `closeBook`
 - `openBox` / `closeBox`
@@ -772,6 +818,13 @@ frontend/
 4. `post`
 5. `computer`
 
+### `interactionTarget` の決定規則
+
+- `activeOverlay !== "none"` のときは `null`
+- `introSequence` が `approach` または `message` のときは `null`
+- `activeCrystalId` と `activeMessage` が揃っていれば `crystal`
+- それ以外は `nearbyTarget`
+
 ### Overlay の原則
 
 - オーバーレイは 1 つだけ。
@@ -785,14 +838,16 @@ frontend/
 1. `page.tsx` が `World` と UI レイヤーを同時に配置
 2. `World` が `Canvas` を構築し、環境・光源・3D オブジェクトを描画
 3. `Player` と各オブジェクトが `useFrame` で移動・近接・カメラを更新
-4. `InteractionPrompt` が `nearbyTarget` に応じた単一 TAP 導線を表示
-5. `OverlayRoot` が `activeOverlay` に応じた UI を 1 つだけ描画
-6. `SectionImagesPreloader` が Post / Box / Computer の画像を背後で先読み
+4. `IntroOverlay` が開始メッセージを表示し、クリック待ちを行う
+5. `InteractionPrompt` が `interactionTarget` に応じた単一 TAP 導線を表示
+6. `OverlayRoot` が `activeOverlay` に応じた UI を 1 つだけ描画
+7. `SectionImagesPreloader` が Post / Box / Computer の画像を背後で先読み
 
 **停止条件:**
 
 - `activeOverlay !== "none"` の間は `Crystal` 全体を停止
 - `activeOverlay === "computer"` の間は `ComputerObject` の浮遊を停止
+- `introSequence === "approach"` または `"message"` の間はプレイヤー入力を停止
 
 ---
 
@@ -820,7 +875,7 @@ frontend/
 
 - キーボードとジョイスティックの X/Y 入力を合算
 - 長さが 1 を超える場合は正規化
-- `dialogue` と `computer` 中は移動入力を止める
+- `dialogue` と `computer`、および開始演出の `approach` / `message` 中は移動入力を止める
 
 ### 近接判定
 
@@ -833,6 +888,12 @@ frontend/
 - 各クリスタルは担当セクター内の新しい目標点をランダムに選ぶ
 - `delta > 0.5` のフレームでは位置更新をせず、次の目標だけ更新してワープ感を防ぐ
 - 担当制は `5m` 以内で獲得、担当中は `7m` まで維持
+
+### 開始演出
+
+- `IntroCrystal` は開始位置からプレイヤーへ接近し、距離 `3.4m` 以内で停止する
+- `message` 中は `IntroOverlay` とカメラ寄りを維持し、クリックまで待機する
+- `release` では担当セクター内の `releasePosition` まで戻り、その後通常徘徊へ合流する
 
 ### Box グリッド最適化
 
@@ -923,14 +984,14 @@ frontend/
 
 ## トラブルシューティング
 
-| 現象                                       | 原因                                                     | 対処                                                             |
-| ------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| プレイヤーが床をすり抜ける                 | `groundRef` が床メッシュを取れていない                   | `Floor.tsx` の ref 設定と床モデルの当たり判定を確認              |
-| 近くにいるのに TAP が出ない                | `activeOverlay !== "none"`、または他対象が優先されている | `activeOverlay` と `nearbyTarget` を確認                         |
-| Computer が開いても作品が出ない            | `tabletScreenImageIndex` が範囲外                        | `currentIndex` の剰余正規化と `COMPUTER_WORKS.length` を確認     |
-| Box / Post / Computer 画像の初回表示が遅い | プリロード未実行                                         | `SectionImagesPreloader` が `World` 内でマウントされているか確認 |
-| 手紙送信に失敗する                         | 環境変数未設定、または Resend エラー                     | `RESEND_API_KEY`, `MY_EMAIL`, API レスポンスを確認               |
-| `next build` が fonts 取得で失敗する       | `next/font/google` がネットワーク制限下で取得できない    | ネットワークあり環境でビルドするか、ローカルフォント化を検討     |
+| 現象                                       | 原因                                                        | 対処                                                                       |
+| ------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------- |
+| プレイヤーが床をすり抜ける                 | `groundRef` が床メッシュを取れていない                      | `Floor.tsx` の ref 設定と床モデルの当たり判定を確認                        |
+| 近くにいるのに TAP が出ない                | `interactionTarget` が `null`、または他対象が優先されている | `activeOverlay`, `introSequence`, `activeCrystalId`, `nearbyTarget` を確認 |
+| Computer が開いても作品が出ない            | `tabletScreenImageIndex` が範囲外                           | `currentIndex` の剰余正規化と `COMPUTER_WORKS.length` を確認               |
+| Box / Post / Computer 画像の初回表示が遅い | プリロード未実行                                            | `SectionImagesPreloader` が `World` 内でマウントされているか確認           |
+| 手紙送信に失敗する                         | 環境変数未設定、または Resend エラー                        | `RESEND_API_KEY`, `MY_EMAIL`, API レスポンスを確認                         |
+| `next build` が fonts 取得で失敗する       | `next/font/google` がネットワーク制限下で取得できない       | ネットワークあり環境でビルドするか、ローカルフォント化を検討               |
 
 ---
 

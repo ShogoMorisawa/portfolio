@@ -9,9 +9,10 @@ import { useUIStore } from "@/shared/uiStore";
 import { getCrystalLookTarget, syncCrystalInteraction } from "./crystalInteraction";
 import { CRYSTAL } from "./worldConfig";
 
-interface CrystalProps {
+interface IntroCrystalProps {
   id: string;
-  position: [number, number, number];
+  initialPosition: [number, number, number];
+  releasePosition: [number, number, number];
   message: string;
   scale?: number | [number, number, number];
   sectorStart: number;
@@ -27,29 +28,37 @@ type GLTFResult = GLTF & {
   };
 };
 
-export default function Crystal({
+const INTRO_APPROACH_STOP_DISTANCE = 3.4;
+const INTRO_RELEASE_ARRIVAL_RADIUS = 0.6;
+const INTRO_APPROACH_SPEED = CRYSTAL.SPEED * 1.5;
+
+export default function IntroCrystal({
   id,
-  position: initialPosition,
+  initialPosition,
+  releasePosition,
   message,
   scale = 0.25,
   sectorStart,
   sectorSize,
   playerRef,
   isFrozen = false,
-}: CrystalProps) {
+}: IntroCrystalProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const { nodes } = useGLTF("/models/crystal-transformed.glb") as unknown as GLTFResult;
-  const matcap = useTexture("/textures/crystal_texture.jpg");
-
+  const introSequence = useUIStore((state) => state.introSequence);
+  const setIntroSequence = useUIStore((state) => state.setIntroSequence);
+  const setIntroFocusPosition = useUIStore((state) => state.setIntroFocusPosition);
+  const finishIntro = useUIStore((state) => state.finishIntro);
   const setActiveCrystal = useUIStore((state) => state.setActiveCrystal);
   const setNearbyState = useUIStore((state) => state.setNearbyState);
   const setTargetPosition = useUIStore((state) => state.setTargetPosition);
   const activeCrystalId = useUIStore((state) => state.activeCrystalId);
   const activeOverlay = useUIStore((state) => state.activeOverlay);
   const isDialogueOpen = activeOverlay === "dialogue";
+  const { nodes } = useGLTF("/models/crystal-transformed.glb") as unknown as GLTFResult;
+  const matcap = useTexture("/textures/crystal_texture.jpg");
 
   const [target, setTarget] = useState(
-    new THREE.Vector3(initialPosition[0], initialPosition[1], initialPosition[2]),
+    new THREE.Vector3(releasePosition[0], releasePosition[1], releasePosition[2]),
   );
 
   const getNextPosition = (currentPosition: THREE.Vector3) => {
@@ -68,6 +77,51 @@ export default function Crystal({
     if (!groupRef.current || isFrozen) return;
 
     const currentPosition = groupRef.current.position;
+
+    if (introSequence !== "done") {
+      if (introSequence === "message") {
+        setIntroFocusPosition([currentPosition.x, currentPosition.y, currentPosition.z]);
+      } else if (introSequence === "release") {
+        setIntroFocusPosition(null);
+      }
+
+      const playerPosition = playerRef.current?.position ?? state.camera.position;
+      groupRef.current.lookAt(getCrystalLookTarget(playerPosition, currentPosition.y));
+
+      if (introSequence === "approach" && playerRef.current) {
+        const approachTarget = playerRef.current.position.clone();
+        const direction = new THREE.Vector3().subVectors(approachTarget, currentPosition);
+        const planarDistance = Math.hypot(direction.x, direction.z);
+
+        if (planarDistance <= INTRO_APPROACH_STOP_DISTANCE) {
+          setIntroSequence("message");
+        } else {
+          direction.y = 0;
+          direction.normalize();
+          currentPosition.x += direction.x * INTRO_APPROACH_SPEED * delta;
+          currentPosition.z += direction.z * INTRO_APPROACH_SPEED * delta;
+        }
+      } else if (introSequence === "release") {
+        const direction = new THREE.Vector3().subVectors(
+          new THREE.Vector3(...releasePosition),
+          currentPosition,
+        );
+
+        if (direction.length() <= INTRO_RELEASE_ARRIVAL_RADIUS) {
+          setTarget(getNextPosition(currentPosition));
+          finishIntro();
+        } else {
+          direction.y = 0;
+          direction.normalize();
+          currentPosition.x += direction.x * CRYSTAL.SPEED * delta * 1.8;
+          currentPosition.z += direction.z * CRYSTAL.SPEED * delta * 1.8;
+        }
+      }
+
+      currentPosition.y = initialPosition[1] + Math.sin(state.clock.elapsedTime * 2.4) * 0.5;
+      return;
+    }
+
     const playerPosition = playerRef.current?.position ?? state.camera.position;
     const { isMyTurn } = syncCrystalInteraction({
       id,
@@ -115,7 +169,7 @@ export default function Crystal({
       groupRef.current.lookAt(lookTarget);
     }
 
-    currentPosition.y = initialPosition[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
+    currentPosition.y = releasePosition[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
   });
 
   return (
@@ -135,5 +189,3 @@ export default function Crystal({
     </group>
   );
 }
-
-useGLTF.preload("/models/crystal-transformed.glb");

@@ -13,6 +13,7 @@ import { useDeviceType } from "@/shared/useDeviceType";
 import Crystal from "./Crystal";
 import Dome from "./Dome";
 import Floor from "./Floor";
+import IntroCrystal from "./IntroCrystal";
 import Player from "./Player";
 import { SectionImagesPreloader } from "./SectionImagesPreloader";
 import { CAMERA, CRYSTAL, LAYOUT } from "./worldConfig";
@@ -61,6 +62,8 @@ export default function World() {
       };
     });
   }, []);
+
+  const [introCrystal, ...regularCrystals] = crystals;
 
   return (
     <div className="w-full h-full bg-black">
@@ -115,7 +118,22 @@ export default function World() {
           />
           <Player groundRef={groundRef} isMobile={isMobile} playerRef={playerRef} />
 
-          {crystals.map((crystal) => (
+          {introCrystal && (
+            <IntroCrystal
+              key={introCrystal.key}
+              id={introCrystal.id}
+              initialPosition={[0, 2, 10]}
+              releasePosition={introCrystal.position}
+              scale={introCrystal.scale}
+              message={introCrystal.message}
+              sectorStart={introCrystal.sectorStart}
+              sectorSize={introCrystal.sectorSize}
+              playerRef={playerRef}
+              isFrozen={shouldFreezeCrystals}
+            />
+          )}
+
+          {regularCrystals.map((crystal) => (
             <Crystal
               key={crystal.key}
               id={crystal.id}

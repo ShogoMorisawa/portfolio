@@ -3,6 +3,7 @@
 import { Loader } from "@react-three/drei";
 import World from "@/features/world/World";
 import JoystickControls from "@/features/world/JoystickControls";
+import { IntroOverlay } from "@/features/world/IntroOverlay";
 import { InteractionPrompt } from "@/shared/InteractionPrompt";
 import { OverlayRoot } from "@/shared/OverlayRoot";
 
@@ -11,6 +12,7 @@ export default function Home() {
     <main className="relative w-full h-dvh overflow-hidden bg-black">
       <World />
       <JoystickControls />
+      <IntroOverlay />
       <InteractionPrompt />
       <OverlayRoot />
 

@@ -1,36 +1,31 @@
 "use client";
 
-import { useUIStore } from "@/shared/uiStore";
+import {
+  selectInteractionTarget,
+  useUIStore,
+  type InteractionTarget,
+} from "@/shared/uiStore";
 
 export function InteractionPrompt() {
-  const activeOverlay = useUIStore((state) => state.activeOverlay);
-  const nearbyTarget = useUIStore((state) => state.nearbyTarget);
+  const interactionTarget = useUIStore(selectInteractionTarget);
   const startDialogue = useUIStore((state) => state.startDialogue);
   const openBook = useUIStore((state) => state.openBook);
   const openBox = useUIStore((state) => state.openBox);
   const openPost = useUIStore((state) => state.openPost);
   const openComputer = useUIStore((state) => state.openComputer);
 
-  if (activeOverlay !== "none" || !nearbyTarget) return null;
+  if (!interactionTarget) return null;
 
   const handleOpen = () => {
-    if (nearbyTarget === "crystal") {
-      startDialogue();
-      return;
-    }
-    if (nearbyTarget === "book") {
-      openBook();
-      return;
-    }
-    if (nearbyTarget === "box") {
-      openBox();
-      return;
-    }
-    if (nearbyTarget === "post") {
-      openPost();
-      return;
-    }
-    openComputer();
+    const openByTarget: Record<InteractionTarget, () => void> = {
+      crystal: startDialogue,
+      book: openBook,
+      box: openBox,
+      post: openPost,
+      computer: openComputer,
+    };
+
+    openByTarget[interactionTarget]();
   };
 
   return (

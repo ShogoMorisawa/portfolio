@@ -23,8 +23,13 @@ export default function Player({ groundRef, isMobile, playerRef }: PlayerProps) 
   const joystick = useUIStore((state) => state.joystick);
   const activeOverlay = useUIStore((state) => state.activeOverlay);
   const targetPosition = useUIStore((state) => state.targetPosition);
+  const introSequence = useUIStore((state) => state.introSequence);
+  const introFocusPosition = useUIStore((state) => state.introFocusPosition);
   const isDialogueOpen = activeOverlay === "dialogue";
   const isComputerOpen = activeOverlay === "computer";
+  const isIntroInputLocked =
+    introSequence === "approach" || introSequence === "message";
+  const isIntroCameraActive = introSequence === "message";
   const cameraSettings = isMobile ? CAMERA.mobile : CAMERA.pc;
 
   const [keys, setKeys] = useState({
@@ -92,7 +97,7 @@ export default function Player({ groundRef, isMobile, playerRef }: PlayerProps) 
     let rawX = 0;
     let rawY = 0;
 
-    if (!isDialogueOpen && !isComputerOpen) {
+    if (!isDialogueOpen && !isComputerOpen && !isIntroInputLocked) {
       if (keys.up) rawY += 1;
       if (keys.down) rawY -= 1;
       if (keys.left) rawX -= 1;
@@ -153,7 +158,28 @@ export default function Player({ groundRef, isMobile, playerRef }: PlayerProps) 
     const desiredCameraPosition = new THREE.Vector3();
     const lookAtTarget = new THREE.Vector3();
 
-    if (isComputerOpen) {
+    if (isIntroCameraActive && introFocusPosition) {
+      const [targetX, targetY, targetZ] = introFocusPosition;
+      const focusTarget = new THREE.Vector3(targetX, targetY, targetZ);
+      const direction = new THREE.Vector3(
+        player.position.x - targetX,
+        0,
+        player.position.z - targetZ,
+      );
+
+      if (direction.lengthSq() < 1e-4) {
+        direction.set(0, 0, 1);
+      } else {
+        direction.normalize();
+      }
+
+      desiredCameraPosition.set(
+        targetX + direction.x * 4.5,
+        targetY + 1,
+        targetZ + direction.z * 4.5,
+      );
+      lookAtTarget.copy(focusTarget);
+    } else if (isComputerOpen) {
       const centerX = 0;
       const centerY = LAYOUT.COMPUTER_HEIGHT;
       const centerZ = -LAYOUT.OBJECT_RING_RADIUS;
