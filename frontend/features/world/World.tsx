@@ -63,7 +63,8 @@ export default function World() {
     });
   }, []);
 
-  const [introCrystal, ...regularCrystals] = crystals;
+  const introCrystal = crystals[2];
+  const regularCrystals = crystals.filter((crystal) => crystal.id !== introCrystal?.id);
 
   return (
     <div className="w-full h-full bg-black">
@@ -122,7 +123,7 @@ export default function World() {
             <IntroCrystal
               key={introCrystal.key}
               id={introCrystal.id}
-              initialPosition={[0, 2, 10]}
+              initialPosition={[-3.2, 2, -3.2]}
               releasePosition={introCrystal.position}
               scale={introCrystal.scale}
               message={introCrystal.message}

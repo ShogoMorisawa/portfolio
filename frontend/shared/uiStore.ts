@@ -121,7 +121,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   activeMessage: null,
   targetPosition: null,
   introSequence: "approach",
-  introMessage: "Welcome!",
+  introMessage: "ようこそ！見に来てくれて嬉しいです。",
   introFocusPosition: null,
   selectedAdventureSlot: null,
   ...getResetBoxState(),

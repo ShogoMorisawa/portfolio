@@ -233,7 +233,7 @@ frontend/
 **挙動:**
 
 - `activeOverlay !== "none"` の間は `shouldFreezeCrystals=true` とし、全クリスタルの `useFrame` を停止。
-- 開始時は 1 体だけ `IntroCrystal` としてプレイヤーへ接近し、クリック待ちの導入演出を担当する。
+- 開始時は 1 体だけ `IntroCrystal` としてプレイヤー斜め前に待機し、クリック待ちの導入演出を担当する。
 - 本・ポスト・箱・コンピューターは `LAYOUT` の円周 4 点に固定配置。
 
 ---
@@ -407,28 +407,36 @@ frontend/
 
 | 項目      | 内容                                                                                                                   |
 | --------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **責務**  | 初回導入用 crystal の接近、クリック待ち、帰投、通常徘徊への合流                                                        |
+| **責務**  | 初回導入用 crystal の待機、クリック待ち、帰投、通常徘徊への合流                                                        |
 | **Props** | `id`, `initialPosition`, `releasePosition`, `message`, `scale?`, `sectorStart`, `sectorSize`, `playerRef`, `isFrozen?` |
 | **依存**  | `useUIStore`, `crystalInteraction.ts`, `CRYSTAL`                                                                       |
 
 **実装:**
 
-- `introSequence` が `approach` の間はプレイヤーへ接近し、一定距離で停止する。
+- 開始位置は `[-3.2, 2, -3.2]` で、`box` と `computer` の間を担当する個体を使う。
+- `introSequence` が `approach` の間はその場で `1.5 秒` 待機する。
 - `message` の間は `introFocusPosition` を更新し、カメラ演出と `IntroOverlay` の表示を支える。
 - クリックで `release` に進み、自分の担当セクター内の `releasePosition` へ戻る。
+- `release` 中はプレイヤーではなく帰投先の方向を向く。
 - 帰投完了後は通常の crystal と同じ近接判定・会話・徘徊ロジックへ合流する。
 
 ---
 
 ### IntroOverlay.tsx
 
-| 項目      | 内容                                           |
-| --------- | ---------------------------------------------- |
-| **責務**  | 開始演出中の `Welcome!` 表示と継続クリック待ち |
-| **Props** | なし                                           |
-| **依存**  | `useUIStore`                                   |
+| 項目      | 内容                                             |
+| --------- | ------------------------------------------------ |
+| **責務**  | 開始演出中の歓迎メッセージ表示と継続クリック待ち |
+| **Props** | なし                                             |
+| **依存**  | `useUIStore`                                     |
 
 **表示条件:** `introSequence === "message"` かつ `introMessage` が存在するとき。
+
+**表示仕様:**
+
+- Desktop では `ようこそ！見に来てくれて嬉しいです。` を 1 行表示。
+- Mobile では `ようこそ！` の後で改行し、2 行表示する。
+- 吹き出しの見た目は `DialogueOverlay` と同じトーンに揃える。
 
 **閉じ方:** 全画面クリックで `introSequence = "release"`。
 
@@ -891,7 +899,7 @@ frontend/
 
 ### 開始演出
 
-- `IntroCrystal` は開始位置からプレイヤーへ接近し、距離 `3.4m` 以内で停止する
+- `IntroCrystal` はプレイヤー斜め前の開始位置で `1.5 秒` 待機する
 - `message` 中は `IntroOverlay` とカメラ寄りを維持し、クリックまで待機する
 - `release` では担当セクター内の `releasePosition` まで戻り、その後通常徘徊へ合流する
 

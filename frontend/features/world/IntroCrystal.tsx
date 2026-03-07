@@ -28,9 +28,8 @@ type GLTFResult = GLTF & {
   };
 };
 
-const INTRO_APPROACH_STOP_DISTANCE = 3.4;
 const INTRO_RELEASE_ARRIVAL_RADIUS = 0.6;
-const INTRO_APPROACH_SPEED = CRYSTAL.SPEED * 1.5;
+const INTRO_APPROACH_MIN_DURATION = 1.5;
 
 export default function IntroCrystal({
   id,
@@ -44,6 +43,7 @@ export default function IntroCrystal({
   isFrozen = false,
 }: IntroCrystalProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const introApproachElapsedRef = useRef(0);
   const introSequence = useUIStore((state) => state.introSequence);
   const setIntroSequence = useUIStore((state) => state.setIntroSequence);
   const setIntroFocusPosition = useUIStore((state) => state.setIntroFocusPosition);
@@ -86,20 +86,21 @@ export default function IntroCrystal({
       }
 
       const playerPosition = playerRef.current?.position ?? state.camera.position;
-      groupRef.current.lookAt(getCrystalLookTarget(playerPosition, currentPosition.y));
+      if (introSequence === "release") {
+        const releaseLookTarget = new THREE.Vector3(
+          releasePosition[0],
+          currentPosition.y,
+          releasePosition[2],
+        );
+        groupRef.current.lookAt(releaseLookTarget);
+      } else {
+        groupRef.current.lookAt(getCrystalLookTarget(playerPosition, currentPosition.y));
+      }
 
-      if (introSequence === "approach" && playerRef.current) {
-        const approachTarget = playerRef.current.position.clone();
-        const direction = new THREE.Vector3().subVectors(approachTarget, currentPosition);
-        const planarDistance = Math.hypot(direction.x, direction.z);
-
-        if (planarDistance <= INTRO_APPROACH_STOP_DISTANCE) {
+      if (introSequence === "approach") {
+        introApproachElapsedRef.current += delta;
+        if (introApproachElapsedRef.current >= INTRO_APPROACH_MIN_DURATION) {
           setIntroSequence("message");
-        } else {
-          direction.y = 0;
-          direction.normalize();
-          currentPosition.x += direction.x * INTRO_APPROACH_SPEED * delta;
-          currentPosition.z += direction.z * INTRO_APPROACH_SPEED * delta;
         }
       } else if (introSequence === "release") {
         const direction = new THREE.Vector3().subVectors(

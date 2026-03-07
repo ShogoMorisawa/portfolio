@@ -9,19 +9,42 @@ export function IntroOverlay() {
 
   if (introSequence !== "message" || !introMessage) return null;
 
+  const [firstSegment, ...restSegments] = introMessage.split("！");
+  const secondLine = restSegments.join("！");
+
   return (
-    <button
-      type="button"
+    <div
+      className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-auto cursor-pointer z-10000"
       onClick={() => setIntroSequence("release")}
-      className="absolute inset-0 z-9998 cursor-pointer bg-black/15 px-4"
       aria-label="開始メッセージを閉じる"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setIntroSequence("release");
+        }
+      }}
     >
-      <div className="absolute inset-x-0 bottom-20 flex justify-center pointer-events-none">
-        <div className="max-w-xl rounded-2xl border border-white/10 bg-black/65 px-6 py-4 text-center text-white shadow-2xl backdrop-blur-sm">
-          <p className="text-lg font-medium tracking-wide md:text-2xl">{introMessage}</p>
-          <p className="mt-3 text-xs text-white/60">Click to continue</p>
+      <div className="absolute bottom-20 left-0 right-0 flex justify-center px-4">
+        <div
+          className="bg-black/80 text-white p-8 rounded-2xl max-w-2xl w-full text-center shadow-2xl border border-white/10 transform transition-all"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <p className="text-lg md:text-2xl font-medium leading-relaxed font-sans">
+            {secondLine ? (
+              <>
+                {firstSegment}！
+                <br className="md:hidden" />
+                {secondLine}
+              </>
+            ) : (
+              introMessage
+            )}
+          </p>
+          <p className="mt-4 text-xs text-gray-400 opacity-70">Tap anywhere to close</p>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
