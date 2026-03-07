@@ -142,7 +142,7 @@ frontend/
 │   │   ├── Crystal.tsx                 # クリスタルの徘徊と会話担当制
 │   │   ├── DialogueOverlay.tsx         # 会話オーバーレイ
 │   │   ├── JoystickControls.tsx        # 仮想ジョイスティック
-│   │   ├── SectionImagesPreloader.tsx  # Box / Post 画像のプリロード
+│   │   ├── SectionImagesPreloader.tsx  # Box / Post / Computer 画像のプリロード
 │   │   ├── preloadWorldImages.ts       # 画像プリロード処理
 │   │   ├── FloatingWorldModel.tsx      # 浮遊オブジェクト共通描画
 │   │   ├── Dome.tsx                    # ドーム
@@ -163,7 +163,7 @@ frontend/
 │   └── computer/
 │       ├── ComputerObject.tsx          # コンピューターの 3D オブジェクト
 │       ├── ComputerOverlay.tsx         # 作品オーバーレイ
-│       └── computerData.ts             # 作品データ
+│       └── computerData.ts             # 作品データと画像 URL 一覧
 ├── shared/
 │   ├── uiStore.ts                      # Zustand ストア
 │   ├── InteractionPrompt.tsx           # TAP 導線
@@ -565,11 +565,11 @@ frontend/
 
 ### SectionImagesPreloader.tsx
 
-| 項目      | 内容                                                  |
-| --------- | ----------------------------------------------------- |
-| **責務**  | ワールド表示後に Box / Post 画像を 1 回だけプリロード |
-| **Props** | なし                                                  |
-| **依存**  | `preloadWorldImages.ts`                               |
+| 項目      | 内容                                                             |
+| --------- | ---------------------------------------------------------------- |
+| **責務**  | ワールド表示後に Box / Post / Computer 画像を 1 回だけプリロード |
+| **Props** | なし                                                             |
+| **依存**  | `preloadWorldImages.ts`                                          |
 
 **実装:** `useEffect` で `preloadSectionImages()` を 1 回呼び出し、R3F 内では `<group />` を返すだけ。
 
@@ -577,10 +577,10 @@ frontend/
 
 ### preloadWorldImages.ts
 
-| 項目     | 内容                                             |
-| -------- | ------------------------------------------------ |
-| **責務** | 画像 URL を順に `new Image().src = url` で先読み |
-| **依存** | `getBoxImageUrls`, `POST_IMAGE_URLS`             |
+| 項目     | 内容                                                        |
+| -------- | ----------------------------------------------------------- |
+| **責務** | 画像 URL を順に `new Image().src = url` で先読み            |
+| **依存** | `getBoxImageUrls`, `POST_IMAGE_URLS`, `COMPUTER_IMAGE_URLS` |
 
 ---
 
@@ -787,7 +787,7 @@ frontend/
 3. `Player` と各オブジェクトが `useFrame` で移動・近接・カメラを更新
 4. `InteractionPrompt` が `nearbyTarget` に応じた単一 TAP 導線を表示
 5. `OverlayRoot` が `activeOverlay` に応じた UI を 1 つだけ描画
-6. `SectionImagesPreloader` が Post / Box の画像を背後で先読み
+6. `SectionImagesPreloader` が Post / Box / Computer の画像を背後で先読み
 
 **停止条件:**
 
@@ -923,14 +923,14 @@ frontend/
 
 ## トラブルシューティング
 
-| 現象                                 | 原因                                                     | 対処                                                             |
-| ------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| プレイヤーが床をすり抜ける           | `groundRef` が床メッシュを取れていない                   | `Floor.tsx` の ref 設定と床モデルの当たり判定を確認              |
-| 近くにいるのに TAP が出ない          | `activeOverlay !== "none"`、または他対象が優先されている | `activeOverlay` と `nearbyTarget` を確認                         |
-| Computer が開いても作品が出ない      | `tabletScreenImageIndex` が範囲外                        | `currentIndex` の剰余正規化と `COMPUTER_WORKS.length` を確認     |
-| Box / Post 画像の初回表示が遅い      | プリロード未実行                                         | `SectionImagesPreloader` が `World` 内でマウントされているか確認 |
-| 手紙送信に失敗する                   | 環境変数未設定、または Resend エラー                     | `RESEND_API_KEY`, `MY_EMAIL`, API レスポンスを確認               |
-| `next build` が fonts 取得で失敗する | `next/font/google` がネットワーク制限下で取得できない    | ネットワークあり環境でビルドするか、ローカルフォント化を検討     |
+| 現象                                       | 原因                                                     | 対処                                                             |
+| ------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| プレイヤーが床をすり抜ける                 | `groundRef` が床メッシュを取れていない                   | `Floor.tsx` の ref 設定と床モデルの当たり判定を確認              |
+| 近くにいるのに TAP が出ない                | `activeOverlay !== "none"`、または他対象が優先されている | `activeOverlay` と `nearbyTarget` を確認                         |
+| Computer が開いても作品が出ない            | `tabletScreenImageIndex` が範囲外                        | `currentIndex` の剰余正規化と `COMPUTER_WORKS.length` を確認     |
+| Box / Post / Computer 画像の初回表示が遅い | プリロード未実行                                         | `SectionImagesPreloader` が `World` 内でマウントされているか確認 |
+| 手紙送信に失敗する                         | 環境変数未設定、または Resend エラー                     | `RESEND_API_KEY`, `MY_EMAIL`, API レスポンスを確認               |
+| `next build` が fonts 取得で失敗する       | `next/font/google` がネットワーク制限下で取得できない    | ネットワークあり環境でビルドするか、ローカルフォント化を検討     |
 
 ---
 

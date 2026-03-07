@@ -23,3 +23,8 @@ export const COMPUTER_WORKS: ComputerWork[] = [
       "webデザイナーにでもなろうかと思って、絵描いて飾る額縁としてサイトを作ろうと思ったのが、プログラミングを本格的に始めるきっかけでした。",
   },
 ];
+
+export const COMPUTER_IMAGE_URLS = [
+  "/computer/frame.png",
+  ...COMPUTER_WORKS.map((work) => work.imageSrc),
+] as const;
