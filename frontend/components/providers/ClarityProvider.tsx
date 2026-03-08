@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { isOwnerModeEnabled, syncOwnerMode } from "@/shared/ownerMode";
 
 const CLARITY_SCRIPT_ID = "clarity-script";
 
@@ -24,11 +26,15 @@ function ensureClarityQueue() {
 
 export function ClarityProvider() {
   const projectId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!projectId || typeof window === "undefined") return;
     if (process.env.NODE_ENV === "development") return;
     if (document.getElementById(CLARITY_SCRIPT_ID)) return;
+
+    syncOwnerMode(searchParams);
+    if (isOwnerModeEnabled()) return;
 
     ensureClarityQueue();
 
@@ -37,7 +43,7 @@ export function ClarityProvider() {
     script.async = true;
     script.src = `https://www.clarity.ms/tag/${projectId}`;
     document.head.appendChild(script);
-  }, [projectId]);
+  }, [projectId, searchParams]);
 
   return null;
 }

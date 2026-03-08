@@ -1,6 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import { Loader } from "@react-three/drei";
+import { PortfolioVisitNotifier } from "@/components/providers/PortfolioVisitNotifier";
 import World from "@/features/world/World";
 import JoystickControls from "@/features/world/JoystickControls";
 import { IntroOverlay } from "@/features/world/IntroOverlay";
@@ -10,6 +12,9 @@ import { OverlayRoot } from "@/shared/OverlayRoot";
 export default function Home() {
   return (
     <main className="relative w-full h-dvh overflow-hidden bg-black">
+      <Suspense fallback={null}>
+        <PortfolioVisitNotifier />
+      </Suspense>
       <World />
       <JoystickControls />
       <IntroOverlay />
