@@ -35,6 +35,18 @@ function isBot(userAgent: string) {
     "googlebot",
     "bingbot",
     "headless",
+    "preview",
+    "wget",
+    "curl",
+    "python-requests",
+    "python/",
+    "aiohttp",
+    "scrapy",
+    "axios",
+    "okhttp",
+    "java/",
+    "node-fetch",
+    "vercel-screenshot",
   ];
 
   const lowerUserAgent = userAgent.toLowerCase();
