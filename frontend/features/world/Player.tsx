@@ -4,16 +4,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useUIStore } from "@/shared/uiStore";
+import type { ScreenTier } from "@/shared/useDeviceType";
 import Coco from "./Coco";
-import { CAMERA, LAYOUT, PLAYER } from "./worldConfig";
+import { LAYOUT, PLAYER, getCameraConfig } from "./worldConfig";
 
 interface PlayerProps {
   groundRef: React.RefObject<THREE.Object3D | null>;
-  isMobile: boolean;
   playerRef: React.RefObject<THREE.Group | null>;
+  screenTier: ScreenTier;
 }
 
-export default function Player({ groundRef, isMobile, playerRef }: PlayerProps) {
+export default function Player({ groundRef, playerRef, screenTier }: PlayerProps) {
   const raycaster = useRef(new THREE.Raycaster());
   const downVector = useRef(new THREE.Vector3(0, -1, 0));
   const hasInitializedRotation = useRef(false);
@@ -30,7 +31,7 @@ export default function Player({ groundRef, isMobile, playerRef }: PlayerProps) 
   const isIntroInputLocked =
     introSequence === "approach" || introSequence === "message";
   const isIntroCameraActive = introSequence === "message";
-  const cameraSettings = isMobile ? CAMERA.mobile : CAMERA.pc;
+  const cameraSettings = getCameraConfig(screenTier);
 
   const [keys, setKeys] = useState({
     up: false,

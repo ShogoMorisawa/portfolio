@@ -1,22 +1,28 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+export type ScreenTier = "mobile" | "tablet" | "desktop" | "wide";
+
+const getScreenTier = (width: number): ScreenTier => {
+  if (width < 768) return "mobile";
+  if (width < 1280) return "tablet";
+  if (width < 1920) return "desktop";
+  return "wide";
+};
 
 export const useDeviceType = () => {
-  // 初期値はPC扱い（false）にしておく
-  const [isMobile, setIsMobile] = useState(false);
+  // 初期値は既存挙動に寄せて desktop にしておく
+  const [screenTier, setScreenTier] = useState<ScreenTier>("desktop");
 
   useEffect(() => {
     const handleResize = () => {
-      // 768px未満ならスマホとみなす（Tailwindのmdブレークポイント基準）
-      setIsMobile(window.innerWidth < 768);
+      setScreenTier(getScreenTier(window.innerWidth));
     };
 
-    // 初回実行
     handleResize();
 
-    // 画面サイズが変わった時も再判定
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return isMobile;
+  return screenTier;
 };

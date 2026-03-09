@@ -74,8 +74,8 @@ function BoxMenuView({
             type="button"
             onClick={() => onSelect(entry.id)}
             className={`
-              w-full text-left px-5 py-4 rounded-none
-              ${FRAME_CLASS} font-bold text-lg
+              w-full text-left px-5 py-4 md:py-5 xl:py-6 rounded-none
+              ${FRAME_CLASS} type-ui font-bold
               hover:bg-amber-900/40 hover:border-black/60 transition-colors
             `}
           >
@@ -89,7 +89,7 @@ function BoxMenuView({
           onClick={onClose}
           className={`
             w-full px-5 py-3 rounded-none border border-black/60
-            bg-black/60 text-amber-100 font-bold
+            bg-black/60 text-amber-100 type-ui font-bold
             hover:bg-amber-900/40 transition-colors
           `}
         >
@@ -562,7 +562,7 @@ function BoxGridView() {
         <div className="flex flex-col h-full min-h-0 border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#2e2b26] overflow-hidden">
           {/* 上段: ヘッダー（レトロゲームUI風） */}
           <div className="shrink-0 flex items-center justify-between px-2 py-1 border-b border-black/50 bg-[#6b672a]">
-            <span className="text-[#ffea00] font-extrabold text-base md:text-xl tracking-widest truncate">
+            <span className="type-title text-[#ffea00] font-extrabold tracking-widest truncate">
               {headerTitle}
             </span>
             {pageCount > 1 ? (
@@ -573,11 +573,11 @@ function BoxGridView() {
                   onClick={() =>
                     setCurrentBoxPage(Math.max(1, currentBoxPage - 1))
                   }
-                  className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
+                  className="type-ui bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
                 >
                   L
                 </button>
-                <span className="text-white text-sm md:text-base font-bold tabular-nums px-1">
+                <span className="type-ui text-white font-bold tabular-nums px-1">
                   {currentBoxPage} / {pageCount}
                 </span>
                 <button
@@ -586,13 +586,13 @@ function BoxGridView() {
                   onClick={() =>
                     setCurrentBoxPage(Math.min(pageCount, currentBoxPage + 1))
                   }
-                  className="bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
+                  className="type-ui bg-[#e6e6e6] text-black font-extrabold border border-black shadow-[2px_2px_0_#222] px-1 py-0.5 leading-none disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4d4d4]"
                 >
                   R
                 </button>
               </div>
             ) : (
-              <span className="text-white text-sm md:text-base font-bold tabular-nums">
+              <span className="type-ui text-white font-bold tabular-nums">
                 1 / 1
               </span>
             )}
@@ -618,7 +618,7 @@ function BoxGridView() {
           </div>
 
           {/* 下段: フッター（選択中アイテム名・所持数） */}
-          <div className="shrink-0 flex items-center justify-between px-2 py-1 border-t border-black/50 bg-[#532219] text-white text-sm md:text-base font-bold drop-shadow-md [text-shadow:1px_1px_0_rgb(0,0,0)]">
+          <div className="type-ui shrink-0 flex items-center justify-between px-2 py-1 border-t border-black/50 bg-[#532219] text-white font-bold drop-shadow-md [text-shadow:1px_1px_0_rgb(0,0,0)]">
             <span className="truncate min-w-0">{footerName || "－"}</span>
             {footerQuantity != null ? (
               <span className="shrink-0 tabular-nums">x {footerQuantity}</span>
@@ -660,7 +660,7 @@ export default function BoxOverlay() {
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-auto">
       <div
         className={`
-          w-[95vw] max-w-4xl h-[95dvh] max-h-screen overflow-hidden flex flex-col relative
+          w-[95vw] max-w-6xl h-[95dvh] max-h-screen overflow-hidden flex flex-col relative
         `}
       >
         {boxView === "menu" && (

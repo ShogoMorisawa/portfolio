@@ -1,16 +1,11 @@
+import type { ScreenTier } from "@/shared/useDeviceType";
+
 export const STAGE = {
   DOME_POSITION_Y: -7,
   DOME_SCALE: 20,
 };
 
 export const CAMERA = {
-  pc: {
-    fov: 50,
-    distance: 8,
-    height: 5,
-    lookAtOffsetY: 1.5,
-    position: [0, 5, 12] as [number, number, number],
-  },
   mobile: {
     fov: 55,
     distance: 6,
@@ -18,7 +13,30 @@ export const CAMERA = {
     lookAtOffsetY: 1.5,
     position: [0, 4, 10] as [number, number, number],
   },
+  tablet: {
+    fov: 52,
+    distance: 7,
+    height: 4.5,
+    lookAtOffsetY: 1.5,
+    position: [0, 4.5, 11] as [number, number, number],
+  },
+  desktop: {
+    fov: 50,
+    distance: 8,
+    height: 5,
+    lookAtOffsetY: 1.5,
+    position: [0, 5, 12] as [number, number, number],
+  },
+  wide: {
+    fov: 44,
+    distance: 6.8,
+    height: 4.7,
+    lookAtOffsetY: 1.6,
+    position: [0, 4.7, 10.5] as [number, number, number],
+  },
 };
+
+export const getCameraConfig = (screenTier: ScreenTier) => CAMERA[screenTier];
 
 export const PLAYER = {
   MOVE_SPEED: 5,

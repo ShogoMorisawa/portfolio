@@ -16,15 +16,16 @@ import Floor from "./Floor";
 import IntroCrystal from "./IntroCrystal";
 import Player from "./Player";
 import { SectionImagesPreloader } from "./SectionImagesPreloader";
-import { CAMERA, CRYSTAL, LAYOUT } from "./worldConfig";
+import { CRYSTAL, LAYOUT, getCameraConfig } from "./worldConfig";
 
 export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
   const playerRef = useRef<THREE.Group>(null);
-  const isMobile = useDeviceType();
+  const screenTier = useDeviceType();
+  const isMobile = screenTier === "mobile";
   const activeOverlay = useUIStore((state) => state.activeOverlay);
   const shouldFreezeCrystals = activeOverlay !== "none";
-  const cameraConfig = isMobile ? CAMERA.mobile : CAMERA.pc;
+  const cameraConfig = getCameraConfig(screenTier);
 
   const crystals = useMemo(() => {
     const seedHolder = { value: 1337 };
@@ -70,7 +71,7 @@ export default function World() {
     <div className="w-full h-full bg-black">
       <Canvas
         flat
-        key={isMobile ? "mobile" : "pc"}
+        key={screenTier}
         dpr={[1, 2]}
         frameloop="always"
         camera={{
@@ -117,7 +118,11 @@ export default function World() {
             scale={LAYOUT.COMPUTER_SCALE}
             playerRef={playerRef}
           />
-          <Player groundRef={groundRef} isMobile={isMobile} playerRef={playerRef} />
+          <Player
+            groundRef={groundRef}
+            playerRef={playerRef}
+            screenTier={screenTier}
+          />
 
           {introCrystal && (
             <IntroCrystal
