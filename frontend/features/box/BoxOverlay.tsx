@@ -7,7 +7,6 @@ import {
   BOX_MENU_ENTRIES,
   SKILL_ENTRIES,
   ITEM_ENTRIES,
-  SLOTS_PER_PAGE,
   type BoxMenuEntry,
   type SkillEntry,
   type ItemEntry,
@@ -38,8 +37,39 @@ const SELECTED_CELL_CONTAINER_CLASSES = [
 const SELECTED_CELL_BUTTON_CLASSES = ["bg-[#52c234]", "opacity-100"];
 const BASE_CELL_BUTTON_BG_CLASS = "bg-[#796296]";
 const EMPTY_CELL_OPACITY_CLASS = "opacity-50";
-const MOBILE_GRID_SIZE = 6;
-const MOBILE_SLOTS_PER_PAGE = MOBILE_GRID_SIZE * MOBILE_GRID_SIZE;
+const GRID_GAP_PX = 4;
+const MOBILE_IDEAL_CELL_SIZE = 56;
+const DESKTOP_IDEAL_CELL_SIZE = 64;
+
+type GridCapacity = {
+  cols: number;
+  rows: number;
+  itemsPerPage: number;
+};
+
+function getGridCapacity(
+  width: number,
+  height: number,
+  isMobile: boolean,
+): GridCapacity {
+  const idealCellSize = isMobile
+    ? MOBILE_IDEAL_CELL_SIZE
+    : DESKTOP_IDEAL_CELL_SIZE;
+  const cols = Math.max(
+    1,
+    Math.floor((width + GRID_GAP_PX) / (idealCellSize + GRID_GAP_PX)),
+  );
+  const rows = Math.max(
+    1,
+    Math.floor((height + GRID_GAP_PX) / (idealCellSize + GRID_GAP_PX)),
+  );
+
+  return {
+    cols,
+    rows,
+    itemsPerPage: cols * rows,
+  };
+}
 
 function getGridIconSrc(entry: SkillEntry | ItemEntry): string {
   if ("iconPath" in entry && entry.iconPath) {
@@ -169,7 +199,7 @@ const SKILL_PANEL_DIVIDER =
 function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
   if (!skill) {
     return (
-      <div className="p-2 bg-[#0b101c] text-amber-200/60 text-xs">
+      <div className="type-caption p-2 bg-[#0b101c] text-amber-200/60">
         スロットを選択してください
       </div>
     );
@@ -198,7 +228,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
           )}
         </div>
         <p
-          className="text-xl md:text-2xl font-bold text-[#fceeb5] min-w-0 truncate"
+          className="text-lg md:text-xl font-bold text-[#fceeb5] min-w-0 truncate"
           style={dropShadow}
         >
           {skill.name}
@@ -208,7 +238,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       {/* 2. 2段目: RARE表記（右寄せ） */}
       <div className="flex justify-end mt-0.5">
         <span
-          className={`text-xs md:text-sm font-bold ${getRarityColorClass(skill.rare)}`}
+          className={`type-caption font-bold ${getRarityColorClass(skill.rare)}`}
           style={dropShadow}
         >
           RARE {skill.rare}
@@ -221,13 +251,13 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       {/* 4. 3段目: 攻撃力 */}
       <div className="flex justify-between items-center py-0">
         <span
-          className="text-white font-bold text-sm md:text-base"
+          className="type-ui text-white font-bold"
           style={dropShadow}
         >
           ◆ 攻撃力
         </span>
         <span
-          className="text-white font-bold text-sm md:text-base tabular-nums"
+          className="type-ui text-white font-bold tabular-nums"
           style={dropShadow}
         >
           {skill.attack}
@@ -240,7 +270,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       {/* 6. 4段目: 斬れ味ラベル */}
       <div className="py-0">
         <span
-          className="text-white font-bold text-sm md:text-base"
+          className="type-ui text-white font-bold"
           style={dropShadow}
         >
           ◆ 斬れ味
@@ -259,7 +289,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
 
       {/* 10. 最下段: 説明文 */}
-      <p className="text-sm text-amber-100/90 leading-tight pt-0 min-h-0 overflow-hidden line-clamp-4">
+      <p className="text-sm md:text-base text-amber-100/90 leading-tight pt-0 min-h-0 overflow-hidden line-clamp-4">
         {skill.description}
       </p>
     </div>
@@ -270,7 +300,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
   if (!item) {
     return (
-      <div className="p-2 text-amber-200/60 text-xs">
+      <div className="type-caption p-2 text-amber-200/60">
         スロットを選択してください
       </div>
     );
@@ -291,12 +321,12 @@ function ItemDetailPanel({ item }: { item: ItemEntry | null }) {
             <span className="font-bold">{item.name.slice(0, 1)}</span>
           )}
         </div>
-        <p className="font-bold text-amber-100 text-xl wrap-break-word min-w-0">
+        <p className="text-lg md:text-xl font-bold text-amber-100 wrap-break-word min-w-0">
           {item.name}
         </p>
       </div>
       <div className={SKILL_PANEL_DIVIDER} aria-hidden />
-      <p className="text-sm text-amber-100/90 leading-tight line-clamp-4">
+      <p className="text-sm md:text-base text-amber-100/90 leading-tight line-clamp-4">
         {item.description}
       </p>
     </div>
@@ -335,7 +365,7 @@ const BoxGridCell = memo(function BoxGridCell({
   );
 
   return (
-    <div ref={handleContainerRef} className="aspect-square min-w-0">
+    <div ref={handleContainerRef} className="min-h-0 min-w-0">
       <button
         ref={handleRef}
         data-empty={entry ? "false" : "true"}
@@ -370,20 +400,26 @@ const BoxGridCell = memo(function BoxGridCell({
   );
 });
 
-/** PC:10×10 / Mobile:6×6 グリッド */
+/** 実ピクセル計測ベースの動的敷き詰めグリッド */
 function BoxGridView() {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  const [isPortrait, setIsPortrait] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(orientation: portrait)").matches
+      : false,
   );
+  const [gridCapacity, setGridCapacity] = useState<GridCapacity>(() => ({
+    cols: 10,
+    rows: 10,
+    itemsPerPage: 100,
+  }));
   const isOpen = useUIStore((s) => s.activeOverlay === "box");
   const boxView = useUIStore((s) => s.boxView);
   const activeBoxCategory = useUIStore((s) => s.activeBoxCategory);
   const currentBoxPage = useUIStore((s) => s.currentBoxPage);
   const selectedBoxSlotIndex = useUIStore((s) => s.selectedBoxSlotIndex);
   const setCurrentBoxPage = useUIStore((s) => s.setCurrentBoxPage);
-  const setSelectedBoxSlotIndex = useUIStore(
-    (s) => s.setSelectedBoxSlotIndex,
-  );
+  const setSelectedBoxSlotIndex = useUIStore((s) => s.setSelectedBoxSlotIndex);
+  const gridViewportRef = useRef<HTMLDivElement>(null);
   const containerRefMap = useRef<Map<number, HTMLDivElement>>(new Map());
   const buttonRefMap = useRef<Map<number, HTMLButtonElement>>(new Map());
   const highlightedIndexRef = useRef(-1);
@@ -417,18 +453,17 @@ function BoxGridView() {
     [],
   );
 
-  const isGridActive = isOpen && boxView === "grid" && activeBoxCategory !== null;
+  const isGridActive =
+    isOpen && boxView === "grid" && activeBoxCategory !== null;
   const isSkills = activeBoxCategory === "skills";
   const entries = isSkills ? SKILL_ENTRIES : ITEM_ENTRIES;
-  const slotsPerPage = isMobile ? MOBILE_SLOTS_PER_PAGE : SLOTS_PER_PAGE;
-  const gridCols = isMobile ? 6 : 10;
+  const { cols, rows, itemsPerPage } = gridCapacity;
+  const slotsPerPage = itemsPerPage;
   const pageCount = Math.max(1, Math.ceil(entries.length / slotsPerPage));
-  /** 隙間を固定2pxにし、セルは minmax(0, 1fr) で均等割り */
-  const gridGapPx = 2;
   const gridTemplateStyle = {
-    gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
-    gridTemplateRows: `repeat(${gridCols}, minmax(0, 1fr))`,
-    gap: `${gridGapPx}px`,
+    gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+    gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+    gap: `${GRID_GAP_PX}px`,
   } as const;
   const startIndex = (currentBoxPage - 1) * slotsPerPage;
 
@@ -463,10 +498,45 @@ function BoxGridView() {
     selectedEntry && !isSkills ? (selectedEntry as ItemEntry).quantity : null;
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const mediaQuery = window.matchMedia("(orientation: portrait)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsPortrait(event.matches);
+    };
+
+    setIsPortrait(mediaQuery.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
+
+  useEffect(() => {
+    const viewport = gridViewportRef.current;
+    if (!isGridActive || !viewport) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+
+      const nextCapacity = getGridCapacity(
+        entry.contentRect.width,
+        entry.contentRect.height,
+        window.innerWidth < 768,
+      );
+
+      setGridCapacity((current) => {
+        if (
+          current.cols === nextCapacity.cols &&
+          current.rows === nextCapacity.rows &&
+          current.itemsPerPage === nextCapacity.itemsPerPage
+        ) {
+          return current;
+        }
+        return nextCapacity;
+      });
+    });
+
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [isGridActive]);
 
   useEffect(() => {
     if (!isGridActive) return;
@@ -529,20 +599,20 @@ function BoxGridView() {
 
   return (
     <div
-      className={`
-        flex flex-col md:flex-row flex-1 min-h-0 w-full font-adventure gap-2 md:gap-3
-        ${isMobile ? "justify-start" : ""}
-      `}
+      className="
+        flex flex-1 min-h-0 w-full items-center justify-center gap-3 font-adventure
+        portrait:flex-col
+        landscape:flex-row landscape:items-stretch
+      "
     >
-      {/* 詳細パネル: PC=左 / モバイル=上（モバイル時は高さ固定） */}
       <div
         className={`
           ${FRAME_CLASS} rounded p-1 min-h-0 overflow-hidden font-adventure shrink-0
-          ${isMobile ? "w-full h-[36vh] min-h-0 overflow-auto" : "w-64 md:w-72 min-w-0 shrink-0 md:h-[40%]"}
+          w-full overflow-hidden portrait:h-[32vh] portrait:min-h-[240px] portrait:w-full landscape:self-start landscape:h-[30vh] landscape:min-h-[280px] landscape:w-[clamp(220px,28vw,320px)]
         `}
       >
         <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#0b101c] overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden portrait:overflow-hidden">
             {isSkills ? (
               <SkillDetailPanel skill={selectedEntry as SkillEntry | null} />
             ) : (
@@ -552,15 +622,13 @@ function BoxGridView() {
         </div>
       </div>
 
-      {/* グリッド部分（PC=flex-1 / モバイル=高さ固定の正方形） */}
       <div
         className={`
-          ${FRAME_CLASS} rounded p-1 min-h-0 w-full max-w-2xl mx-auto font-adventure
-          ${isMobile ? "shrink-0 h-[50vh] max-h-[50vh] flex flex-col" : "min-w-0 flex-1 flex flex-col"}
+          ${FRAME_CLASS} rounded p-1 min-h-0 w-full font-adventure
+          flex-1 min-w-0 min-h-0 portrait:flex-1
         `}
       >
         <div className="flex flex-col h-full min-h-0 border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#2e2b26] overflow-hidden">
-          {/* 上段: ヘッダー（レトロゲームUI風） */}
           <div className="shrink-0 flex items-center justify-between px-2 py-1 border-b border-black/50 bg-[#6b672a]">
             <span className="type-title text-[#ffea00] font-extrabold tracking-widest truncate">
               {headerTitle}
@@ -598,26 +666,18 @@ function BoxGridView() {
             )}
           </div>
 
-          {/* グリッド: コンテナクエリで「親の短い方」に完璧に追従する正方形を作る */}
           <div
-            className="flex-1 min-h-0 min-w-0 flex items-center justify-center overflow-hidden p-1"
-            style={{
-              containerType: "size" as React.CSSProperties["containerType"],
-            }}
+            ref={gridViewportRef}
+            className="flex-1 min-h-0 min-w-0 overflow-hidden p-1"
           >
             <div
-              className="grid bg-black"
-              style={{
-                ...gridTemplateStyle,
-                width: "100cqmin",
-                height: "100cqmin",
-              }}
+              className="grid w-full h-full overflow-hidden"
+              style={gridTemplateStyle}
             >
               {gridCells}
             </div>
           </div>
 
-          {/* 下段: フッター（選択中アイテム名・所持数） */}
           <div className="type-ui shrink-0 flex items-center justify-between px-2 py-1 border-t border-black/50 bg-[#532219] text-white font-bold drop-shadow-md [text-shadow:1px_1px_0_rgb(0,0,0)]">
             <span className="truncate min-w-0">{footerName || "－"}</span>
             {footerQuantity != null ? (
@@ -639,9 +699,7 @@ export default function BoxOverlay() {
   const setBoxView = useUIStore((s) => s.setBoxView);
   const setActiveBoxCategory = useUIStore((s) => s.setActiveBoxCategory);
   const setCurrentBoxPage = useUIStore((s) => s.setCurrentBoxPage);
-  const setSelectedBoxSlotIndex = useUIStore(
-    (s) => s.setSelectedBoxSlotIndex,
-  );
+  const setSelectedBoxSlotIndex = useUIStore((s) => s.setSelectedBoxSlotIndex);
 
   if (!isOpen) return null;
 
@@ -660,13 +718,15 @@ export default function BoxOverlay() {
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-auto">
       <div
         className={`
-          w-[95vw] max-w-6xl h-[95dvh] max-h-screen overflow-hidden flex flex-col relative
+          w-[95vw] h-[95dvh] max-h-screen overflow-hidden flex flex-col relative
+          min-[1200px]:w-[78vw]
+          min-[1600px]:w-[72vw]
         `}
       >
         {boxView === "menu" && (
           <div className="flex flex-col h-full font-adventure">
             <div className="p-4 border-b border-black/50">
-              <h2 className="text-amber-100 font-bold text-lg">アイテムBOX</h2>
+              <h2 className="type-title text-amber-100 font-bold">アイテムBOX</h2>
             </div>
             <div className="flex-1 overflow-auto">
               <BoxMenuView onSelect={handleMenuSelect} onClose={handleClose} />
@@ -679,11 +739,11 @@ export default function BoxOverlay() {
             <button
               type="button"
               onClick={() => setBoxView("menu")}
-              className="absolute top-2 right-2 md:top-4 md:right-4 z-10 px-2 py-1 md:px-3 md:py-1.5 border border-black/60 bg-black/60 text-amber-100 text-xs md:text-sm font-bold hover:bg-amber-900/40 transition-colors shrink-0"
+              className="absolute top-2 right-2 portrait:top-2 portrait:right-2 landscape:top-3 landscape:right-3 min-[1920px]:top-4 min-[1920px]:right-4 z-20 px-3 py-1.5 md:px-3 md:py-1.5 border border-black/60 bg-black/85 text-amber-100 text-sm md:text-sm font-bold hover:bg-amber-900/50 transition-colors shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
             >
               もどる
             </button>
-            <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-2 md:p-3">
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-2 md:p-3 landscape:pt-12 min-[1920px]:pt-14">
               <BoxGridView />
             </div>
           </div>
