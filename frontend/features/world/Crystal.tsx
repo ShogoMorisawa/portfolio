@@ -65,9 +65,14 @@ export default function Crystal({
   };
 
   useFrame((state, delta) => {
-    if (!groupRef.current || isFrozen) return;
+    if (!groupRef.current) return;
 
     const currentPosition = groupRef.current.position;
+    if (isFrozen) {
+      currentPosition.y =
+        initialPosition[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
+      return;
+    }
     const playerPosition = playerRef.current?.position ?? state.camera.position;
     const { isMyTurn } = syncCrystalInteraction({
       id,

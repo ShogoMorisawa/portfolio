@@ -24,7 +24,8 @@ export default function World() {
   const screenTier = useDeviceType();
   const isMobile = screenTier === "mobile";
   const activeOverlay = useUIStore((state) => state.activeOverlay);
-  const shouldFreezeCrystals = activeOverlay !== "none";
+  const shouldFreezeCrystals =
+    activeOverlay !== "none" && activeOverlay !== "dialogue";
   const cameraConfig = getCameraConfig(screenTier);
 
   const crystals = useMemo(() => {

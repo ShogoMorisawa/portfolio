@@ -16,13 +16,15 @@ export default function DialogueOverlay() {
     >
       <div className="absolute bottom-20 left-0 right-0 flex justify-center px-4">
         <div
-          className="bg-black/80 text-white p-8 rounded-2xl max-w-2xl w-full text-center shadow-2xl border border-white/10 transform transition-all"
+          className="bg-black/80 text-white w-[min(92vw,42rem)] xl:w-[min(80vw,52rem)] p-6 md:p-8 xl:p-10 rounded-2xl text-center shadow-2xl border border-white/10 transform transition-all"
           onClick={(event) => event.stopPropagation()}
         >
-          <p className="text-lg md:text-2xl font-medium leading-relaxed font-sans">
+          <p className="text-lg md:text-xl xl:text-2xl font-medium leading-relaxed font-sans">
             {activeMessage}
           </p>
-          <p className="mt-4 text-xs text-gray-400 opacity-70">Tap anywhere to close</p>
+          <p className="type-caption mt-4 text-gray-400 opacity-70">
+            Tap anywhere to close
+          </p>
         </div>
       </div>
     </div>

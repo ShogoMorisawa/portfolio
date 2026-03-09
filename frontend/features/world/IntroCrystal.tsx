@@ -74,7 +74,7 @@ export default function IntroCrystal({
   };
 
   useFrame((state, delta) => {
-    if (!groupRef.current || isFrozen) return;
+    if (!groupRef.current) return;
 
     const currentPosition = groupRef.current.position;
 
@@ -120,6 +120,12 @@ export default function IntroCrystal({
       }
 
       currentPosition.y = initialPosition[1] + Math.sin(state.clock.elapsedTime * 2.4) * 0.5;
+      return;
+    }
+
+    if (isFrozen) {
+      currentPosition.y =
+        releasePosition[1] + Math.sin(state.clock.elapsedTime * 2) * 0.5;
       return;
     }
 
