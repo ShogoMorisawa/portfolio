@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useUIStore } from "@/shared/uiStore";
 import {
   ADVENTURE_SLOTS,
@@ -160,6 +160,9 @@ export default function BookOverlay() {
     (state) => state.setSelectedAdventureSlot,
   );
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
 
   const handleBack = useCallback(() => {
     setSelectedAdventureSlot(null);
@@ -181,6 +184,44 @@ export default function BookOverlay() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [closeBook, isOpen, selectedSlot, setSelectedAdventureSlot]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    let hintTimeout: number | null = null;
+
+    const updateScrollState = () => {
+      const canScroll = panel.scrollHeight > panel.clientHeight + 4;
+      setIsScrollable(canScroll);
+      setShowScrollHint(canScroll);
+
+      if (hintTimeout) window.clearTimeout(hintTimeout);
+      if (canScroll) {
+        hintTimeout = window.setTimeout(() => {
+          setShowScrollHint(false);
+        }, 3000);
+      }
+    };
+
+    const frameId = window.requestAnimationFrame(updateScrollState);
+
+    const handleScroll = () => {
+      if (panel.scrollTop > 4) setShowScrollHint(false);
+    };
+
+    panel.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      panel.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateScrollState);
+      if (hintTimeout) window.clearTimeout(hintTimeout);
+    };
+  }, [isOpen, selectedSlot]);
+
   if (!isOpen) return null;
 
   return (
@@ -192,8 +233,9 @@ export default function BookOverlay() {
       }}
     >
       <div
+        ref={panelRef}
         className={`
-          w-[min(92vw,28rem)] max-h-[85vh] overflow-y-auto
+          relative w-[min(94vw,34rem)] xl:w-[min(74vw,42rem)] max-h-[88vh] overflow-y-auto
           bg-black border-4 border-white
           p-6 md:p-8
           shadow-[0_0_0_4px_black,0_0_0_8px_white]
@@ -201,6 +243,11 @@ export default function BookOverlay() {
         `}
         onClick={(event) => event.stopPropagation()}
       >
+        {isScrollable && showScrollHint && (
+          <div className="pointer-events-none absolute right-3 top-3 z-10 rounded border border-white/30 bg-black/70 px-2 py-1 text-xs text-white/85 animate-pulse">
+            ↑↓
+          </div>
+        )}
         {selectedSlot === null ? (
           <SlotList onSelect={setSelectedAdventureSlot} onClose={closeBook} />
         ) : (
