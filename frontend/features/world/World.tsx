@@ -22,7 +22,6 @@ export default function World() {
   const groundRef = useRef<THREE.Object3D | null>(null);
   const playerRef = useRef<THREE.Group>(null);
   const screenTier = useDeviceType();
-  const isMobile = screenTier === "mobile";
   const activeOverlay = useUIStore((state) => state.activeOverlay);
   const shouldFreezeCrystals =
     activeOverlay !== "none" && activeOverlay !== "dialogue";
