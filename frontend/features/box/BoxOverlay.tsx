@@ -193,7 +193,7 @@ function JukurenGauge({ level }: { level: number }) {
 
 /** スキル詳細パネル用の統一区切り線 */
 const SKILL_PANEL_DIVIDER =
-  "border-b-[3px] border-dashed border-[#2a364f] my-0.5";
+  "border-b-3 border-dashed border-[#2a364f] my-0.5";
 
 /** スキル用詳細パネル（モンハンステータス画面風・画像構造準拠） */
 function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
@@ -250,10 +250,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 
       {/* 4. 3段目: 攻撃力 */}
       <div className="flex justify-between items-center py-0">
-        <span
-          className="type-ui text-white font-bold"
-          style={dropShadow}
-        >
+        <span className="type-ui text-white font-bold" style={dropShadow}>
           ◆ 攻撃力
         </span>
         <span
@@ -269,10 +266,7 @@ function SkillDetailPanel({ skill }: { skill: SkillEntry | null }) {
 
       {/* 6. 4段目: 斬れ味ラベル */}
       <div className="py-0">
-        <span
-          className="type-ui text-white font-bold"
-          style={dropShadow}
-        >
+        <span className="type-ui text-white font-bold" style={dropShadow}>
           ◆ 斬れ味
         </span>
       </div>
@@ -402,11 +396,6 @@ const BoxGridCell = memo(function BoxGridCell({
 
 /** 実ピクセル計測ベースの動的敷き詰めグリッド */
 function BoxGridView() {
-  const [isPortrait, setIsPortrait] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia("(orientation: portrait)").matches
-      : false,
-  );
   const [gridCapacity, setGridCapacity] = useState<GridCapacity>(() => ({
     cols: 10,
     rows: 10,
@@ -496,17 +485,6 @@ function BoxGridView() {
     : "";
   const footerQuantity =
     selectedEntry && !isSkills ? (selectedEntry as ItemEntry).quantity : null;
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(orientation: portrait)");
-    const handleChange = (event: MediaQueryListEvent) => {
-      setIsPortrait(event.matches);
-    };
-
-    setIsPortrait(mediaQuery.matches);
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
 
   useEffect(() => {
     const viewport = gridViewportRef.current;
@@ -608,11 +586,11 @@ function BoxGridView() {
       <div
         className={`
           ${FRAME_CLASS} rounded p-1 min-h-0 overflow-hidden font-adventure shrink-0
-          w-full overflow-hidden portrait:h-[32vh] portrait:min-h-[240px] portrait:w-full landscape:self-start landscape:h-[30vh] landscape:min-h-[280px] landscape:w-[clamp(220px,28vw,320px)]
+          w-full portrait:h-[32vh] portrait:min-h-[240px] portrait:w-full landscape:self-start landscape:h-[30vh] landscape:min-h-[280px] landscape:w-[clamp(220px,28vw,320px)]
         `}
       >
-        <div className="flex h-full min-h-0 flex-col border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#0b101c] overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-hidden portrait:overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col border-x-3 border-y-0 border-[#a47a34]/80 bg-[#0b101c] overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {isSkills ? (
               <SkillDetailPanel skill={selectedEntry as SkillEntry | null} />
             ) : (
@@ -624,11 +602,11 @@ function BoxGridView() {
 
       <div
         className={`
-          ${FRAME_CLASS} rounded p-1 min-h-0 w-full font-adventure
+          ${FRAME_CLASS} rounded p-1 w-full font-adventure
           flex-1 min-w-0 min-h-0 portrait:flex-1
         `}
       >
-        <div className="flex flex-col h-full min-h-0 border-x-[3px] border-y-0 border-[#a47a34]/80 bg-[#2e2b26] overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 border-x-3 border-y-0 border-[#a47a34]/80 bg-[#2e2b26] overflow-hidden">
           <div className="shrink-0 flex items-center justify-between px-2 py-1 border-b border-black/50 bg-[#6b672a]">
             <span className="type-title text-[#ffea00] font-extrabold tracking-widest truncate">
               {headerTitle}
@@ -726,7 +704,9 @@ export default function BoxOverlay() {
         {boxView === "menu" && (
           <div className="flex flex-col h-full font-adventure">
             <div className="p-4 border-b border-black/50">
-              <h2 className="type-title text-amber-100 font-bold">アイテムBOX</h2>
+              <h2 className="type-title text-amber-100 font-bold">
+                アイテムBOX
+              </h2>
             </div>
             <div className="flex-1 overflow-auto">
               <BoxMenuView onSelect={handleMenuSelect} onClose={handleClose} />

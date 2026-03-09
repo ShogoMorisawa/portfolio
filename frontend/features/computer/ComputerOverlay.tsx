@@ -106,11 +106,11 @@ export default function ComputerOverlay() {
                           COMPUTER_WORKS.length,
                       );
                     }}
-                    className="absolute z-20 left-[-8px] md:left-[-12px] xl:left-[-16px] min-[1920px]:left-[-22px] top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 transition-colors cursor-pointer hover:bg-black/70 md:h-[3.25rem] md:w-[3.25rem] xl:h-[3.75rem] xl:w-[3.75rem] min-[1920px]:h-[4.5rem] min-[1920px]:w-[4.5rem]"
+                    className="absolute z-20 left-[-8px] md:left-[-12px] xl:left-[-16px] min-[1920px]:left-[-22px] top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 transition-colors cursor-pointer hover:bg-black/70 md:h-13 md:w-13 xl:h-15 xl:w-15 min-[1920px]:h-18 min-[1920px]:w-18"
                     aria-label="前の作品"
                   >
                     <span
-                      className="h-0 w-0 border-y-[10px] border-y-transparent border-r-[15px] border-r-white md:border-y-[11px] md:border-r-[17px] xl:border-y-[13px] xl:border-r-[20px] min-[1920px]:border-y-[15px] min-[1920px]:border-r-[24px]"
+                      className="h-0 w-0 border-y-10 border-y-transparent border-r-15 border-r-white md:border-y-11 md:border-r-17 xl:border-y-13 xl:border-r-20 min-[1920px]:border-y-15 min-[1920px]:border-r-24"
                       aria-hidden
                     />
                   </button>
@@ -122,17 +122,17 @@ export default function ComputerOverlay() {
                         (index) => (index + 1) % COMPUTER_WORKS.length,
                       );
                     }}
-                    className="absolute z-20 right-[-8px] md:right-[-12px] xl:right-[-16px] min-[1920px]:right-[-22px] top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 transition-colors cursor-pointer hover:bg-black/70 md:h-[3.25rem] md:w-[3.25rem] xl:h-[3.75rem] xl:w-[3.75rem] min-[1920px]:h-[4.5rem] min-[1920px]:w-[4.5rem]"
+                    className="absolute z-20 right-[-8px] md:right-[-12px] xl:right-[-16px] min-[1920px]:right-[-22px] top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-black/55 transition-colors cursor-pointer hover:bg-black/70 md:h-13 md:w-13 xl:h-15 xl:w-15 min-[1920px]:h-18 min-[1920px]:w-18"
                     aria-label="次の作品"
                   >
                     <span
-                      className="h-0 w-0 border-y-[10px] border-y-transparent border-l-[15px] border-l-white md:border-y-[11px] md:border-l-[17px] xl:border-y-[13px] xl:border-l-[20px] min-[1920px]:border-y-[15px] min-[1920px]:border-l-[24px]"
+                      className="h-0 w-0 border-y-10 border-y-transparent border-l-15 border-l-white md:border-y-11 md:border-l-17 xl:border-y-13 xl:border-l-20 min-[1920px]:border-y-15 min-[1920px]:border-l-24"
                       aria-hidden
                     />
                   </button>
                 </>
               )}
-              <div className="absolute inset-[18.6%] -translate-y-[1px]">
+              <div className="absolute inset-[18.6%] -translate-y-px">
                 {currentWork.href ? (
                   <a
                     href={currentWork.href}

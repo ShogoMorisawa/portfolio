@@ -98,7 +98,7 @@ export default function PostOverlay() {
       }}
     >
       <div
-        className="relative max-md:absolute max-md:inset-x-0 max-md:top-[52%] max-md:-translate-y-1/2 max-md:h-[80vh] max-md:w-full md:h-[98vh] md:aspect-1294/1493 md:max-w-[90vw]"
+        className="post-letter-shell relative max-md:absolute max-md:inset-x-0 max-md:top-[52%] max-md:-translate-y-1/2 max-md:h-[80vh] max-md:w-full md:w-[min(90vw,84.5vh)] md:aspect-1294/1493"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -118,7 +118,7 @@ export default function PostOverlay() {
           sizes="(max-width: 768px) 100vw, min(90vw, 84.5vh)"
         />
 
-        <div className="absolute inset-0 flex flex-col p-6 sm:p-10 md:p-12 pt-8 sm:pt-12 md:pt-14">
+        <div className="post-letter-content absolute inset-0 flex flex-col p-6 sm:p-10 md:p-12 pt-8 sm:pt-12 md:pt-14">
           {submitSuccess ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-1">
               <p className="font-dancing text-2xl sm:text-3xl text-[#4a3728] font-bold text-center">
@@ -130,14 +130,14 @@ export default function PostOverlay() {
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between gap-4 mt-2 sm:mt-4 mb-4 sm:mb-6">
-                <h2 className="font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] drop-shadow-sm shrink-0">
+              <div className="post-letter-header flex items-center justify-between gap-4 mt-2 sm:mt-4 mb-4 sm:mb-6">
+                <h2 className="post-letter-heading font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] drop-shadow-sm shrink-0">
                   To: Shogo Morisawa
                 </h2>
                 <button
                   type="button"
                   onClick={() => setIsStampModalOpen(true)}
-                  className="relative w-24 h-20 sm:w-28 sm:h-24 shrink-0 hover:scale-105 transition-transform duration-300 cursor-pointer drop-shadow-md"
+                  className="post-letter-stamp relative w-24 h-20 sm:w-28 sm:h-24 shrink-0 hover:scale-105 transition-transform duration-300 cursor-pointer drop-shadow-md"
                 >
                   <Image
                     src="/post/stamp.png"
@@ -220,13 +220,13 @@ export default function PostOverlay() {
 
               <form
                 onSubmit={handleSubmit}
-                className="letter-form font-playfair flex-1 flex flex-col gap-4 sm:gap-5 min-h-0"
+                className="post-letter-form letter-form font-playfair flex-1 flex flex-col gap-4 sm:gap-5 min-h-0"
               >
                 <div className="flex flex-col gap-0.5">
                   <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
                     おなまえ
                   </label>
-                  <div className="relative w-full h-12 sm:h-14">
+                  <div className="post-letter-input relative w-full h-12 sm:h-14">
                     <div
                       className="absolute inset-0"
                       style={{
@@ -250,7 +250,7 @@ export default function PostOverlay() {
                   <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
                     メールアドレス
                   </label>
-                  <div className="relative w-full h-12 sm:h-14">
+                  <div className="post-letter-input relative w-full h-12 sm:h-14">
                     <div
                       className="absolute inset-0"
                       style={{
@@ -278,7 +278,7 @@ export default function PostOverlay() {
                     onChange={(event) => setMessage(event.target.value)}
                     placeholder="お気軽にメッセージをどうぞ。ひとことでも嬉しいです。"
                     required
-                    className="bg-transparent border-b border-[#5c4033] outline-none px-1 py-1 text-[#3d2817] placeholder-[#7d6b5a] focus:border-[#3d2817] transition-colors resize-none flex-1 min-h-20 text-sm sm:text-base"
+                    className="post-letter-message bg-transparent border-b border-[#5c4033] outline-none px-1 py-1 text-[#3d2817] placeholder-[#7d6b5a] focus:border-[#3d2817] transition-colors resize-none flex-1 min-h-20 text-sm sm:text-base"
                   />
                 </div>
 
@@ -289,7 +289,7 @@ export default function PostOverlay() {
                 <button
                   type="submit"
                   disabled={isSending}
-                  className="self-center relative w-20 h-20 sm:w-24 sm:h-24 hover:scale-105 active:scale-95 transition-transform mt-2 disabled:opacity-60 disabled:pointer-events-none"
+                  className="post-letter-send self-center relative shrink-0 w-20 h-20 min-w-20 min-h-20 sm:w-24 sm:h-24 sm:min-w-24 sm:min-h-24 hover:scale-105 active:scale-95 transition-transform mt-2 disabled:opacity-60 disabled:pointer-events-none"
                 >
                   <Image
                     src="/post/send-button.png"
