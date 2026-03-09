@@ -172,7 +172,7 @@ frontend/
 │   ├── uiStore.ts                      # Zustand ストア
 │   ├── InteractionPrompt.tsx           # TAP 導線
 │   ├── OverlayRoot.tsx                 # overlay 出し分け
-│   └── useDeviceType.ts                # 768px 未満を mobile と判定
+│   └── useDeviceType.ts                # screenTier（mobile / tablet / desktop / wide）判定
 ├── public/
 │   ├── computer/                       # 額縁画像・作品画像
 │   ├── items/                          # BOX アイテム画像
@@ -230,7 +230,7 @@ frontend/
 | --------- | ------------------------------------------------------------------------------------------- |
 | **責務**  | Canvas 設定、環境描画、3D オブジェクトの配置                                                |
 | **Props** | なし                                                                                        |
-| **状態**  | `groundRef`, `playerRef`, `useDeviceType()` による `isMobile`, `crystals`（4 体の初期配置） |
+| **状態**  | `groundRef`, `playerRef`, `useDeviceType()` による `screenTier`, `crystals`（4 体の初期配置） |
 | **依存**  | `useUIStore`, `worldConfig.ts`, `BookObject`, `BoxObject`, `PostObject`, `ComputerObject`   |
 
 **Canvas 設定:**
@@ -238,8 +238,8 @@ frontend/
 - `flat`
 - `dpr={[1, 2]}`
 - `frameloop="always"`
-- `key={isMobile ? "mobile" : "pc"}`
-- `camera` は `CAMERA.pc` / `CAMERA.mobile` から `fov`, `position` を取得
+- `key={screenTier}`
+- `camera` は `getCameraConfig(screenTier)` から `fov`, `position` を取得
 
 **描画内容:**
 
@@ -256,7 +256,8 @@ frontend/
 
 **挙動:**
 
-- `activeOverlay !== "none"` の間は `shouldFreezeCrystals=true` とし、全クリスタルの `useFrame` を停止。
+- `activeOverlay !== "none" && activeOverlay !== "dialogue"` の間は `shouldFreezeCrystals=true` とし、クリスタルの横移動と注視更新だけを停止する。
+- `dialogue` 中は通常どおり徘徊し、それ以外のオーバーレイ中でも上下のふわふわ運動は継続する。
 - 開始時は 1 体だけ `IntroCrystal` としてプレイヤー斜め前に待機し、クリック待ちの導入演出を担当する。
 - 本・ポスト・箱・コンピューターは `LAYOUT` の円周 4 点に固定配置。
 
@@ -362,7 +363,7 @@ frontend/
 | 項目      | 内容                                                          |
 | --------- | ------------------------------------------------------------- |
 | **責務**  | キー入力 + ジョイスティック入力の統合、移動、接地、カメラ追従 |
-| **Props** | `groundRef`, `isMobile`, `playerRef`                          |
+| **Props** | `groundRef`, `screenTier`, `playerRef`                        |
 | **依存**  | `PLAYER`, `CAMERA`, `LAYOUT`, `useUIStore`, `Coco`            |
 
 **入力:**
@@ -423,7 +424,7 @@ frontend/
 - 近距離で担当になった個体だけが `activeCrystalId`, `activeMessage`, `targetPosition` を更新する。
 - 近接判定と会話対象化は `crystalInteraction.ts` の helper に集約している。
 - `setNearbyState("crystal", ...)` を通じて TAP 導線の最優先対象になる。
-- `isFrozen=true` の間は徘徊・注視・浮遊をすべて停止。
+- `isFrozen=true` の間は徘徊と注視だけを止め、上下のふわふわ運動は継続する。
 
 ---
 
@@ -461,6 +462,7 @@ frontend/
 - Desktop では `ようこそ！見に来てくれて嬉しいです。` を 1 行表示。
 - Mobile では `ようこそ！` の後で改行し、2 行表示する。
 - 吹き出しの見た目は `DialogueOverlay` と同じトーンに揃える。
+- 会話ボックスは `w-[min(92vw,42rem)]` を基準に、`xl` 以上では `w-[min(80vw,52rem)]` まで広げる。
 
 **閉じ方:** 全画面クリックで `introSequence = "release"`。
 
@@ -527,6 +529,11 @@ frontend/
 
 **閉じ方:** 背景クリックで `closeDialogue()`。
 
+**表示仕様:**
+
+- 会話ボックスは `w-[min(92vw,42rem)]`、`xl` 以上では `w-[min(80vw,52rem)]`。
+- 本文は `text-lg md:text-xl xl:text-2xl`、補助文は `type-caption` を用いる。
+
 ---
 
 ### BookOverlay.tsx
@@ -547,6 +554,11 @@ frontend/
 **閉じ方:** 背景クリック、`Esc`、`とじる`。
 
 **補足:** 詳細表示中に `Esc` を押すと overlay を閉じず一覧へ戻る。
+
+**レイアウト補足:**
+
+- パネル幅は `w-[min(94vw,34rem)]`、`xl` 以上では `w-[min(74vw,42rem)]`。
+- 高さは `max-h-[88vh]` の範囲で伸縮し、スクロール可能なときだけ右上に `↑↓` ヒントを約 3 秒表示する。
 
 ---
 
@@ -569,9 +581,10 @@ frontend/
 
 **表示仕様:**
 
-- PC: 10x10 グリッド（`SLOTS_PER_PAGE = 100`）
-- Mobile: 6x6 グリッド（36 スロット）
 - `skills` と `items` でデータソースを切替
+- グリッドは `ResizeObserver` で実ピクセルの描画領域を監視し、理想セルサイズから `cols / rows / itemsPerPage` を動的計算する。
+- 基準値は `GRID_GAP_PX = 4`、理想セルサイズは Mobile `52px`、それ以外 `64px`。
+- `gridTemplateColumns / Rows = repeat(n, minmax(0, 1fr))` で余剰ピクセルを均等配分する。
 
 **データ:**
 
@@ -583,6 +596,8 @@ frontend/
 
 - 選択セルのハイライトは `classList` の直接更新で O(1) 反映する。
 - Grid と詳細パネルの画像は `webp` を参照する。
+- ページ数は `itemsPerPage` 変動後に再計算し、存在しないページを参照しないよう安全なページへ補正する。
+- 外枠幅は `95vw` を基準に、`1200px` 以上で `78vw`、`1600px` 以上で `72vw` に切り替える。
 
 ---
 
@@ -614,6 +629,9 @@ frontend/
 **レイアウト補足:**
 
 - Mobile では手紙全体を `top: 52%` に下げ、上側の余白を確保する。
+- `md` 以上は `w-[min(90vw,84.5vh)] + aspect-1294/1493` で手紙比率を維持する。
+- 低い横長画面（`min-width: 768px` かつ `max-height: 700px`）では手紙内コンテンツだけ縦スクロールを許可し、余白・切手・送信ボタンを専用ルールで圧縮する。
+- さらに `max-width: 980px` かつ `max-height: 540px` ではヘッダーを折り返し可能にし、切手を右寄せで退避させる。
 - 閉じるボタンは切手と干渉しないよう、手紙画像の外側上部に配置する。
 - 切手から開くリンク一覧モーダルの見出しは `Links`。
 - メール欄 placeholder は `よければメールアドレスも`。
@@ -643,6 +661,8 @@ frontend/
 - 作品数が 2 件以上のとき左右ボタンで循環切替。
 - `href` がある作品のみクリックで外部サイトへ遷移。
 - `closeComputer()` 時に `tabletScreenImageIndex` は 0 に戻る。
+- オーバーレイ本体は `md:w-[50vw]` を基準にし、額縁・説明文・ボタンを大画面向けに段階拡張する。
+- 額縁と説明文は別レーンで管理し、説明文エリアには `min-height` を持たせて作品ごとの文字量で額縁位置が揺れないようにする。
 
 ---
 
@@ -697,18 +717,28 @@ frontend/
 
 ### CAMERA
 
-| デバイス | キー            | 値           | 説明                  |
-| -------- | --------------- | ------------ | --------------------- |
-| pc       | `fov`           | `50`         | 視野角                |
-| pc       | `distance`      | `8`          | プレイヤー追従距離    |
-| pc       | `height`        | `5`          | プレイヤー追従高さ    |
-| pc       | `lookAtOffsetY` | `1.5`        | 注視点の Y オフセット |
-| pc       | `position`      | `[0, 5, 12]` | 初期カメラ位置        |
-| mobile   | `fov`           | `55`         | 視野角                |
-| mobile   | `distance`      | `6`          | プレイヤー追従距離    |
-| mobile   | `height`        | `4`          | プレイヤー追従高さ    |
-| mobile   | `lookAtOffsetY` | `1.5`        | 注視点の Y オフセット |
-| mobile   | `position`      | `[0, 4, 10]` | 初期カメラ位置        |
+| デバイス | キー            | 値             | 説明                  |
+| -------- | --------------- | -------------- | --------------------- |
+| mobile   | `fov`           | `55`           | 視野角                |
+| mobile   | `distance`      | `6`            | プレイヤー追従距離    |
+| mobile   | `height`        | `4`            | プレイヤー追従高さ    |
+| mobile   | `lookAtOffsetY` | `1.5`          | 注視点の Y オフセット |
+| mobile   | `position`      | `[0, 4, 10]`   | 初期カメラ位置        |
+| tablet   | `fov`           | `52`           | 視野角                |
+| tablet   | `distance`      | `7`            | プレイヤー追従距離    |
+| tablet   | `height`        | `4.5`          | プレイヤー追従高さ    |
+| tablet   | `lookAtOffsetY` | `1.5`          | 注視点の Y オフセット |
+| tablet   | `position`      | `[0, 4.5, 11]` | 初期カメラ位置        |
+| desktop  | `fov`           | `50`           | 視野角                |
+| desktop  | `distance`      | `8`            | プレイヤー追従距離    |
+| desktop  | `height`        | `5`            | プレイヤー追従高さ    |
+| desktop  | `lookAtOffsetY` | `1.5`          | 注視点の Y オフセット |
+| desktop  | `position`      | `[0, 5, 12]`   | 初期カメラ位置        |
+| wide     | `fov`           | `44`           | 視野角                |
+| wide     | `distance`      | `6.8`          | プレイヤー追従距離    |
+| wide     | `height`        | `4.7`          | プレイヤー追従高さ    |
+| wide     | `lookAtOffsetY` | `1.6`          | 注視点の Y オフセット |
+| wide     | `position`      | `[0, 4.7, 10.5]` | 初期カメラ位置      |
 
 ### PLAYER
 
@@ -771,7 +801,7 @@ frontend/
 ## データフロー
 
 ```
-[useDeviceType] → isMobile
+[useDeviceType] → screenTier
        ↓
 [World] → camera 設定と Player props を切替
 
