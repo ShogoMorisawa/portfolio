@@ -18,6 +18,12 @@ type PortfolioVisitPayload = {
   devicePixelRatio?: number;
 };
 
+type ClassificationResult = {
+  isSuspicious: boolean;
+  reasons: string[];
+  score: number;
+};
+
 function truncate(value: string, maxLength = 700) {
   return value.length > maxLength
     ? `${value.slice(0, maxLength - 3)}...`
@@ -51,6 +57,75 @@ function isBot(userAgent: string) {
 
   const lowerUserAgent = userAgent.toLowerCase();
   return botKeywords.some((keyword) => lowerUserAgent.includes(keyword));
+}
+
+function classifyRequest(
+  request: NextRequest,
+  payload: PortfolioVisitPayload,
+  userAgent: string,
+): ClassificationResult {
+  const reasons: string[] = [];
+  let score = 0;
+
+  const lowerUserAgent = userAgent.toLowerCase();
+  const acceptLanguage = request.headers.get("accept-language") || "unknown";
+  const referer = payload.referer || "Direct/None";
+
+  if (request.method.toUpperCase() != "POST") {
+    reasons.push("non_post_method");
+    score += 2;
+  }
+
+  if (acceptLanguage === "unknown") {
+    reasons.push("missing_accept_language");
+    score += 1;
+  }
+
+  if (referer === "Direct/None") {
+    reasons.push("missing_referer");
+    score += 1;
+  }
+
+  if (lowerUserAgent.includes("nexus 5")) {
+    reasons.push("legacy_nexus_5");
+    score += 1;
+  }
+
+  if (lowerUserAgent.includes("linux i686")) {
+    reasons.push("legacy_linux_i686");
+    score += 1;
+  }
+
+  if (lowerUserAgent.includes("iphone os 10_")) {
+    reasons.push("legacy_ios_10");
+    score += 1;
+  }
+
+  if (lowerUserAgent.includes("android 6.0")) {
+    reasons.push("legacy_android_6");
+    score += 1;
+  }
+
+  if (lowerUserAgent.includes("line/") && lowerUserAgent.includes("iab")) {
+    reasons.push("trusted_line_iab");
+    score -= 1;
+  }
+
+  if (lowerUserAgent.includes("instagram")) {
+    reasons.push("trusted_instagram_iab");
+    score -= 1;
+  }
+
+  if (lowerUserAgent.includes("; wv)") || lowerUserAgent.includes(" wv")) {
+    reasons.push("trusted_webview");
+    score -= 1;
+  }
+
+  return {
+    isSuspicious: score >= 2,
+    reasons,
+    score,
+  };
 }
 
 function detectDevice(userAgent: string) {
@@ -167,11 +242,15 @@ async function sendLineMessage(message: string) {
   });
 }
 
+function noContentResponse() {
+  return new NextResponse(null, { status: 204 });
+}
+
 export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") || "unknown";
 
   if (isBot(userAgent)) {
-    return new NextResponse(null, { status: 204 });
+    return noContentResponse();
   }
 
   let payload: PortfolioVisitPayload = {};
@@ -179,14 +258,20 @@ export async function POST(request: NextRequest) {
   try {
     payload = (await request.json()) as PortfolioVisitPayload;
   } catch {
-    return new NextResponse(null, { status: 204 });
+    return noContentResponse();
+  }
+
+  const classification = classifyRequest(request, payload, userAgent);
+
+  if (classification.isSuspicious) {
+    return noContentResponse();
   }
 
   try {
     await sendLineMessage(buildMessage(payload, request, userAgent));
   } catch {
-    return new NextResponse(null, { status: 204 });
+    return noContentResponse();
   }
 
-  return new NextResponse(null, { status: 204 });
+  return noContentResponse();
 }
