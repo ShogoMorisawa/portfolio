@@ -64,7 +64,7 @@ export default function ComputerOverlay() {
       aria-label="閉じる"
     >
       <div
-        className="absolute left-1/2 top-1/2 flex h-[82dvh] w-full -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden px-3 pt-6 pb-8 md:h-full md:w-[50vw] md:rounded-xl md:px-10 md:pt-10 md:pb-8"
+        className="absolute left-1/2 top-1/2 flex h-[82dvh] w-full -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden px-3 pt-6 pb-8 md:h-full md:w-[min(78vw,42rem)] md:rounded-xl md:px-10 md:pt-10 md:pb-8 md:landscape:w-[50vw]"
         onClick={(event) => event.stopPropagation()}
       >
         <div
@@ -81,11 +81,11 @@ export default function ComputerOverlay() {
           ×
         </button>
         <div
-          className={`relative z-10 my-auto flex w-full flex-col transition-opacity duration-1200 ease-out ${
+          className={`relative z-10 my-auto flex w-full flex-col max-[760px]:my-0 transition-opacity duration-1200 ease-out ${
             showFrame ? "opacity-100" : "opacity-0"
           }`}
         >
-          <div className="flex h-[min(44vw,56dvh)] min-h-[280px] items-center justify-center md:h-[min(40vw,54dvh)] xl:h-[min(36vw,56dvh)] min-[1920px]:h-[min(34vw,58dvh)]">
+          <div className="flex h-[min(90vw,50dvh)] min-h-[280px] items-center justify-center md:h-[min(50vw,520px,52dvh)] xl:h-[min(50vw,620px,56dvh)] min-[1920px]:h-[min(50vw,760px,54dvh)]">
             <div className="relative mx-auto aspect-square w-[min(90vw,50dvh)] md:w-[min(50vw,520px,52dvh)] xl:w-[min(50vw,620px,56dvh)] min-[1920px]:w-[min(50vw,760px,54dvh)]">
               <Image
                 src="/computer/frame.png"
@@ -162,7 +162,7 @@ export default function ComputerOverlay() {
               </div>
             </div>
           </div>
-          <div className="mt-4 mx-auto w-full max-w-[min(96vw,560px)] min-h-[120px] md:min-h-[136px] xl:max-w-[680px] xl:min-h-[152px] min-[1920px]:max-w-[820px] min-[1920px]:min-h-[176px] text-center text-neutral-900">
+          <div className="mt-4 mx-auto w-full max-w-[min(96vw,560px)] min-h-[120px] max-[760px]:min-h-[96px] max-[680px]:min-h-[80px] md:min-h-[136px] xl:max-w-[680px] xl:min-h-[152px] min-[1920px]:max-w-[820px] min-[1920px]:min-h-[176px] text-center text-neutral-900">
             <h3 className="type-title font-bold tracking-wide">
               {currentWork.title}
             </h3>
