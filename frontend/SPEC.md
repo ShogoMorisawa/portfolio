@@ -226,12 +226,12 @@ frontend/
 
 ### World.tsx
 
-| 項目      | 内容                                                                                        |
-| --------- | ------------------------------------------------------------------------------------------- |
-| **責務**  | Canvas 設定、環境描画、3D オブジェクトの配置                                                |
-| **Props** | なし                                                                                        |
+| 項目      | 内容                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------- |
+| **責務**  | Canvas 設定、環境描画、3D オブジェクトの配置                                                  |
+| **Props** | なし                                                                                          |
 | **状態**  | `groundRef`, `playerRef`, `useDeviceType()` による `screenTier`, `crystals`（4 体の初期配置） |
-| **依存**  | `useUIStore`, `worldConfig.ts`, `BookObject`, `BoxObject`, `PostObject`, `ComputerObject`   |
+| **依存**  | `useUIStore`, `worldConfig.ts`, `BookObject`, `BoxObject`, `PostObject`, `ComputerObject`     |
 
 **Canvas 設定:**
 
@@ -653,6 +653,7 @@ frontend/
 
 - store: `tabletScreenImageIndex`
 - local: `showWhitePanel`, `showFrame`
+- local: `isCompactLandscape`（`innerWidth > innerHeight && innerHeight <= 520` のとき `true`）
 
 **実装:**
 
@@ -663,6 +664,10 @@ frontend/
 - `closeComputer()` 時に `tabletScreenImageIndex` は 0 に戻る。
 - オーバーレイ本体は `md:w-[50vw]` を基準にし、額縁・説明文・ボタンを大画面向けに段階拡張する。
 - 額縁と説明文は別レーンで管理し、説明文エリアには `min-height` を持たせて作品ごとの文字量で額縁位置が揺れないようにする。
+- 縦画面と十分な縦幅の横長画面では縦積みレイアウトを維持する。
+- `isCompactLandscape` のときだけ、額縁と説明文を横並びに切り替える。
+- 低い横向き画面ではオーバーレイ全体を上下中央に固定し、説明文だけ `overflow-y-auto` でスクロールさせる。
+- 低い横向き画面の横幅は `w-[min(58vw,36rem)]` に絞り、白パネルの横方向の間延びを防ぐ。
 
 ---
 
@@ -717,28 +722,28 @@ frontend/
 
 ### CAMERA
 
-| デバイス | キー            | 値             | 説明                  |
-| -------- | --------------- | -------------- | --------------------- |
-| mobile   | `fov`           | `55`           | 視野角                |
-| mobile   | `distance`      | `6`            | プレイヤー追従距離    |
-| mobile   | `height`        | `4`            | プレイヤー追従高さ    |
-| mobile   | `lookAtOffsetY` | `1.5`          | 注視点の Y オフセット |
-| mobile   | `position`      | `[0, 4, 10]`   | 初期カメラ位置        |
-| tablet   | `fov`           | `52`           | 視野角                |
-| tablet   | `distance`      | `7`            | プレイヤー追従距離    |
-| tablet   | `height`        | `4.5`          | プレイヤー追従高さ    |
-| tablet   | `lookAtOffsetY` | `1.5`          | 注視点の Y オフセット |
-| tablet   | `position`      | `[0, 4.5, 11]` | 初期カメラ位置        |
-| desktop  | `fov`           | `50`           | 視野角                |
-| desktop  | `distance`      | `8`            | プレイヤー追従距離    |
-| desktop  | `height`        | `5`            | プレイヤー追従高さ    |
-| desktop  | `lookAtOffsetY` | `1.5`          | 注視点の Y オフセット |
-| desktop  | `position`      | `[0, 5, 12]`   | 初期カメラ位置        |
-| wide     | `fov`           | `44`           | 視野角                |
-| wide     | `distance`      | `6.8`          | プレイヤー追従距離    |
-| wide     | `height`        | `4.7`          | プレイヤー追従高さ    |
-| wide     | `lookAtOffsetY` | `1.6`          | 注視点の Y オフセット |
-| wide     | `position`      | `[0, 4.7, 10.5]` | 初期カメラ位置      |
+| デバイス | キー            | 値               | 説明                  |
+| -------- | --------------- | ---------------- | --------------------- |
+| mobile   | `fov`           | `55`             | 視野角                |
+| mobile   | `distance`      | `6`              | プレイヤー追従距離    |
+| mobile   | `height`        | `4`              | プレイヤー追従高さ    |
+| mobile   | `lookAtOffsetY` | `1.5`            | 注視点の Y オフセット |
+| mobile   | `position`      | `[0, 4, 10]`     | 初期カメラ位置        |
+| tablet   | `fov`           | `52`             | 視野角                |
+| tablet   | `distance`      | `7`              | プレイヤー追従距離    |
+| tablet   | `height`        | `4.5`            | プレイヤー追従高さ    |
+| tablet   | `lookAtOffsetY` | `1.5`            | 注視点の Y オフセット |
+| tablet   | `position`      | `[0, 4.5, 11]`   | 初期カメラ位置        |
+| desktop  | `fov`           | `50`             | 視野角                |
+| desktop  | `distance`      | `8`              | プレイヤー追従距離    |
+| desktop  | `height`        | `5`              | プレイヤー追従高さ    |
+| desktop  | `lookAtOffsetY` | `1.5`            | 注視点の Y オフセット |
+| desktop  | `position`      | `[0, 5, 12]`     | 初期カメラ位置        |
+| wide     | `fov`           | `44`             | 視野角                |
+| wide     | `distance`      | `6.8`            | プレイヤー追従距離    |
+| wide     | `height`        | `4.7`            | プレイヤー追従高さ    |
+| wide     | `lookAtOffsetY` | `1.6`            | 注視点の Y オフセット |
+| wide     | `position`      | `[0, 4.7, 10.5]` | 初期カメラ位置        |
 
 ### PLAYER
 
