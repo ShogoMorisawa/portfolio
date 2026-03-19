@@ -27,10 +27,7 @@ export function IntroOverlay() {
       }}
     >
       <div className="absolute bottom-20 left-0 right-0 flex justify-center px-4">
-        <div
-          className="bg-black/80 text-white w-[min(92vw,42rem)] xl:w-[min(80vw,52rem)] p-6 md:p-8 xl:p-10 rounded-2xl text-center shadow-2xl border border-white/10 transform transition-all"
-          onClick={(event) => event.stopPropagation()}
-        >
+        <div className="bg-black/80 text-white w-[min(92vw,42rem)] xl:w-[min(80vw,52rem)] p-6 md:p-8 xl:p-10 rounded-2xl text-center shadow-2xl border border-white/10 transform transition-all">
           <p className="text-lg md:text-xl xl:text-2xl font-medium leading-relaxed font-sans">
             {secondLine ? (
               <>

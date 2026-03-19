@@ -464,7 +464,7 @@ frontend/
 - 吹き出しの見た目は `DialogueOverlay` と同じトーンに揃える。
 - 会話ボックスは `w-[min(92vw,42rem)]` を基準に、`xl` 以上では `w-[min(80vw,52rem)]` まで広げる。
 
-**閉じ方:** 全画面クリックで `introSequence = "release"`。
+**閉じ方:** 画面上の任意クリック（メッセージボックス本体を含む）で `introSequence = "release"`。
 
 ---
 
@@ -527,7 +527,7 @@ frontend/
 
 **表示条件:** `activeOverlay === "dialogue"` かつ `activeMessage` が存在するとき。
 
-**閉じ方:** 背景クリックで `closeDialogue()`。
+**閉じ方:** 画面上の任意クリック（メッセージボックス本体を含む）で `closeDialogue()`。
 
 **表示仕様:**
 
