@@ -26,6 +26,19 @@ type NearbyStateMap = Record<NearbyStateKey, boolean>;
 export type BoxView = "menu" | "grid";
 export type BoxCategory = "skills" | "items" | null;
 
+const OVERLAY_HISTORY_STATE_KEY = "portfolioOverlay";
+let isClosingOverlayFromHistory = false;
+
+export function setOverlayHistoryClosingState(isClosing: boolean) {
+  isClosingOverlayFromHistory = isClosing;
+}
+
+function shouldUseHistoryBackForOverlayClose() {
+  if (typeof window === "undefined") return false;
+  if (isClosingOverlayFromHistory) return false;
+  return window.history.state?.[OVERLAY_HISTORY_STATE_KEY] === true;
+}
+
 type UIState = {
   joystick: { x: number; y: number; isMoving: boolean };
   activeOverlay: OverlayKind;
@@ -192,10 +205,12 @@ export const useUIStore = create<UIState>((set, get) => ({
     }),
 
   closeDialogue: () =>
-    set({
-      activeOverlay: "none",
-      targetPosition: null,
-    }),
+    shouldUseHistoryBackForOverlayClose()
+      ? window.history.back()
+      : set({
+          activeOverlay: "none",
+          targetPosition: null,
+        }),
 
   openBook: () =>
     set({
@@ -204,10 +219,12 @@ export const useUIStore = create<UIState>((set, get) => ({
     }),
 
   closeBook: () =>
-    set({
-      activeOverlay: "none",
-      selectedAdventureSlot: null,
-    }),
+    shouldUseHistoryBackForOverlayClose()
+      ? window.history.back()
+      : set({
+          activeOverlay: "none",
+          selectedAdventureSlot: null,
+        }),
 
   setSelectedAdventureSlot: (slot) => set({ selectedAdventureSlot: slot }),
 
@@ -219,10 +236,12 @@ export const useUIStore = create<UIState>((set, get) => ({
     }),
 
   closeBox: () =>
-    set({
-      activeOverlay: "none",
-      ...getResetBoxState(),
-    }),
+    shouldUseHistoryBackForOverlayClose()
+      ? window.history.back()
+      : set({
+          activeOverlay: "none",
+          ...getResetBoxState(),
+        }),
 
   setBoxView: (view) =>
     set(
@@ -246,7 +265,10 @@ export const useUIStore = create<UIState>((set, get) => ({
       ...getClearedNearbyState(),
     }),
 
-  closePost: () => set({ activeOverlay: "none" }),
+  closePost: () =>
+    shouldUseHistoryBackForOverlayClose()
+      ? window.history.back()
+      : set({ activeOverlay: "none" }),
 
   openComputer: () =>
     set({
@@ -255,10 +277,12 @@ export const useUIStore = create<UIState>((set, get) => ({
     }),
 
   closeComputer: () =>
-    set({
-      activeOverlay: "none",
-      tabletScreenImageIndex: 0,
-    }),
+    shouldUseHistoryBackForOverlayClose()
+      ? window.history.back()
+      : set({
+          activeOverlay: "none",
+          tabletScreenImageIndex: 0,
+        }),
 
   setTabletScreenImageIndex: (index) =>
     set((state) => ({

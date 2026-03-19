@@ -515,6 +515,12 @@ frontend/
 
 **切替対象:** `dialogue`, `book`, `box`, `post`, `computer`。
 
+**履歴連携:**
+
+- `activeOverlay !== "none"` になった時だけ `history.pushState()` でモーダル用の履歴を 1 枚積む。
+- `popstate` を監視し、戻る操作時は `closeActiveOverlay()` を経由して現在のモーダルだけ閉じる。
+- ホーム通常状態では追加履歴を持たない。
+
 ---
 
 ### DialogueOverlay.tsx
@@ -886,6 +892,11 @@ frontend/
 - `openPost` / `closePost`
 - `openComputer` / `closeComputer`
 - `closeActiveOverlay`
+
+### モーダルと履歴
+
+- `closeDialogue / closeBook / closeBox / closePost / closeComputer` は、モーダル用履歴が存在する時は直接 state を閉じず `history.back()` を使って履歴と見た目を同期する。
+- `closeActiveOverlay()` は `popstate` から呼ばれる前提の共通クローズ口で、現在の `activeOverlay` に応じた `close*()` を選択する。
 
 ### `nearbyTarget` の優先順位
 
