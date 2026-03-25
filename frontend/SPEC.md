@@ -130,6 +130,8 @@ frontend/
 │   ├── api/
 │   │   └── letter/
 │   │       └── route.ts                # 手紙送信 API
+│   │   └── portfolio-visit/
+│   │       └── route.ts                # 訪問通知 API
 │   ├── globals.css                     # 全体スタイルとフォントユーティリティ
 │   ├── icon.png                        # ブラウザタブ / Apple touch icon 用画像
 │   ├── layout.tsx                      # フォント定義 + ルートレイアウト + metadata
@@ -712,6 +714,39 @@ frontend/
 **配送:** `Resend.emails.send()` を使い、`process.env.MY_EMAIL` へ送信。
 
 **必要環境変数:** `RESEND_API_KEY`, `MY_EMAIL`
+
+---
+
+### app/api/portfolio-visit/route.ts
+
+| 項目     | 内容                                                                    |
+| -------- | ----------------------------------------------------------------------- |
+| **責務** | ポートフォリオ訪問情報を受け取り、LINE へ通知する                       |
+| **依存** | `next/server`, `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_USER_ID`              |
+
+**エンドポイント:** `POST /api/portfolio-visit`
+
+**入力:** `url`, `path`, `referer`, `referrerPolicy`, `language`, `languages`, `timezone`, `screenWidth`, `screenHeight`, `viewportWidth`, `viewportHeight`, `devicePixelRatio`
+
+**フィルタリング:**
+
+- `user-agent` と `sec-ch-ua` を用いて bot / headless / monitoring 系アクセスを除外する。
+- `accept-language`, `referer`, 古い UA 文字列などを元に request をスコアリングし、`isSuspicious` の場合は通知しない。
+
+**通知内容:**
+
+- タイムスタンプ
+- URL / Path
+- Referer / Referrer Policy
+- Device / Platform / Browser
+- Screen / Viewport / Pixel Ratio
+- Language / Languages / Timezone
+- Client Hints / User-Agent
+
+**応答:**
+
+- 通知有無に関わらず `204 No Content` を返す。
+- LINE 通知はレスポンス遅延を避けるため、レスポンス返却を待たずに非同期で実行する。
 
 ---
 

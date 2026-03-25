@@ -30,7 +30,8 @@ function truncate(value: string, maxLength = 700) {
     : value;
 }
 
-function isBot(userAgent: string) {
+// secChUaを引数に追加し、HeadlessやGPTBotを検知
+function isBot(userAgent: string, secChUa: string = "") {
   const botKeywords = [
     "bot",
     "crawler",
@@ -53,10 +54,26 @@ function isBot(userAgent: string) {
     "java/",
     "node-fetch",
     "vercel-screenshot",
+    "httpclient",
+    "go-http-client",
+    "uptime",
+    "monitor",
+    "letsencrypt",
+    "gptbot",
   ];
 
   const lowerUserAgent = userAgent.toLowerCase();
-  return botKeywords.some((keyword) => lowerUserAgent.includes(keyword));
+  const lowerSecChUa = secChUa.toLowerCase();
+
+  if (botKeywords.some((keyword) => lowerUserAgent.includes(keyword))) {
+    return true;
+  }
+
+  if (lowerSecChUa.includes("headlesschrome")) {
+    return true;
+  }
+
+  return false;
 }
 
 function classifyRequest(
@@ -137,10 +154,7 @@ function detectDevice(userAgent: string) {
   return "💻 Desktop";
 }
 
-function detectPlatform(
-  userAgent: string,
-  secChUaPlatform: string | null,
-) {
+function detectPlatform(userAgent: string, secChUaPlatform: string | null) {
   if (secChUaPlatform) return secChUaPlatform;
 
   const lowerUserAgent = userAgent.toLowerCase();
@@ -248,8 +262,9 @@ function noContentResponse() {
 
 export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") || "unknown";
+  const secChUa = request.headers.get("sec-ch-ua") || "";
 
-  if (isBot(userAgent)) {
+  if (isBot(userAgent, secChUa)) {
     return noContentResponse();
   }
 
@@ -267,11 +282,12 @@ export async function POST(request: NextRequest) {
     return noContentResponse();
   }
 
-  try {
-    await sendLineMessage(buildMessage(payload, request, userAgent));
-  } catch {
-    return noContentResponse();
-  }
+  const message = buildMessage(payload, request, userAgent);
+
+  // レスポンス速度を落とさないよう、LINE通知は非同期で実行（awaitしない）
+  sendLineMessage(message).catch((err) => {
+    console.error("LINE Notification Failed:", err);
+  });
 
   return noContentResponse();
 }
