@@ -284,10 +284,12 @@ export async function POST(request: NextRequest) {
 
   const message = buildMessage(payload, request, userAgent);
 
-  // レスポンス速度を落とさないよう、LINE通知は非同期で実行（awaitしない）
-  sendLineMessage(message).catch((err) => {
+  // サーバーレス環境ではレスポンス返却後に実行が停止されるため、送信完了まで待つ
+  try {
+    await sendLineMessage(message);
+  } catch (err) {
     console.error("LINE Notification Failed:", err);
-  });
+  }
 
   return noContentResponse();
 }

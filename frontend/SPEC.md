@@ -746,7 +746,8 @@ frontend/
 **応答:**
 
 - 通知有無に関わらず `204 No Content` を返す。
-- LINE 通知はレスポンス遅延を避けるため、レスポンス返却を待たずに非同期で実行する。
+- LINE 通知はサーバーレス環境で中断されないよう `await sendLineMessage()` で送信完了を待ってから返す。
+- LINE 送信失敗時は `console.error("LINE Notification Failed:", err)` を出しつつ、応答自体は `204 No Content` を維持する。
 
 ---
 
