@@ -28,8 +28,97 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+  const [isHeaderExtended, setIsHeaderExtended] = React.useState(true)
+  const eyeRef = React.useRef<HTMLDivElement>(null)
+  const pupilRef = React.useRef<HTMLDivElement>(null)
+  const targetPos = React.useRef({ x: 0, y: 0 })
+  const currentPos = React.useRef({ x: 0, y: 0 })
+  const requestRef = React.useRef<number | null>(null)
+  const timeoutRef = React.useRef<ReturnType<typeof window.setTimeout> | null>(null)
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev)
+
+  React.useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!eyeRef.current || !pupilRef.current) return
+
+      const eyeRect = eyeRef.current.getBoundingClientRect()
+      const pupilRect = pupilRef.current.getBoundingClientRect()
+      const eyeCenterX = eyeRect.left + eyeRect.width / 2
+      const eyeCenterY = eyeRect.top + eyeRect.height / 2
+      const dx = event.clientX - eyeCenterX
+      const dy = event.clientY - eyeCenterY
+      const maxDistance = eyeRect.width / 2 - pupilRect.width / 2 - eyeRect.width * 0.05
+      const distance = Math.hypot(dx, dy)
+
+      let moveX = dx
+      let moveY = dy
+
+      if (distance > maxDistance && distance > 0) {
+        moveX = (dx / distance) * maxDistance
+        moveY = (dy / distance) * maxDistance
+      }
+
+      targetPos.current = { x: moveX, y: moveY }
+    }
+
+    const animate = () => {
+      const easing = 0.04
+
+      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * easing
+      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * easing
+
+      if (pupilRef.current) {
+        pupilRef.current.style.transform =
+          `translate(${currentPos.current.x}px, ${currentPos.current.y}px)`
+      }
+
+      requestRef.current = window.requestAnimationFrame(animate)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    requestRef.current = window.requestAnimationFrame(animate)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+
+      if (requestRef.current !== null) {
+        window.cancelAnimationFrame(requestRef.current)
+      }
+    }
+  }, [])
+
+  React.useEffect(() => {
+    const wakeUpHeader = () => {
+      setIsHeaderExtended(true)
+
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current)
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
+        setIsHeaderExtended(false)
+      }, 3000)
+    }
+
+    window.addEventListener('mousemove', wakeUpHeader)
+    window.addEventListener('mousedown', wakeUpHeader)
+    window.addEventListener('scroll', wakeUpHeader)
+    window.addEventListener('keydown', wakeUpHeader)
+
+    wakeUpHeader()
+
+    return () => {
+      window.removeEventListener('mousemove', wakeUpHeader)
+      window.removeEventListener('mousedown', wakeUpHeader)
+      window.removeEventListener('scroll', wakeUpHeader)
+      window.removeEventListener('keydown', wakeUpHeader)
+
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <html lang="ja">
@@ -40,7 +129,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="min-h-screen bg-[#fced35] font-sans m-0 overflow-hidden relative">
         
         {/* 👅 ベロヘッダー (レスポンシブ対応) */}
-        <header className="relative z-50 bg-[#FF5757] h-16 sm:h-24 w-[96vw] sm:w-[98vw] rounded-r-full rounded-b-2xl sm:rounded-b-3xl border-b-4 sm:border-b-8 border-r-4 sm:border-r-8 border-[#4A4A4A] flex items-center justify-end px-6 sm:px-12 mt-0">
+        <header
+          className={`relative z-50 mt-0 flex h-16 w-[96vw] items-center justify-end rounded-r-full rounded-b-2xl border-r-4 border-b-4 border-[#4A4A4A] bg-[#FF5757] px-6 transition-transform duration-700 ease-in-out sm:h-24 sm:w-[98vw] sm:rounded-b-3xl sm:border-r-8 sm:border-b-8 sm:px-12 ${
+            isHeaderExtended ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
           {/* PC用ナビゲーション */}
           <nav className="hidden md:flex gap-8 font-black text-white text-xl tracking-widest">
             <a href="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">3D WORLD</a>
@@ -73,10 +166,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
         {/* 👁️ 巨大な目玉 (レスポンシブ対応 z-0) */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
-          {/* 白目と太枠 (画面幅に合わせて伸縮、最大450px) */}
-          <div className="relative w-[65vw] h-[65vw] max-w-[450px] max-h-[450px] bg-white rounded-full border-[4vw] sm:border-[24px] border-[#4A4A4A]">
-            {/* 黒目 (白目のサイズに追従) */}
-            <div className="absolute top-[10%] right-[12%] w-[30vw] h-[30vw] max-w-[200px] max-h-[200px] bg-[#4A4A4A] rounded-full"></div>
+          {/* 白目と太枠 */}
+          <div
+            ref={eyeRef}
+            className="relative flex h-[65vw] w-[65vw] max-h-[450px] max-w-[450px] items-center justify-center rounded-full border-[4vw] border-[#4A4A4A] bg-white sm:border-[24px]"
+          >
+            {/* 黒目 */}
+            <div
+              ref={pupilRef}
+              className="h-[30vw] w-[30vw] max-h-[200px] max-w-[200px] rounded-full bg-[#4A4A4A]"
+            />
           </div>
         </div>
 
@@ -86,10 +185,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {/* 親グループの相対座標の基準 (固定ピクセルで黄金比を定義) */}
           <div className="relative">
             {/* 口 */}
-            <div className="w-[350px] h-[175px] bg-[#F78E9B] rounded-b-[175px]"></div>
+            <div className="h-[175px] w-[350px] rounded-b-[175px] border-8 border-[#4A4A4A] bg-[#F78E9B]"></div>
 
             {/* 舌 (口の上に重なるように z-10) */}
-            <div className="absolute top-[80px] right-[110px] w-[130px] h-[300px] bg-[#FF5757] rounded-b-full z-10"></div>
+            <div className="absolute top-[80px] right-[110px] z-10 h-[300px] w-[130px] rounded-b-full border-x-[10px] border-b-[10px] border-[#4A4A4A] bg-[#FF5757]"></div>
           </div>
         </div>
 
