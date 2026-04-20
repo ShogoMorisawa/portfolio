@@ -29,6 +29,7 @@ export const Route = createRootRoute({
 function RootDocument({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isHeaderExtended, setIsHeaderExtended] = React.useState(true)
+  const [isBlinking, setIsBlinking] = React.useState(false)
   const eyeRef = React.useRef<HTMLDivElement>(null)
   const pupilRef = React.useRef<HTMLDivElement>(null)
   const targetPos = React.useRef({ x: 0, y: 0 })
@@ -120,6 +121,34 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  React.useEffect(() => {
+    let blinkTimeout: ReturnType<typeof window.setTimeout> | null = null
+    let resetTimeout: ReturnType<typeof window.setTimeout> | null = null
+
+    const triggerBlink = () => {
+      setIsBlinking(true)
+
+      resetTimeout = window.setTimeout(() => {
+        setIsBlinking(false)
+      }, 150)
+
+      const nextBlinkTime = Math.random() * 4000 + 2000
+      blinkTimeout = window.setTimeout(triggerBlink, nextBlinkTime)
+    }
+
+    blinkTimeout = window.setTimeout(triggerBlink, 3000)
+
+    return () => {
+      if (blinkTimeout !== null) {
+        window.clearTimeout(blinkTimeout)
+      }
+
+      if (resetTimeout !== null) {
+        window.clearTimeout(resetTimeout)
+      }
+    }
+  }, [])
+
   return (
     <html lang="ja">
       <head>
@@ -169,12 +198,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {/* 白目と太枠 */}
           <div
             ref={eyeRef}
-            className="relative flex h-[65vw] w-[65vw] max-h-[450px] max-w-[450px] items-center justify-center rounded-full border-[4vw] border-[#4A4A4A] bg-white sm:border-[24px]"
+            className="relative flex h-[65vw] w-[65vw] max-h-[450px] max-w-[450px] items-center justify-center overflow-hidden rounded-full border-[4vw] border-[#4A4A4A] bg-white sm:border-[24px]"
           >
+            <div
+              className={`absolute top-0 left-0 z-20 h-full w-full border-b-[4vw] border-[#4A4A4A] bg-[#fced35] transition-transform duration-100 ease-in-out sm:border-b-[24px] ${
+                isBlinking ? 'translate-y-0' : '-translate-y-full'
+              }`}
+            />
             {/* 黒目 */}
             <div
               ref={pupilRef}
-              className="h-[30vw] w-[30vw] max-h-[200px] max-w-[200px] rounded-full bg-[#4A4A4A]"
+              className="z-10 h-[30vw] w-[30vw] max-h-[200px] max-w-[200px] rounded-full bg-[#4A4A4A]"
             />
           </div>
         </div>
@@ -188,7 +222,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <div className="h-[175px] w-[350px] rounded-b-[175px] border-8 border-[#4A4A4A] bg-[#F78E9B]"></div>
 
             {/* 舌 (口の上に重なるように z-10) */}
-            <div className="absolute top-[80px] right-[110px] z-10 h-[300px] w-[130px] rounded-b-full border-x-[10px] border-b-[10px] border-[#4A4A4A] bg-[#FF5757]"></div>
+            {isHeaderExtended ? (
+              <div className="absolute top-[80px] right-[110px] z-10 h-[300px] w-[130px] rounded-b-full border-x-[10px] border-b-[10px] border-[#4A4A4A] bg-[#FF5757]"></div>
+            ) : null}
           </div>
         </div>
 
