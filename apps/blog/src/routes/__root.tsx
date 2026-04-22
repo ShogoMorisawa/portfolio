@@ -1,4 +1,4 @@
-import { HeadContent, Scripts, createRootRoute, Link } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, Link, useRouterState } from '@tanstack/react-router'
 import * as React from 'react'
 import appCss from '../styles.css?url'
 
@@ -27,6 +27,8 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const isHomePage = pathname === '/'
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isHeaderExtended, setIsHeaderExtended] = React.useState(true)
   const [isBlinking, setIsBlinking] = React.useState(false)
@@ -35,7 +37,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const targetPos = React.useRef({ x: 0, y: 0 })
   const currentPos = React.useRef({ x: 0, y: 0 })
   const requestRef = React.useRef<number | null>(null)
-  const timeoutRef = React.useRef<ReturnType<typeof window.setTimeout> | null>(null)
+  const timeoutRef = React.useRef<number | null>(null)
 
   const toggleMenu = () => setIsMenuOpen((prev) => !prev)
 
@@ -122,8 +124,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   React.useEffect(() => {
-    let blinkTimeout: ReturnType<typeof window.setTimeout> | null = null
-    let resetTimeout: ReturnType<typeof window.setTimeout> | null = null
+    let blinkTimeout: number | null = null
+    let resetTimeout: number | null = null
 
     const triggerBlink = () => {
       setIsBlinking(true)
@@ -154,8 +156,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      {/* overflow-hidden を追加して、画面外にはみ出たパーツでスクロールバーが出ないようにします */}
-      <body className="min-h-screen bg-[#fced35] font-sans m-0 overflow-hidden relative">
+      <body className="relative m-0 min-h-screen overflow-x-hidden bg-[#fced35] font-sans">
         
         {/* 👅 ベロヘッダー (レスポンシブ対応) */}
         <header
@@ -167,8 +168,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <nav className="hidden md:flex gap-8 font-black text-white text-xl tracking-widest">
             <a href="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">3D WORLD</a>
             <Link to="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">HOME</Link>
-            <Link to="/tech" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">TECH</Link>
-            <Link to="/psychology" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">PSYCHOLOGY</Link>
+            <Link to="/articles" search={{ category: undefined }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">ARTICLES</Link>
+            <Link to="/articles" search={{ category: 'tech' }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">TECH</Link>
+            <Link to="/articles" search={{ category: 'psychology' }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">PSYCHOLOGY</Link>
           </nav>
 
           {/* モバイル用ハンバーガーボタン */}
@@ -188,45 +190,46 @@ function RootDocument({ children }: { children: React.ReactNode }) {
            <nav className="flex flex-col gap-10 font-black text-white text-4xl tracking-tighter">
             <a href="/" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">3D WORLD</a>
             <Link to="/" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">HOME</Link>
-            <Link to="/tech" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">TECH</Link>
-            <Link to="/psychology" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">PSYCHOLOGY</Link>
+            <Link to="/articles" search={{ category: undefined }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">ARTICLES</Link>
+            <Link to="/articles" search={{ category: 'tech' }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">TECH</Link>
+            <Link to="/articles" search={{ category: 'psychology' }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">PSYCHOLOGY</Link>
           </nav>
         </div>
 
-        {/* 👁️ 巨大な目玉 (レスポンシブ対応 z-0) */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
-          {/* 白目と太枠 */}
-          <div
-            ref={eyeRef}
-            className="relative flex h-[65vw] w-[65vw] max-h-[450px] max-w-[450px] items-center justify-center overflow-hidden rounded-full border-[4vw] border-[#4A4A4A] bg-white sm:border-[24px]"
-          >
-            <div
-              className={`absolute top-0 left-0 z-20 h-full w-full border-b-[4vw] border-[#4A4A4A] bg-[#fced35] transition-transform duration-100 ease-in-out sm:border-b-[24px] ${
-                isBlinking ? 'translate-y-0' : '-translate-y-full'
-              }`}
-            />
-            {/* 黒目 */}
-            <div
-              ref={pupilRef}
-              className="z-10 h-[30vw] w-[30vw] max-h-[200px] max-w-[200px] rounded-full bg-[#4A4A4A]"
-            />
-          </div>
-        </div>
+        {isHomePage ? (
+          <>
+            {/* 👁️ 巨大な目玉 (レスポンシブ対応 z-0) */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+              {/* 白目と太枠 */}
+              <div
+                ref={eyeRef}
+                className="relative flex h-[65vw] w-[65vw] max-h-[450px] max-w-[450px] items-center justify-center overflow-hidden rounded-full border-[4vw] border-[#4A4A4A] bg-white sm:border-[24px]"
+              >
+                <div
+                  className={`absolute top-0 left-0 z-20 h-full w-full border-b-[4vw] border-[#4A4A4A] bg-[#fced35] transition-transform duration-100 ease-in-out sm:border-b-[24px] ${
+                    isBlinking ? 'translate-y-0' : '-translate-y-full'
+                  }`}
+                />
+                {/* 黒目 */}
+                <div
+                  ref={pupilRef}
+                  className="z-10 h-[30vw] w-[30vw] max-h-[200px] max-w-[200px] rounded-full bg-[#4A4A4A]"
+                />
+              </div>
+            </div>
 
-        {/* 🍉 グループ化された口と舌 (画面端に固定) */}
-        <div className="absolute bottom-[6%] -right-[2.5%] z-10 pointer-events-none transform rotate-[-45deg] origin-center scale-[0.7] sm:scale-[0.9] lg:scale-[1.1]">
+            {/* 🍉 グループ化された口と舌 (画面端に固定) */}
+            <div className="absolute bottom-[6%] -right-[2.5%] z-10 pointer-events-none transform rotate-[-45deg] origin-center scale-[0.7] sm:scale-[0.9] lg:scale-[1.1]">
+              <div className="relative">
+                <div className="h-[175px] w-[350px] rounded-b-[175px] border-8 border-[#4A4A4A] bg-[#F78E9B]"></div>
 
-          {/* 親グループの相対座標の基準 (固定ピクセルで黄金比を定義) */}
-          <div className="relative">
-            {/* 口 */}
-            <div className="h-[175px] w-[350px] rounded-b-[175px] border-8 border-[#4A4A4A] bg-[#F78E9B]"></div>
-
-            {/* 舌 (口の上に重なるように z-10) */}
-            {isHeaderExtended ? (
-              <div className="absolute top-[80px] right-[110px] z-10 h-[300px] w-[130px] rounded-b-full border-x-[10px] border-b-[10px] border-[#4A4A4A] bg-[#FF5757]"></div>
-            ) : null}
-          </div>
-        </div>
+                {isHeaderExtended ? (
+                  <div className="absolute top-[80px] right-[110px] z-10 h-[300px] w-[130px] rounded-b-full border-x-[10px] border-b-[10px] border-[#4A4A4A] bg-[#FF5757]"></div>
+                ) : null}
+              </div>
+            </div>
+          </>
+        ) : null}
 
         {/* メインコンテンツ領域 (z-20) */}
         <main className="relative z-20 p-10">
