@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
 import FaceTongueLayout from '../components/FaceTongueLayout'
 import { articles, type ArticleCategory } from '../data/articles'
 
@@ -15,7 +15,13 @@ export const Route = createFileRoute('/articles')({
 })
 
 function ArticlesPage() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   const { category } = Route.useSearch()
+
+  if (pathname !== '/articles') {
+    return <Outlet />
+  }
+
   const filteredArticles = category
     ? articles.filter((article) => article.category === category)
     : articles
@@ -36,7 +42,7 @@ function ArticlesPage() {
             key={article.slug}
             to="/articles/$slug"
             params={{ slug: article.slug }}
-            className="group rounded-[28px] border-8 border-[#4A4A4A] bg-white px-5 py-5 text-[#4A4A4A] transition-transform hover:-translate-y-1 hover:rotate-[0.4deg]"
+            className="group block h-full rounded-[28px] border-8 border-[#4A4A4A] bg-white px-5 py-5 text-[#4A4A4A] transition-transform hover:-translate-y-1 hover:rotate-[0.4deg]"
             style={{ animationDelay: `${index * 80}ms` }}
           >
             <p className="text-[0.68rem] font-black uppercase tracking-[0.28em] text-[#FF5757]">

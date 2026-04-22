@@ -92,6 +92,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   React.useEffect(() => {
+    if (!isHomePage) {
+      setIsHeaderExtended(true)
+      return
+    }
+
     const wakeUpHeader = () => {
       setIsHeaderExtended(true)
 
@@ -121,7 +126,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         window.clearTimeout(timeoutRef.current)
       }
     }
-  }, [])
+  }, [isHomePage])
 
   React.useEffect(() => {
     let blinkTimeout: number | null = null
