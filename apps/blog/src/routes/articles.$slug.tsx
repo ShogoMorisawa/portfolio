@@ -32,7 +32,7 @@ function ArticleDetailPage() {
       <div className="space-y-10">
         <MarkdownArticle markdown={article.body} />
 
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3 border-t-4 border-dashed border-[#4A4A4A] pt-8">
+        <div className="mx-auto flex max-w-none flex-wrap items-center gap-3 border-t-4 border-dashed border-[#4A4A4A] pt-8 sm:max-w-3xl">
           <Link
             to="/articles"
             className="rounded-full border-4 border-[#4A4A4A] bg-white px-5 py-3 text-sm font-black tracking-[0.16em] text-[#4A4A4A] transition-transform hover:-rotate-2 hover:scale-105"

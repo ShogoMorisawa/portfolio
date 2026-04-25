@@ -237,7 +237,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         ) : null}
 
         {/* メインコンテンツ領域 (z-20) */}
-        <main className="relative z-20 p-10">
+        <main className="relative z-20 px-px py-10 sm:p-10">
           {children}
         </main>
 

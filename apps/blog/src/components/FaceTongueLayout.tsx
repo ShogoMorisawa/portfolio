@@ -19,24 +19,24 @@ export default function FaceTongueLayout({
   article,
 }: FaceTongueLayoutProps) {
   return (
-    <section className="mx-auto w-full max-w-[1080px] px-4 pb-24 pt-10 sm:px-6 sm:pb-32 sm:pt-14">
+    <section className="mx-auto w-full max-w-[1080px] px-2 pb-24 pt-10 sm:px-6 sm:pb-32 sm:pt-14">
       {/* 顔: 左右の目 */}
       <div className="mx-auto mb-8 flex w-full max-w-[700px] items-center justify-between px-10">
         {/* 左目 */}
-        <div className="relative h-32 w-32 overflow-hidden rounded-full border-8 border-[#4A4A4A] bg-white shadow-sm sm:h-44 sm:w-44">
+        <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-full border-8 border-[#4A4A4A] bg-white shadow-sm sm:h-44 sm:w-44">
           <div className="absolute bottom-[-4px] left-1/2 h-16 w-16 -translate-x-1/2 rounded-full bg-[#4A4A4A] sm:bottom-[-6px] sm:h-24 sm:w-24" />
         </div>
 
         {/* 右目 */}
-        <div className="relative h-32 w-32 overflow-hidden rounded-full border-8 border-[#4A4A4A] bg-white shadow-sm sm:h-44 sm:w-44">
+        <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-full border-8 border-[#4A4A4A] bg-white shadow-sm sm:h-44 sm:w-44">
           <div className="absolute bottom-[-4px] left-1/2 h-16 w-16 -translate-x-1/2 rounded-full bg-[#4A4A4A] sm:bottom-[-6px] sm:h-24 sm:w-24" />
         </div>
       </div>
 
       {/* 口 / 舌のベースになる外側フレーム */}
-      <div className="rounded-[36px] border-8 border-[#4A4A4A] bg-[#FF5757] p-3 sm:rounded-[44px] sm:p-4">
+      <div className="rounded-[36px] border-8 border-[#4A4A4A] bg-[#FF5757] p-2 sm:rounded-[44px] sm:p-4">
         {/* 記事キャンバス本体 */}
-        <div className="rounded-[28px] border-8 border-[#4A4A4A] bg-[#FFF6D1] px-5 py-6 sm:rounded-[32px] sm:px-8 sm:py-8">
+        <div className="rounded-[28px] border-8 border-[#4A4A4A] bg-[#FFF6D1] px-3 py-6 sm:rounded-[32px] sm:px-8 sm:py-8">
           {/* カテゴリタブ */}
           <div className="mb-6 flex flex-wrap items-center gap-3">
             <Link

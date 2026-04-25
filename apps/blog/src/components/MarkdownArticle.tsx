@@ -7,7 +7,7 @@ type MarkdownArticleProps = {
 
 export default function MarkdownArticle({ markdown }: MarkdownArticleProps) {
   return (
-    <div className="mx-auto max-w-3xl text-[#4A4A4A]">
+    <div className="mx-auto max-w-none text-[#4A4A4A] sm:max-w-3xl">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
