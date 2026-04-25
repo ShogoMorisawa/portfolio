@@ -1,0 +1,32 @@
+services:
+  # php
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=blog_db
+      - DB_USER=blog_user
+      - DB_PASS=blog_pass
+
+  # postgres
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: blog_db
+      POSTGRES_USER: blog_user
+      POSTGRES_PASSWORD: blog_pass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
