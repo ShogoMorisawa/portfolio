@@ -24,7 +24,12 @@ function TipTapRenderer({ contentJson }: { contentJson: string | object }) {
           return (
             <p key={index}>
               {block.content?.map((span: any, i: number) => (
-                <span key={i} className={span.marks?.some((m: any) => m.type === 'bold') ? 'font-bold' : ''}>
+                <span
+                  key={i}
+                  className={
+                    span.marks?.some((m: any) => m.type === 'bold') ? 'font-bold' : ''
+                  }
+                >
                   {span.text}
                 </span>
               ))}
@@ -39,6 +44,17 @@ function TipTapRenderer({ contentJson }: { contentJson: string | object }) {
             >
               {block.content?.[0]?.text}
             </h2>
+          );
+        }
+        if (block.type === 'image') {
+          return (
+            <div key={index} className="my-10 flex justify-center">
+              <img
+                src={block.attrs?.src}
+                alt={block.attrs?.alt || 'ブログ画像'}
+                className="max-w-full rounded-[24px] border-8 border-[#4A4A4A] bg-[#FFF6D1] shadow-[8px_8px_0_0_#4A4A4A] transition-transform hover:-translate-y-1 hover:rotate-1"
+              />
+            </div>
           );
         }
         return null;
