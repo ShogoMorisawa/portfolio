@@ -9,3 +9,6 @@ RUN apt-get update && apt-get install -y \
 
 # APIのルーティングを綺麗にするためのApache設定（mod_rewrite）を有効化
 RUN a2enmod rewrite
+
+# composerのインストール
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
