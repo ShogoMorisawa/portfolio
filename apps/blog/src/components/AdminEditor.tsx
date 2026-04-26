@@ -91,7 +91,7 @@ export default function AdminEditor() {
         },
       }),
     ],
-    content: '<p>べろべろしてやるぜ</p>',
+    content: '',
     editorProps: {
       attributes: {
         class: 'min-h-[300px] outline-none text-[#4A4A4A] text-lg leading-8',
