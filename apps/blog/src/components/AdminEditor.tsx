@@ -1,14 +1,46 @@
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useState } from 'react';
+import Image from '@tiptap/extension-image';
+import { useRef, useState } from 'react';
 
 // カスタムツールバー
 const Menubar = ({ editor }: { editor: any }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!editor) return null;
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:8000/upload_image.php', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.status === 'success' && data.url) {
+        editor.chain().focus().setImage({ src: data.url }).run();
+      } else {
+        alert('画像のアップロードに失敗しました。' + data.error);
+      }
+    } catch (error) {
+      alert('通信に失敗しました。ネットワークを確認してください。');
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="mb-6 flex flex-wrap gap-2 border-b-4 border-dashed border-[#4A4A4A] pb-4">
       <button
-        onClick={() => editor.chain().focus().toggleBold.run()}
+        onClick={() => editor.chain().focus().toggleBold().run()}
         className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
           editor.isActive('bold') ? 'bg-[#FFE36E]' : 'bg-white'
         }`}
@@ -23,6 +55,21 @@ const Menubar = ({ editor }: { editor: any }) => {
       >
         H2
       </button>
+
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="rounded-full border-4 border-[#4A4A4A] bg-[#FF5757] px-4 py-1 text-sm font-black text-white transition-transform hover:-rotate-2"
+      >
+        📷 IMAGE
+      </button>
     </div>
   );
 };
@@ -36,7 +83,14 @@ export default function AdminEditor() {
   const [thumbnailUrl, setThumbnailUrl] = useState('');
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Image.configure({
+        HTMLAttributes: {
+          class: 'border-8 border-[#4A4A4A] rounded-xl my-8 max-w-full', // Cocoスタイルの枠線！
+        },
+      }),
+    ],
     content: '<p>べろべろしてやるぜ</p>',
     editorProps: {
       attributes: {
@@ -126,6 +180,7 @@ export default function AdminEditor() {
       {/* エディタ本体（ベロの質感） */}
       <div className="rounded-[44px] border-8 border-[#4A4A4A] bg-[#FF5757] p-4">
         <div className="rounded-[32px] border-8 border-[#4A4A4A] bg-[#FFF6D1] p-8">
+          <Menubar editor={editor} />
           <EditorContent editor={editor} />
         </div>
       </div>
