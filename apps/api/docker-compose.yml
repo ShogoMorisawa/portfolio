@@ -10,11 +10,13 @@ services:
       - ./src:/var/www/html
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
-      - DB_HOST=db
-      - DB_NAME=blog_db
-      - DB_USER=blog_user
-      - DB_PASS=blog_pass
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
 
   # postgres
   db:

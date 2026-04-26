@@ -9,7 +9,7 @@ $user = getenv('DB_USER') ?: 'blog_user';
 $pass = getenv('DB_PASS') ?: 'blog_pass';
 
 try {
-    $dsn = "pgsql:host=$host;dbname=$db";
+    $dsn = "pgsql:host=$host;port=5432;dbname=$db;sslmode=require";
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);

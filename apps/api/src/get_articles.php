@@ -4,7 +4,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
 // DB接続
-$dsn = "pgsql:host=" . getenv('DB_HOST') . ";dbname=" . getenv("DB_NAME");
+$dsn = "pgsql:host=" . getenv('DB_HOST') . ";port=5432;dbname=" . getenv("DB_NAME") . ";sslmode=require";
 $user = getenv('DB_USER');
 $pass = getenv('DB_PASS');
 
