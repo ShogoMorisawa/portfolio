@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from '@tanstack/react-router';
 import FaceTongueLayout from '../components/FaceTongueLayout';
-import { type ArticleCategory } from '../data/articles';
+import { type ArticleCategory, isArticleCategory } from '../data/articles';
 
 type ArticlesSearch = {
   category?: ArticleCategory;
@@ -9,7 +9,7 @@ type ArticlesSearch = {
 export const Route = createFileRoute('/articles')({
   validateSearch: (search: Record<string, unknown>): ArticlesSearch => {
     const category = search.category;
-    return category === 'tech' || category === 'psychology' ? { category } : {};
+    return isArticleCategory(category) ? { category } : {};
   },
   loader: async () => {
     const res = await fetch('http://localhost:8000/get_articles.php');
@@ -35,11 +35,6 @@ function ArticlesPage() {
   return (
     <FaceTongueLayout
       title={category ? `${category.toUpperCase()} ARTICLES` : 'ARTICLES'}
-      intro={
-        category
-          ? `${category.toUpperCase()} に絞って、口から垂れたベロの中へ記事を並べています。`
-          : 'ベロの中に飲み込まれていくように、気になる記事を選ぶための一覧画面です。'
-      }
       category={category ?? 'all'}
     >
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -48,6 +43,7 @@ function ArticlesPage() {
             key={article.slug}
             to="/articles/$slug"
             params={{ slug: article.slug }}
+            search={{ category }}
             className="group block h-full rounded-[28px] border-8 border-[#4A4A4A] bg-white px-5 py-5 text-[#4A4A4A] transition-transform hover:-translate-y-1 hover:rotate-[0.4deg]"
             style={{ animationDelay: `${index * 80}ms` }}
           >

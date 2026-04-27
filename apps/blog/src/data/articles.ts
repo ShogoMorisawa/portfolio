@@ -16,6 +16,10 @@ export const articleCategories: { value: ArticleCategory; label: string }[] = [
   { value: 'psychology', label: 'PSYCHOLOGY' },
 ]
 
+export function isArticleCategory(value: unknown): value is ArticleCategory {
+  return value === 'tech' || value === 'psychology'
+}
+
 export const articles: Article[] = [
   {
     slug: 'cursor-moves-before-thought',

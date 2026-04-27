@@ -1,25 +1,26 @@
-import { Link } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
-import type { Article, ArticleCategory } from '../data/articles'
-import { articleCategories } from '../data/articles'
+import { Link } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
+import type { Article, ArticleCategory } from '../data/articles';
+import { articleCategories } from '../data/articles';
 
 type FaceTongueLayoutProps = {
-  title: string
-  intro: string
-  category?: ArticleCategory | 'all'
-  children: ReactNode
-  article?: Article
-}
+  title: string;
+  intro: string;
+  category?: ArticleCategory | 'all';
+  showCategoryTabs?: boolean;
+  children: ReactNode;
+  article?: Article;
+};
 
 export default function FaceTongueLayout({
   title,
-  intro,
   category = 'all',
+  showCategoryTabs = true,
   children,
   article,
 }: FaceTongueLayoutProps) {
   return (
-    <section className="mx-auto w-full max-w-[1080px] px-2 pb-24 pt-10 sm:px-6 sm:pb-32 sm:pt-14">
+    <section className="mx-auto w-full max-w-[1080px] px-2 pt-10 pb-24 sm:px-6 sm:pt-14 sm:pb-32">
       {/* 顔: 左右の目 */}
       <div className="mx-auto mb-8 flex w-full max-w-[700px] items-center justify-between px-10">
         {/* 左目 */}
@@ -38,41 +39,37 @@ export default function FaceTongueLayout({
         {/* 記事キャンバス本体 */}
         <div className="rounded-[28px] border-8 border-[#4A4A4A] bg-[#FFF6D1] px-3 py-6 sm:rounded-[32px] sm:px-8 sm:py-8">
           {/* カテゴリタブ */}
-          <div className="mb-6 flex flex-wrap items-center gap-3">
-            <Link
-              to="/articles"
-              search={{ category: undefined }}
-              className={`rounded-full border-4 border-[#4A4A4A] px-4 py-2 text-sm font-black tracking-[0.18em] text-[#4A4A4A] transition-transform hover:-rotate-2 hover:scale-105 ${
-                category === 'all' ? 'bg-[#FFE36E]' : 'bg-white'
-              }`}
-            >
-              ALL
-            </Link>
-            {articleCategories.map((item) => (
+          {showCategoryTabs ? (
+            <div className="mb-6 flex flex-wrap items-center gap-3">
               <Link
-                key={item.value}
                 to="/articles"
-                search={{ category: item.value }}
-                className={`rounded-full border-4 border-[#4A4A4A] px-4 py-2 text-sm font-black tracking-[0.18em] text-[#4A4A4A] transition-transform hover:-rotate-2 hover:scale-105 ${
-                  category === item.value ? 'bg-[#7BE0D6]' : 'bg-white'
+                search={{ category: undefined }}
+                className={`rounded-full border-4 border-[#4A4A4A] px-4 py-2 text-sm font-black tracking-[0.18em] text-[#4A4A4A] transition-transform hover:scale-105 hover:-rotate-2 ${
+                  category === 'all' ? 'bg-[#FFE36E]' : 'bg-white'
                 }`}
               >
-                {item.label}
+                ALL
               </Link>
-            ))}
-          </div>
+              {articleCategories.map((item) => (
+                <Link
+                  key={item.value}
+                  to="/articles"
+                  search={{ category: item.value }}
+                  className={`rounded-full border-4 border-[#4A4A4A] px-4 py-2 text-sm font-black tracking-[0.18em] text-[#4A4A4A] transition-transform hover:scale-105 hover:-rotate-2 ${
+                    category === item.value ? 'bg-[#7BE0D6]' : 'bg-white'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
 
           {/* 見出しエリア */}
           <div className="mb-8 border-b-4 border-dashed border-[#4A4A4A] pb-6">
-            <p className="text-[0.7rem] font-black uppercase tracking-[0.28em] text-[#FF5757]">
-              {article ? article.eyebrow : 'monster archive'}
-            </p>
             <h1 className="mt-3 text-4xl leading-none font-black tracking-tight text-[#4A4A4A] sm:text-6xl">
               {title}
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-[#4A4A4A] sm:text-lg">
-              {intro}
-            </p>
 
             {article ? (
               <div className="mt-5 flex flex-wrap items-center gap-3 text-sm font-bold tracking-[0.12em] text-[#4A4A4A]">
@@ -90,5 +87,5 @@ export default function FaceTongueLayout({
         </div>
       </div>
     </section>
-  )
+  );
 }

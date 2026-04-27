@@ -174,8 +174,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <a href="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">3D WORLD</a>
             <Link to="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">HOME</Link>
             <Link to="/articles" search={{ category: undefined }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">ARTICLES</Link>
-            <Link to="/articles" search={{ category: 'tech' }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">TECH</Link>
-            <Link to="/articles" search={{ category: 'psychology' }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">PSYCHOLOGY</Link>
           </nav>
 
           {/* モバイル用ハンバーガーボタン */}
@@ -196,8 +194,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <a href="/" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">3D WORLD</a>
             <Link to="/" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">HOME</Link>
             <Link to="/articles" search={{ category: undefined }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">ARTICLES</Link>
-            <Link to="/articles" search={{ category: 'tech' }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">TECH</Link>
-            <Link to="/articles" search={{ category: 'psychology' }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">PSYCHOLOGY</Link>
           </nav>
         </div>
 
