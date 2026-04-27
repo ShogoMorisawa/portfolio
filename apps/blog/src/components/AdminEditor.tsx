@@ -2,6 +2,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { useRef, useState } from 'react';
+import Link from '@tiptap/extension-link';
 
 // カスタムツールバー
 const Menubar = ({ editor }: { editor: any }) => {
@@ -37,6 +38,24 @@ const Menubar = ({ editor }: { editor: any }) => {
     }
   };
 
+  const setLink = () => {
+    // 既にリンクが設定されている場合は、そのURLを初期値にする
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('リンク先のURLを入力してね👅', previousUrl);
+
+    // キャンセルボタンが押されたら何もしない
+    if (url === null) return;
+
+    // 空文字にしてOKを押した場合は、リンクを解除する
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    // リンクを設定する
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
   return (
     <div className="mb-6 flex flex-wrap gap-2 border-b-4 border-dashed border-[#4A4A4A] pb-4">
       <button
@@ -65,10 +84,28 @@ const Menubar = ({ editor }: { editor: any }) => {
       />
 
       <button
+        onClick={setLink}
+        className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
+          editor.isActive('link') ? 'bg-[#4A4A4A] text-white' : 'bg-white'
+        }`}
+      >
+        LINK
+      </button>
+
+      <button
         onClick={() => fileInputRef.current?.click()}
         className="rounded-full border-4 border-[#4A4A4A] bg-[#FF5757] px-4 py-1 text-sm font-black text-white transition-transform hover:-rotate-2"
       >
         📷 IMAGE
+      </button>
+
+      <button
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
+          editor.isActive('codeBlock') ? 'bg-[#4A4A4A] text-[#7BE0D6]' : 'bg-white'
+        }`}
+      >
+        CODE
       </button>
     </div>
   );
@@ -90,11 +127,24 @@ export default function AdminEditor() {
           class: 'border-8 border-[#4A4A4A] rounded-xl my-8 max-w-full', // Cocoスタイルの枠線！
         },
       }),
+      Link.configure({
+        openOnClick: false, // エディタ編集中にクリックしてもページ遷移しないようにする
+        HTMLAttributes: {
+          rel: 'noopener noreferrer',
+          target: '_blank', // デフォルトで別タブで開くようにする
+        },
+      }),
     ],
     content: '',
     editorProps: {
       attributes: {
-        class: 'min-h-[300px] outline-none text-[#4A4A4A] text-lg leading-8',
+        class:
+          'min-h-[400px] outline-none text-[#4A4A4A] text-lg leading-8 ' +
+          '[&_h2]:text-2xl [&_h2]:font-black [&_h2]:border-4 [&_h2]:border-[#4A4A4A] [&_h2]:bg-[#7BE0D6] [&_h2]:px-3 [&_h2]:py-1 [&_h2]:inline-block [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:rotate-[-1deg] ' +
+          '[&_p]:mb-4 [&_strong]:font-black [&_strong]:text-[#FF5757] ' +
+          '[&_pre]:bg-[#4A4A4A] [&_pre]:text-[#7BE0D6] [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:border-8 [&_pre]:border-[#4A4A4A] [&_pre]:my-6 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:overflow-x-auto ' +
+          '[&_code]:font-mono' +
+          '[&_a]:text-[#FF5757] [&_a]:font-black [&_a]:underline [&_a]:decoration-4 [&_a]:underline-offset-4 hover:[&_a]:text-[#7BE0D6]',
       },
     },
   });
