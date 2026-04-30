@@ -1,11 +1,38 @@
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from '@tiptap/extension-link';
+import { useNavigate } from '@tanstack/react-router';
+
+const AUTH_TOKEN_KEY = 'coco_auth_token';
+const AUTH_ERROR_MESSAGES = new Set([
+  'ログイン状態が確認できません。もう一度ログインしてください。',
+  'ログインの有効期限が切れました。もう一度ログインしてください。',
+]);
+
+function getAuthToken() {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+  if (!token) {
+    throw new Error('ログイン状態が確認できません。もう一度ログインしてください。');
+  }
+
+  return token;
+}
+
+function isAuthErrorMessage(message: string) {
+  return AUTH_ERROR_MESSAGES.has(message);
+}
 
 // カスタムツールバー
-const Menubar = ({ editor }: { editor: any }) => {
+const Menubar = ({
+  editor,
+  onAuthError,
+}: {
+  editor: any;
+  onAuthError: (message: string) => void;
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!editor) return null;
@@ -18,18 +45,30 @@ const Menubar = ({ editor }: { editor: any }) => {
     formData.append('image', file);
 
     try {
+      const token = getAuthToken();
+
       const res = await fetch('http://localhost:8000/upload_image.php', {
         method: 'POST',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
         body: formData,
       });
       const data = await res.json();
 
-      if (data.status === 'success' && data.url) {
+      if (res.ok && data.status === 'success' && data.url) {
         editor.chain().focus().setImage({ src: data.url }).run();
+      } else if (res.status === 401) {
+        onAuthError(data.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
       } else {
-        alert('画像のアップロードに失敗しました。' + data.error);
+        alert(`画像のアップロードに失敗しました。${data.message || data.error || ''}`);
       }
     } catch (error) {
+      if (error instanceof Error && isAuthErrorMessage(error.message)) {
+        onAuthError(error.message);
+        return;
+      }
+
       alert('通信に失敗しました。ネットワークを確認してください。');
     }
 
@@ -118,6 +157,25 @@ export default function AdminEditor() {
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const navigate = useNavigate();
+
+  const handleAuthError = (message: string) => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.alert(message);
+    navigate({ to: '/admin/login' });
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (!token) {
+      navigate({ to: '/admin/login' });
+      return;
+    }
+
+    setIsCheckingAuth(false);
+  }, [navigate]);
 
   const editor = useEditor({
     extensions: [
@@ -175,21 +233,38 @@ export default function AdminEditor() {
     };
 
     try {
+      const token = getAuthToken();
+
       const res = await fetch('http://localhost:8000/save_article.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+         },
         body: JSON.stringify(payload),
       });
+      const errorData = res.ok ? null : await res.json();
+
       if (res.ok) {
         alert('記事を保存しました！');
+      } else if (res.status === 401) {
+        handleAuthError(errorData?.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
       } else {
-        const errorData = await res.json();
-        alert(`保存失敗: ${errorData.message || '不明なエラー'}`);
+        alert(`保存失敗: ${errorData?.message || '不明なエラー'}`);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && isAuthErrorMessage(error.message)) {
+        handleAuthError(error.message);
+        return;
+      }
+
       alert('通信に失敗しました。ネットワークを確認してください。');
     }
   };
+
+  if (isCheckingAuth) {
+    return null;
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-20">
@@ -230,7 +305,7 @@ export default function AdminEditor() {
       {/* エディタ本体（ベロの質感） */}
       <div className="rounded-[44px] border-8 border-[#4A4A4A] bg-[#FF5757] p-4">
         <div className="rounded-[32px] border-8 border-[#4A4A4A] bg-[#FFF6D1] p-8">
-          <Menubar editor={editor} />
+          <Menubar editor={editor} onAuthError={handleAuthError} />
           <EditorContent editor={editor} />
         </div>
       </div>

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ArticlesRouteImport } from './routes/articles'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArticlesSlugRouteImport } from './routes/articles.$slug'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminEditorRouteImport } from './routes/admin.editor'
 
 const ArticlesRoute = ArticlesRouteImport.update({
@@ -29,6 +30,11 @@ const ArticlesSlugRoute = ArticlesSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ArticlesRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEditorRoute = AdminEditorRouteImport.update({
   id: '/admin/editor',
   path: '/admin/editor',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRouteWithChildren
   '/admin/editor': typeof AdminEditorRoute
+  '/admin/login': typeof AdminLoginRoute
   '/articles/$slug': typeof ArticlesSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRouteWithChildren
   '/admin/editor': typeof AdminEditorRoute
+  '/admin/login': typeof AdminLoginRoute
   '/articles/$slug': typeof ArticlesSlugRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/articles': typeof ArticlesRouteWithChildren
   '/admin/editor': typeof AdminEditorRoute
+  '/admin/login': typeof AdminLoginRoute
   '/articles/$slug': typeof ArticlesSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/articles' | '/admin/editor' | '/articles/$slug'
+  fullPaths:
+    | '/'
+    | '/articles'
+    | '/admin/editor'
+    | '/admin/login'
+    | '/articles/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/articles' | '/admin/editor' | '/articles/$slug'
-  id: '__root__' | '/' | '/articles' | '/admin/editor' | '/articles/$slug'
+  to: '/' | '/articles' | '/admin/editor' | '/admin/login' | '/articles/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/articles'
+    | '/admin/editor'
+    | '/admin/login'
+    | '/articles/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArticlesRoute: typeof ArticlesRouteWithChildren
   AdminEditorRoute: typeof AdminEditorRoute
+  AdminLoginRoute: typeof AdminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -90,6 +111,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/articles/$slug'
       preLoaderRoute: typeof ArticlesSlugRouteImport
       parentRoute: typeof ArticlesRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/editor': {
       id: '/admin/editor'
@@ -117,6 +145,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArticlesRoute: ArticlesRouteWithChildren,
   AdminEditorRoute: AdminEditorRoute,
+  AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
