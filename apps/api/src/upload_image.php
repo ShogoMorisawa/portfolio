@@ -7,10 +7,13 @@ use Aws\S3\S3Client;
 
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
+
+require_once __DIR__ . '/auth.php';
+$authUser = verifyToken();
 
 if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
     http_response_code(400);
