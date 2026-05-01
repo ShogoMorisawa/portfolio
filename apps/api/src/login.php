@@ -3,6 +3,20 @@ require __DIR__ . '/vendor/autoload.php';
 
 use \Firebase\JWT\JWT;
 
+function getJwtSecret(): string {
+    $key = getenv("JWT_SECRET") ?: '';
+
+    if ($key === '') {
+        throw new Exception("JWT_SECRET が設定されていません。");
+    }
+
+    if (strlen($key) < 32) {
+        throw new Exception("JWT_SECRET は 32 文字以上のランダム文字列にしてください。");
+    }
+
+    return $key;
+}
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
@@ -31,11 +45,7 @@ try {
     $loginUser = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($loginUser && password_verify($password, $loginUser['password_hash'])) {
-        $key = getenv("JWT_SECRET");
-
-        if (!$key) {
-            throw new Exception("JWTシークレットキーが設定されていません。");
-        }
+        $key = getJwtSecret();
 
         $payload = [
             'iss' => 'shogomorisawa-blog',
@@ -59,9 +69,10 @@ try {
     }
 
 } catch(Exception $e) {
+    error_log('login.php: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'status' => 'error',
-        'message' => 'サーバーエラーが発生しました。'
+        'message' => $e->getMessage()
     ]);
 }
