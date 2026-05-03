@@ -76,8 +76,9 @@ export default function FaceTongueLayout({
                 <span className="rounded-full border-4 border-[#4A4A4A] bg-white px-3 py-1">
                   {article.category.toUpperCase()}
                 </span>
-                <span>{article.publishedAt}</span>
-                <span>{article.readTime}</span>
+                {article.published_at && (
+                  <span>{new Date(article.published_at).toLocaleDateString('ja-JP')}</span>
+                )}
               </div>
             ) : null}
           </div>

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 const AUTH_TOKEN_KEY = 'coco_auth_token';
 
@@ -27,7 +28,7 @@ function AdminDashboardPage() {
       return;
     }
 
-    fetch('http://localhost:8000/get_articles.php')
+    fetch(`${API_BASE_URL}/get_articles.php`)
       .then((res) => res.json())
       .then((data) => {
         setArticles(data);

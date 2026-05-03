@@ -1,6 +1,6 @@
-// apps/blog/src/routes/admin.login.tsx
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { API_BASE_URL } from '../config'
 
 export const Route = createFileRoute('/admin/login')({
   component: LoginPage,
@@ -17,7 +17,7 @@ function LoginPage() {
     setError('')
 
     try {
-      const res = await fetch('http://localhost:8000/login.php', {
+      const res = await fetch(`${API_BASE_URL}/login.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
