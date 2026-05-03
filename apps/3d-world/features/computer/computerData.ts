@@ -16,6 +16,13 @@ export const COMPUTER_WORKS: ComputerWork[] = [
     href: "https://oox-seven.vercel.app/",
   },
   {
+    id: "blog",
+    imageSrc: "/computer/blog.png",
+    title: "Blog",
+    description: "技術や心理学について書いているブログです。",
+    href: "https://blog.shogomorisawa.me",
+  },
+  {
     id: "cat",
     imageSrc: "/computer/cat.png",
     title: "猫ちゃん",
