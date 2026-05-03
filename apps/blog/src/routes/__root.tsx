@@ -171,7 +171,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         >
           {/* PC用ナビゲーション */}
           <nav className="hidden md:flex gap-8 font-black text-white text-xl tracking-widest">
-            <a href="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">3D WORLD</a>
+            <a href="https://shogomorisawa.me" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">3D WORLD</a>
             <Link to="/" className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">HOME</Link>
             <Link to="/articles" search={{ category: undefined }} className="hover:scale-110 hover:-rotate-3 transition-transform duration-200">ARTICLES</Link>
           </nav>
@@ -191,7 +191,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* モバイル用フルスクリーンメニュー */}
         <div className={`fixed inset-0 z-[60] bg-[#FF5757] flex flex-col items-center justify-center transition-transform duration-500 border-l-[8vw] border-[#4A4A4A] ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
            <nav className="flex flex-col gap-10 font-black text-white text-4xl tracking-tighter">
-            <a href="/" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">3D WORLD</a>
+            <a href="https://shogomorisawa.me" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">3D WORLD</a>
             <Link to="/" onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">HOME</Link>
             <Link to="/articles" search={{ category: undefined }} onClick={toggleMenu} className="hover:scale-110 active:scale-95 transition-transform text-center">ARTICLES</Link>
           </nav>

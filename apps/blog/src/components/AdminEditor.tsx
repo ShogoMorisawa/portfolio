@@ -4,6 +4,7 @@ import Image from '@tiptap/extension-image';
 import { useEffect, useRef, useState } from 'react';
 import Link from '@tiptap/extension-link';
 import { useNavigate } from '@tanstack/react-router';
+import { API_BASE_URL } from '../config';
 
 const AUTH_TOKEN_KEY = 'coco_auth_token';
 const AUTH_ERROR_MESSAGES = new Set([
@@ -71,7 +72,7 @@ const Menubar = ({
     try {
       const token = getAuthToken();
 
-      const res = await fetch('http://localhost:8000/upload_image.php', {
+      const res = await fetch(`${API_BASE_URL}/upload_image.php`, {
         method: 'POST',
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -226,7 +227,7 @@ export default function AdminEditor() {
 
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:8000/delete_article.php', {
+      const res = await fetch(`${API_BASE_URL}/delete_article.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +276,7 @@ export default function AdminEditor() {
     if (targetSlug) {
       setIsEditMode(true);
 
-      fetch('http://localhost:8000/get_articles.php')
+      fetch(`${API_BASE_URL}/get_articles.php`)
         .then((res) => res.json())
         .then((data) => {
           const targetArticle = data.find((a: any) => a.slug === targetSlug);
@@ -330,7 +331,7 @@ export default function AdminEditor() {
     try {
       const token = getAuthToken();
 
-      const res = await fetch('http://localhost:8000/save_article.php', {
+      const res = await fetch(`${API_BASE_URL}/save_article.php`, {
         method: 'POST',
         headers: { 
           "Content-Type": "application/json",
