@@ -27,7 +27,7 @@ function LoginPage() {
 
       if (res.ok && data.status === 'success') {
         localStorage.setItem('coco_auth_token', data.token)
-        navigate({ to: '/admin/editor' })
+        navigate({ to: '/admin' })
       } else {
         setError(data.message || 'ログインに失敗しました👅')
       }

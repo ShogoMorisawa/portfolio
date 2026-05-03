@@ -239,7 +239,7 @@ export default function AdminEditor() {
 
       if (res.ok) {
         alert('記事を削除しました');
-        navigate({ to: '/articles' });
+        navigate({ to: '/admin' });
       } else if (res.status === 401) {
         handleAuthError(data.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
       } else {
@@ -363,6 +363,12 @@ export default function AdminEditor() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-20">
+      <a
+        href="/admin"
+        className="inline-block rounded-full border-4 border-[#4A4A4A] bg-white px-5 py-1 text-sm font-black transition-transform hover:-rotate-2"
+      >
+        ← ADMIN
+      </a>
       {/* メタデータ入力エリア */}
       <div className="grid gap-6 rounded-[32px] border-8 border-[#4A4A4A] bg-white p-8">
         <input
