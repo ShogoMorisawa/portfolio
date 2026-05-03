@@ -25,6 +25,30 @@ function isAuthErrorMessage(message: string) {
   return AUTH_ERROR_MESSAGES.has(message);
 }
 
+function formatTagsForInput(tags: unknown) {
+  if (Array.isArray(tags)) {
+    return tags.join(', ');
+  }
+
+  if (typeof tags === 'string') {
+    return tags.replace(/[{}]/g, '');
+  }
+
+  return '';
+}
+
+function parseEditorBody(body: unknown) {
+  if (typeof body !== 'string') {
+    return body;
+  }
+
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
+}
+
 // カスタムツールバー
 const Menubar = ({
   editor,
@@ -158,38 +182,22 @@ export default function AdminEditor() {
   const [tags, setTags] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const navigate = useNavigate();
-
-  const handleAuthError = (message: string) => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    window.alert(message);
-    navigate({ to: '/admin/login' });
-  };
-
-  useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-
-    if (!token) {
-      navigate({ to: '/admin/login' });
-      return;
-    }
-
-    setIsCheckingAuth(false);
-  }, [navigate]);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Image.configure({
         HTMLAttributes: {
-          class: 'border-8 border-[#4A4A4A] rounded-xl my-8 max-w-full', // Cocoスタイルの枠線！
+          class: 'border-8 border-[#4A4A4A] rounded-xl my-8 max-w-full',
         },
       }),
       Link.configure({
-        openOnClick: false, // エディタ編集中にクリックしてもページ遷移しないようにする
+        openOnClick: false,
         HTMLAttributes: {
           rel: 'noopener noreferrer',
-          target: '_blank', // デフォルトで別タブで開くようにする
+          target: '_blank',
         },
       }),
     ],
@@ -206,6 +214,93 @@ export default function AdminEditor() {
       },
     },
   });
+
+  const handleAuthError = (message: string) => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.alert(message);
+    navigate({ to: '/admin/login' });
+  };
+
+  const handleDelete = async() => {
+    if (!window.confirm('記事を削除してもよろしいですか？')) return;
+
+    try {
+      const token = getAuthToken();
+      const res = await fetch('http://localhost:8000/delete_article.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ slug }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('記事を削除しました');
+        navigate({ to: '/articles' });
+      } else if (res.status === 401) {
+        handleAuthError(data.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
+      } else {
+        alert(data.message || '記事の削除に失敗しました');
+      }
+    } catch (error) {
+      if (error instanceof Error && isAuthErrorMessage(error.message)) {
+        handleAuthError(error.message);
+        return;
+      }
+
+      alert('通信エラー');
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (!token) {
+      navigate({ to: '/admin/login' });
+      return;
+    }
+
+    setIsCheckingAuth(false);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const targetSlug = searchParams.get('slug');
+
+    if (targetSlug) {
+      setIsEditMode(true);
+
+      fetch('http://localhost:8000/get_articles.php')
+        .then((res) => res.json())
+        .then((data) => {
+          const targetArticle = data.find((a: any) => a.slug === targetSlug);
+
+          if (targetArticle) {
+            setTitle(targetArticle.title);
+            setSlug(targetArticle.slug);
+            setCategory(targetArticle.category);
+            setDescription(targetArticle.description || '');
+            setTags(formatTagsForInput(targetArticle.tags));
+            setThumbnailUrl(targetArticle.thumbnail_url || '');
+            editor.commands.setContent(parseEditorBody(targetArticle.body));
+          } else {
+            alert('記事が見つかりませんでした');
+            navigate({ to: '/admin/editor' });
+          }
+        })
+        .catch(() => {
+          alert('記事データの取得に失敗しました');
+          navigate({ to: '/admin/editor' });
+        });
+    } else {
+      setIsEditMode(false);
+    }
+  }, [editor, navigate]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -316,8 +411,18 @@ export default function AdminEditor() {
           onClick={handleSave}
           className="rounded-full border-8 border-[#4A4A4A] bg-[#7BE0D6] px-12 py-4 text-2xl font-black tracking-widest text-[#4A4A4A] transition-all hover:-translate-y-2 hover:rotate-2 active:translate-y-0"
         >
-          SAVE ARTICLE
+          {isEditMode ? 'UPDATE ARTICLE' : 'SAVE ARTICLE'}
         </button>
+        {
+          isEditMode && (
+            <button
+              onClick={handleDelete}
+              className="rounded-full border-8 border-[#4A4A4A] bg-[#FF5757] px-12 py-4 text-2xl font-black tracking-widest text-[#4A4A4A] transition-all hover:-translate-y-2 hover:rotate-2 active:translate-y-0"
+            >
+              DELETE ARTICLE
+            </button>
+          )
+        }
       </div>
     </div>
   );

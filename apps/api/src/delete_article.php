@@ -37,6 +37,16 @@ try {
     $stmt->execute([
         ':slug' => $slug,    
     ]);
+
+    if ($stmt->rowCount() === 0) {
+        http_response_code(404);
+        echo json_encode([
+            'status' => 'error',
+            'message' => '削除対象の記事が見つかりません。'
+        ]);
+        exit;
+    }
+
     echo json_encode([
         'status' => 'success',
         'message' => '記事を削除しました。'
