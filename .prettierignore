@@ -1,0 +1,12 @@
+.next
+node_modules
+out
+dist
+dist-ssr
+.output
+.nitro
+.tanstack
+.vinxi
+.wrangler
+package-lock.json
+*.lock
