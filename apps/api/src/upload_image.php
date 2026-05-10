@@ -35,10 +35,6 @@ $bucket = getenv('AWS_BUCKET_NAME');
 $s3Client = new S3Client([
     'version' => 'latest',
     'region' => getenv('AWS_REGION'),
-    'credentials' => [
-        'key' => getenv('AWS_ACCESS_KEY_ID'),
-        'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
-    ]
 ]);
 
 try {
