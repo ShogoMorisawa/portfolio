@@ -53,6 +53,12 @@ function AdminDashboardPage() {
         <h1 className="text-4xl font-black text-[#4A4A4A]">ADMIN</h1>
         <div className="flex gap-4">
           <Link
+            to="/admin/letters"
+            className="rounded-full border-4 border-[#4A4A4A] bg-[#FFE36E] px-6 py-2 font-black transition-transform hover:-rotate-2"
+          >
+            LETTERS
+          </Link>
+          <Link
             to="/admin/editor"
             className="rounded-full border-4 border-[#4A4A4A] bg-[#7BE0D6] px-6 py-2 font-black transition-transform hover:-rotate-2"
           >
