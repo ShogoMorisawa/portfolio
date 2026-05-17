@@ -4,22 +4,72 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { FaGithub, FaInstagram } from "react-icons/fa";
 import { useUIStore } from "@/shared/uiStore";
+import { getVisitorId } from "@/lib/visitorId";
+import {
+  checkLetters,
+  markLettersRead,
+  submitLetter,
+  type LetterReply,
+} from "@/lib/letterApi";
+
+type View = "checking" | "reply" | "form" | "success";
 
 export default function PostOverlay() {
   const isOpen = useUIStore((state) => state.activeOverlay === "post");
   const closePost = useUIStore((state) => state.closePost);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<View>("checking");
+  const [replies, setReplies] = useState<LetterReply[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isStampModalOpen, setIsStampModalOpen] = useState(false);
 
   const handleClose = useCallback(() => {
     closePost();
   }, [closePost]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setView("checking");
+      setReplies([]);
+      setSubmitError(null);
+      setIsStampModalOpen(false);
+      return;
+    }
+
+    let cancelled = false;
+    const visitorId = getVisitorId();
+    if (!visitorId) {
+      setView("form");
+      return;
+    }
+
+    checkLetters(visitorId)
+      .then((found) => {
+        if (cancelled) return;
+        if (found.length > 0) {
+          setReplies(found);
+          setView("reply");
+          void markLettersRead({
+            visitor_id: visitorId,
+            letter_ids: found.map((letter) => letter.id),
+          });
+        } else {
+          setView("form");
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setView("form");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -43,42 +93,20 @@ export default function PostOverlay() {
 
     setIsSending(true);
     setSubmitError(null);
-    setSubmitSuccess(false);
 
     try {
-      const response = await fetch("/api/letter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim() || undefined,
-          email: email.trim() || undefined,
-          message: message.trim() || undefined,
-          meta: {
-            sentAt: new Date().toISOString(),
-            userAgent:
-              typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-            screenSize:
-              typeof window !== "undefined"
-                ? `${window.innerWidth}x${window.innerHeight}`
-                : undefined,
-            language:
-              typeof navigator !== "undefined" ? navigator.language : undefined,
-          },
-        }),
+      await submitLetter({
+        visitor_id: getVisitorId(),
+        name: name.trim(),
+        email: email.trim() || undefined,
+        message: message.trim(),
       });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "送信に失敗しました");
-      }
-
       setName("");
       setEmail("");
       setMessage("");
-      setSubmitSuccess(true);
+      setView("success");
       window.setTimeout(() => {
         handleClose();
-        setSubmitSuccess(false);
       }, 2000);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "送信に失敗しました");
@@ -119,7 +147,15 @@ export default function PostOverlay() {
         />
 
         <div className="post-letter-content absolute inset-0 flex flex-col p-6 sm:p-10 md:p-12 pt-8 sm:pt-12 md:pt-14">
-          {submitSuccess ? (
+          {view === "checking" && (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="font-playfair text-sm sm:text-base text-[#5c4033] italic">
+                Loading...
+              </p>
+            </div>
+          )}
+
+          {view === "success" && (
             <div className="flex-1 flex flex-col items-center justify-center gap-1">
               <p className="font-dancing text-2xl sm:text-3xl text-[#4a3728] font-bold text-center">
                 Your letter has been sent.
@@ -128,7 +164,53 @@ export default function PostOverlay() {
                 Thank you for your message.
               </p>
             </div>
-          ) : (
+          )}
+
+          {view === "reply" && (
+            <div className="flex-1 flex flex-col gap-4 sm:gap-5 min-h-0 overflow-hidden">
+              <div className="text-center mt-2 sm:mt-4">
+                <p className="font-dancing text-2xl sm:text-3xl text-[#6a4e37] font-bold drop-shadow-sm">
+                  お手紙が届いています
+                </p>
+                <p className="font-playfair text-xs sm:text-sm text-[#7d6b5a] italic mt-1">
+                  A letter has arrived for you.
+                </p>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto post-letter-replies flex flex-col gap-4 pr-1">
+                {replies.map((letter) => (
+                  <article
+                    key={letter.id}
+                    className="rounded-md bg-[#f4ebd8]/80 border border-[#c1a68d] p-4 sm:p-5 text-[#3d2817] shadow-sm"
+                  >
+                    <header className="font-playfair text-xs sm:text-sm text-[#7d6b5a] italic mb-2">
+                      Reply to your letter on{" "}
+                      {new Date(letter.created_at).toLocaleDateString("ja-JP")}
+                    </header>
+                    <p className="font-playfair text-xs sm:text-sm text-[#7d6b5a] mb-3 whitespace-pre-wrap border-l-2 border-[#c1a68d] pl-3">
+                      {letter.message}
+                    </p>
+                    <p className="font-playfair text-sm sm:text-base whitespace-pre-wrap leading-relaxed">
+                      {letter.reply}
+                    </p>
+                    <footer className="font-dancing text-base sm:text-lg text-[#6a4e37] mt-3 text-right">
+                      — Shogo
+                    </footer>
+                  </article>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setView("form")}
+                className="self-center font-playfair text-sm sm:text-base text-[#4a3728] underline-offset-4 underline hover:text-[#3d2817] transition-colors"
+              >
+                新しい手紙を書く
+              </button>
+            </div>
+          )}
+
+          {view === "form" && (
             <>
               <div className="post-letter-header flex items-center justify-between gap-4 mt-2 sm:mt-4 mb-4 sm:mb-6">
                 <h2 className="post-letter-heading font-dancing font-bold text-3xl sm:text-4xl md:text-5xl text-[#6a4e37] drop-shadow-sm shrink-0">
