@@ -67,6 +67,8 @@ Resources:
                   - apigateway:PATCH
                   - apigateway:POST
                   - apigateway:PUT
+                  - apigateway:TagResource
+                  - apigateway:UntagResource
                   - budgets:ModifyBudget
                   - budgets:ViewBudget
                   - aws-portal:ModifyBilling
