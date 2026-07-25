@@ -115,7 +115,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
-      ReservedConcurrentExecutions: 5
       AutoPublishAlias: live
       Events:
         Root:
