@@ -230,7 +230,6 @@ Resources:
 
   SesFailureMetric:
     Type: AWS::Logs::MetricFilter
-    DependsOn: ApiLogGroup
     Properties:
       LogGroupName: !Ref ApiLogGroup
       FilterPattern: '"letter_notification_failed"'
@@ -257,7 +256,6 @@ Resources:
 
   LoginFailureMetric:
     Type: AWS::Logs::MetricFilter
-    DependsOn: ApiLogGroup
     Properties:
       LogGroupName: !Ref ApiLogGroup
       FilterPattern: '"auth.login_failed"'
