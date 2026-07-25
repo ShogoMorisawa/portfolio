@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   migrate:
-    environment: production
+    environment: Production
     runs-on: ubuntu-latest
     defaults:
       run:

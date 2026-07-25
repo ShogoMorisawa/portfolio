@@ -12,4 +12,4 @@ capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_image_repos = false
 fail_on_empty_changeset = false
-parameter_overrides = "ApiDomainName=api.shogomorisawa.me ExistingMediaBucketName=portfolio-blog-image-bucket CreateAccountBudget=false CreateApiDnsRecord=false"
+parameter_overrides = "ApiDomainName=api.shogomorisawa.me ExistingMediaBucketName=portfolio-blog-image-bucket CreateAccountBudget=true CreateApiDnsRecord=false"

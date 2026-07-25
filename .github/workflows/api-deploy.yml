@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   deploy:
-    environment: production
+    environment: Production
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -52,7 +52,7 @@ jobs:
           NotificationEmail=${{ vars.NOTIFICATION_EMAIL }}
           ApiDomainName=api.shogomorisawa.me
           ExistingMediaBucketName=portfolio-blog-image-bucket
-          CreateAccountBudget=${{ inputs.create_api_dns_record }}
+          CreateAccountBudget=true
           CreateApiDnsRecord=${{ inputs.create_api_dns_record }}
       - name: Smoke test
         env:

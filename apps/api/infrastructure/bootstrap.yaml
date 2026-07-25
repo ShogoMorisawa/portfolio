@@ -162,7 +162,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:environment:production
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:environment:Production
       Policies:
         - PolicyName: DeployPortfolioApi
           PolicyDocument:
@@ -181,7 +181,7 @@ Resources:
                   - cloudformation:GetTemplateSummary
                 Resource:
                   - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/portfolio-api/*
-                  - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:changeSet/portfolio-api-*/*
+                  - !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:changeSet/*/*
               - Sid: ReadCloudFormationTransforms
                 Effect: Allow
                 Action:
@@ -229,7 +229,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:environment:production
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:environment:Production
       Policies:
         - PolicyName: ReadProductionDatabaseUrl
           PolicyDocument:
