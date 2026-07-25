@@ -4,27 +4,8 @@ import Image from '@tiptap/extension-image';
 import { useEffect, useRef, useState } from 'react';
 import Link from '@tiptap/extension-link';
 import { useNavigate } from '@tanstack/react-router';
-import { API_BASE_URL } from '../config';
-
-const AUTH_TOKEN_KEY = 'coco_auth_token';
-const AUTH_ERROR_MESSAGES = new Set([
-  'ログイン状態が確認できません。もう一度ログインしてください。',
-  'ログインの有効期限が切れました。もう一度ログインしてください。',
-]);
-
-function getAuthToken() {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-
-  if (!token) {
-    throw new Error('ログイン状態が確認できません。もう一度ログインしてください。');
-  }
-
-  return token;
-}
-
-function isAuthErrorMessage(message: string) {
-  return AUTH_ERROR_MESSAGES.has(message);
-}
+import type { Article } from '../data/articles';
+import { adminApi, ApiError, restoreSession } from '../lib/api';
 
 function formatTagsForInput(tags: unknown) {
   if (Array.isArray(tags)) {
@@ -70,31 +51,20 @@ const Menubar = ({
     formData.append('image', file);
 
     try {
-      const token = getAuthToken();
-
-      const res = await fetch(`${API_BASE_URL}/upload_image.php`, {
+      const data = await adminApi<{ url: string }>('/admin/media', {
         method: 'POST',
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
         body: formData,
       });
-      const data = await res.json();
-
-      if (res.ok && data.status === 'success' && data.url) {
-        editor.chain().focus().setImage({ src: data.url }).run();
-      } else if (res.status === 401) {
-        onAuthError(data.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
-      } else {
-        alert(`画像のアップロードに失敗しました。${data.message || data.error || ''}`);
-      }
+      editor.chain().focus().setImage({ src: data.url }).run();
     } catch (error) {
-      if (error instanceof Error && isAuthErrorMessage(error.message)) {
+      if (error instanceof ApiError && error.status === 401) {
         onAuthError(error.message);
         return;
       }
 
-      alert('通信に失敗しました。ネットワークを確認してください。');
+      alert(
+        `画像のアップロードに失敗しました。${error instanceof Error ? error.message : ''}`,
+      );
     }
 
     if (fileInputRef.current) {
@@ -176,6 +146,7 @@ const Menubar = ({
 };
 
 export default function AdminEditor() {
+  const [articleId, setArticleId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [category, setCategory] = useState('tech');
@@ -217,85 +188,58 @@ export default function AdminEditor() {
   });
 
   const handleAuthError = (message: string) => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
     window.alert(message);
     navigate({ to: '/admin/login' });
   };
 
-  const handleDelete = async() => {
+  const handleDelete = async () => {
+    if (articleId === null) return;
     if (!window.confirm('記事を削除してもよろしいですか？')) return;
 
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE_URL}/delete_article.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ slug }),
+      await adminApi<void>(`/admin/articles/${articleId}`, {
+        method: 'DELETE',
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert('記事を削除しました');
-        navigate({ to: '/admin' });
-      } else if (res.status === 401) {
-        handleAuthError(data.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
-      } else {
-        alert(data.message || '記事の削除に失敗しました');
-      }
+      alert('記事を削除しました');
+      navigate({ to: '/admin' });
     } catch (error) {
-      if (error instanceof Error && isAuthErrorMessage(error.message)) {
+      if (error instanceof ApiError && error.status === 401) {
         handleAuthError(error.message);
         return;
       }
 
-      alert('通信エラー');
+      alert(error instanceof Error ? error.message : '通信エラー');
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-
-    if (!token) {
-      navigate({ to: '/admin/login' });
-      return;
-    }
-
-    setIsCheckingAuth(false);
+    restoreSession()
+      .then(() => setIsCheckingAuth(false))
+      .catch(() => navigate({ to: '/admin/login' }));
   }, [navigate]);
 
   useEffect(() => {
     if (!editor) return;
 
     const searchParams = new URLSearchParams(window.location.search);
-    const targetSlug = searchParams.get('slug');
+    const targetId = Number(searchParams.get('id'));
 
-    if (targetSlug) {
+    if (Number.isInteger(targetId) && targetId > 0) {
       setIsEditMode(true);
+      setArticleId(targetId);
 
-      fetch(`${API_BASE_URL}/get_articles.php`)
-        .then((res) => res.json())
-        .then((data) => {
-          const targetArticle = data.find((a: any) => a.slug === targetSlug);
-
-          if (targetArticle) {
-            setTitle(targetArticle.title);
-            setSlug(targetArticle.slug);
-            setCategory(targetArticle.category);
-            setDescription(targetArticle.description || '');
-            setTags(formatTagsForInput(targetArticle.tags));
-            setThumbnailUrl(targetArticle.thumbnail_url || '');
-            editor.commands.setContent(parseEditorBody(targetArticle.body));
-          } else {
-            alert('記事が見つかりませんでした');
-            navigate({ to: '/admin/editor' });
-          }
+      adminApi<Article>(`/admin/articles/${targetId}`)
+        .then((article) => {
+          setTitle(article.title);
+          setSlug(article.slug);
+          setCategory(article.category);
+          setDescription(article.description || '');
+          setTags(formatTagsForInput(article.tags));
+          setThumbnailUrl(article.thumbnail_url || '');
+          editor.commands.setContent(parseEditorBody(article.body));
         })
-        .catch(() => {
-          alert('記事データの取得に失敗しました');
+        .catch((error) => {
+          alert(error instanceof Error ? error.message : '記事データの取得に失敗しました');
           navigate({ to: '/admin/editor' });
         });
     } else {
@@ -325,36 +269,32 @@ export default function AdminEditor() {
         .filter(Boolean), // 空のタグを除外
       body: editor.getJSON(),
       thumbnail_url: thumbnailUrl || null,
-      is_publish: true,
+      publish: true,
     };
 
     try {
-      const token = getAuthToken();
-
-      const res = await fetch(`${API_BASE_URL}/save_article.php`, {
-        method: 'POST',
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-         },
-        body: JSON.stringify(payload),
-      });
-      const errorData = res.ok ? null : await res.json();
-
-      if (res.ok) {
-        alert('記事を保存しました！');
-      } else if (res.status === 401) {
-        handleAuthError(errorData?.message || 'ログインの有効期限が切れました。もう一度ログインしてください。');
-      } else {
-        alert(`保存失敗: ${errorData?.message || '不明なエラー'}`);
+      const saved = await adminApi<Article>(
+        articleId === null ? '/admin/articles' : `/admin/articles/${articleId}`,
+        {
+          method: articleId === null ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (articleId === null) {
+        setArticleId(saved.id);
+        setIsEditMode(true);
+        window.history.replaceState(null, '', `/admin/editor?id=${saved.id}`);
       }
+      alert('記事を保存しました！');
     } catch (error) {
-      if (error instanceof Error && isAuthErrorMessage(error.message)) {
+      if (error instanceof ApiError && error.status === 401) {
         handleAuthError(error.message);
         return;
       }
-
-      alert('通信に失敗しました。ネットワークを確認してください。');
+      alert(
+        `保存失敗: ${error instanceof Error ? error.message : '不明なエラー'}`,
+      );
     }
   };
 
@@ -385,6 +325,7 @@ export default function AdminEditor() {
             placeholder="slug (url-name)"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
+            disabled={isEditMode}
             className="border-b-2 border-[#4A4A4A] py-2 font-mono text-sm outline-none"
           />
           <select

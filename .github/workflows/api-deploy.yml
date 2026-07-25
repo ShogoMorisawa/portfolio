@@ -1,0 +1,69 @@
+name: Deploy API
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_api_dns_record:
+        description: Create the Route 53 alias after the old EC2 A record has been removed
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: fileinfo, mbstring, pdo_pgsql
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: apps/api
+      - run: composer check
+      - run: composer audit --locked
+      - run: npx --yes @redocly/cli@2.20.0 lint openapi.yaml
+      - uses: aws-actions/setup-sam@v2
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-1
+      - run: sam validate --lint --template-file infrastructure/template.yaml
+      - run: sam build --template-file infrastructure/template.yaml
+      - name: Deploy immutable Lambda image
+        run: >-
+          sam deploy
+          --config-file infrastructure/samconfig.toml
+          --no-confirm-changeset
+          --image-repository ${{ vars.API_ECR_REPOSITORY_URI }}
+          --role-arn ${{ vars.AWS_CLOUDFORMATION_EXECUTION_ROLE_ARN }}
+          --parameter-overrides
+          HostedZoneId=${{ vars.HOSTED_ZONE_ID }}
+          NotificationEmail=${{ vars.NOTIFICATION_EMAIL }}
+          ApiDomainName=api.shogomorisawa.me
+          ExistingMediaBucketName=portfolio-blog-image-bucket
+          CreateAccountBudget=${{ inputs.create_api_dns_record }}
+          CreateApiDnsRecord=${{ inputs.create_api_dns_record }}
+      - name: Smoke test
+        env:
+          CREATE_API_DNS_RECORD: ${{ inputs.create_api_dns_record }}
+        run: |
+          if [ "$CREATE_API_DNS_RECORD" = "true" ]; then
+            api_url="https://api.shogomorisawa.me"
+          else
+            api_url="$(aws cloudformation describe-stacks \
+              --stack-name portfolio-api \
+              --query "Stacks[0].Outputs[?OutputKey=='ExecuteApiUrl'].OutputValue" \
+              --output text)"
+          fi
+          curl --fail --retry 12 --retry-delay 5 "$api_url/health/ready"

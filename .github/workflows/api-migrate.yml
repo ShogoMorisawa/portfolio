@@ -1,0 +1,63 @@
+name: Migrate API Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type MIGRATE_PRODUCTION
+        required: true
+        type: string
+      tested_on_neon_branch:
+        description: Migration was tested on a disposable Neon branch
+        required: true
+        default: false
+        type: boolean
+      recovery_branch_created:
+        description: A Neon recovery branch was created immediately before this run
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  migrate:
+    environment: production
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - name: Require explicit production safeguards
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          TESTED_ON_NEON_BRANCH: ${{ inputs.tested_on_neon_branch }}
+          RECOVERY_BRANCH_CREATED: ${{ inputs.recovery_branch_created }}
+        run: |
+          test "$CONFIRMATION" = "MIGRATE_PRODUCTION"
+          test "$TESTED_ON_NEON_BRANCH" = "true"
+          test "$RECOVERY_BRANCH_CREATED" = "true"
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: pdo_pgsql
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: apps/api
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_MIGRATION_ROLE_ARN }}
+          aws-region: ap-northeast-1
+      - name: Apply pending production migrations
+        run: |
+          DATABASE_URL="$(aws ssm get-parameter \
+            --name /portfolio-api/prod/database-url \
+            --with-decryption \
+            --query Parameter.Value \
+            --output text)"
+          export DATABASE_URL
+          APP_ENV=production vendor/bin/phinx migrate --environment production --no-interaction

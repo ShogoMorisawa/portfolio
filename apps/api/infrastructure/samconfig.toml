@@ -1,0 +1,15 @@
+version = 0.1
+
+[default.build.parameters]
+template_file = "infrastructure/template.yaml"
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+stack_name = "portfolio-api"
+region = "ap-northeast-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_image_repos = false
+fail_on_empty_changeset = false
+parameter_overrides = "ApiDomainName=api.shogomorisawa.me ExistingMediaBucketName=portfolio-blog-image-bucket CreateAccountBudget=false CreateApiDnsRecord=false"

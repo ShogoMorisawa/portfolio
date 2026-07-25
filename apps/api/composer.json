@@ -1,0 +1,57 @@
+{
+    "name": "shogomorisawa/portfolio-api",
+    "description": "Serverless PHP API for shogomorisawa.me",
+    "type": "project",
+    "require": {
+        "php": "^8.4",
+        "ext-fileinfo": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*",
+        "aws/aws-sdk-php": "^3.379",
+        "firebase/php-jwt": "^7.0",
+        "monolog/monolog": "^3.9",
+        "php-di/php-di": "^7.1",
+        "robmorgan/phinx": "^0.16",
+        "slim/psr7": "^1.8",
+        "slim/slim": "^4.15"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.88",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "/src/vendor/",
+            "/src/*.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --debug --no-progress --memory-limit=1G",
+        "format": "php-cs-fixer fix --sequential",
+        "format:check": "php-cs-fixer fix --dry-run --diff --sequential",
+        "check": [
+            "@format:check",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

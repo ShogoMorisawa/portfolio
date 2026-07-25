@@ -3,7 +3,7 @@ export const LETTER_API_BASE_URL =
 
 export type LetterReply = {
   id: number;
-  name: string | null;
+  name: string;
   message: string;
   reply: string;
   replied_at: string;
@@ -11,39 +11,39 @@ export type LetterReply = {
 };
 
 export async function submitLetter(payload: {
-  visitor_id: string;
   name: string;
   email?: string;
   message: string;
+  turnstileToken: string;
+  website: string;
 }): Promise<void> {
-  const response = await fetch(`${LETTER_API_BASE_URL}/submit_letter.php`, {
+  const response = await fetch(`${LETTER_API_BASE_URL}/letterbox/letters`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const data = await response.json().catch(() => null);
-    throw new Error(data?.error ?? "送信に失敗しました");
+    throw new Error(data?.error?.message ?? "送信に失敗しました");
   }
 }
 
-export async function checkLetters(visitor_id: string): Promise<LetterReply[]> {
-  const url = new URL(`${LETTER_API_BASE_URL}/check_letter.php`);
-  url.searchParams.set("visitor_id", visitor_id);
-  const response = await fetch(url.toString());
+export async function checkLetters(): Promise<LetterReply[]> {
+  const response = await fetch(`${LETTER_API_BASE_URL}/letterbox/replies`, {
+    credentials: "include",
+  });
   if (!response.ok) return [];
   const data = await response.json().catch(() => null);
-  return Array.isArray(data?.letters) ? (data.letters as LetterReply[]) : [];
+  return Array.isArray(data?.data) ? (data.data as LetterReply[]) : [];
 }
 
-export async function markLettersRead(payload: {
-  visitor_id: string;
-  letter_ids: number[];
-}): Promise<void> {
-  if (payload.letter_ids.length === 0) return;
-  await fetch(`${LETTER_API_BASE_URL}/mark_read.php`, {
+export async function markLettersRead(letterIds: number[]): Promise<void> {
+  if (letterIds.length === 0) return;
+  await fetch(`${LETTER_API_BASE_URL}/letterbox/read-receipts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    credentials: "include",
+    body: JSON.stringify({ letterIds }),
   });
 }

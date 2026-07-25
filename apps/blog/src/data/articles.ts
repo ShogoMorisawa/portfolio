@@ -1,6 +1,7 @@
 export type ArticleCategory = 'tech' | 'psychology'
 
 export type Article = {
+  id: number
   slug: string
   title: string
   category: ArticleCategory
@@ -9,6 +10,8 @@ export type Article = {
   published_at: string | null
   thumbnail_url?: string | null
   tags?: string[]
+  created_at: string
+  updated_at: string
 }
 
 export const articleCategories: { value: ArticleCategory; label: string }[] = [

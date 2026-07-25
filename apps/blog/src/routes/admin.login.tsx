@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
-import { API_BASE_URL } from '../config'
+import { useEffect, useState } from 'react'
+import { Turnstile } from '../components/Turnstile'
+import { ApiError, login, restoreSession } from '../lib/api'
 
 export const Route = createFileRoute('/admin/login')({
   component: LoginPage,
@@ -10,29 +11,29 @@ function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [website, setWebsite] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    restoreSession()
+      .then(() => navigate({ to: '/admin' }))
+      .catch(() => undefined)
+  }, [navigate])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     try {
-      const res = await fetch(`${API_BASE_URL}/login.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      })
-
-      const data = await res.json()
-
-      if (res.ok && data.status === 'success') {
-        localStorage.setItem('coco_auth_token', data.token)
-        navigate({ to: '/admin' })
-      } else {
-        setError(data.message || 'ログインに失敗しました👅')
-      }
-    } catch (err) {
-      setError('サーバーとの通信に失敗しました。')
+      await login(username, password, turnstileToken, website)
+      navigate({ to: '/admin' })
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError
+          ? caught.message
+          : 'サーバーとの通信に失敗しました。',
+      )
     }
   }
 
@@ -50,6 +51,16 @@ function LoginPage() {
         )}
 
         <form onSubmit={handleLogin} className="space-y-6">
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+            className="absolute left-[-10000px] h-px w-px overflow-hidden"
+            aria-hidden="true"
+          />
           <div>
             <input
               type="text"
@@ -60,6 +71,7 @@ function LoginPage() {
               required
             />
           </div>
+          <Turnstile action="admin_login" onToken={setTurnstileToken} />
           <div>
             <input
               type="password"

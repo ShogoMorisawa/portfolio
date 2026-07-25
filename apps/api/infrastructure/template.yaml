@@ -1,0 +1,301 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless PHP API for shogomorisawa.me
+
+Parameters:
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+  ApiDomainName:
+    Type: String
+    Default: api.shogomorisawa.me
+  ExistingMediaBucketName:
+    Type: String
+    Default: portfolio-blog-image-bucket
+  NotificationEmail:
+    Type: String
+  CreateAccountBudget:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+  CreateApiDnsRecord:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+
+Conditions:
+  ShouldCreateBudget: !Equals [!Ref CreateAccountBudget, "true"]
+  ShouldCreateApiDnsRecord: !Equals [!Ref CreateApiDnsRecord, "true"]
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 512
+    Architectures:
+      - x86_64
+    Tracing: Active
+    Environment:
+      Variables:
+        APP_ENV: production
+        APP_DEBUG: "false"
+        AWS_LWA_PORT: "8080"
+        AWS_LWA_READINESS_CHECK_PATH: /health
+        AWS_LWA_ENABLE_COMPRESSION: "true"
+        AWS_BUCKET_NAME: !Ref ExistingMediaBucketName
+        MEDIA_BASE_URL: !Sub https://${ExistingMediaBucketName}.s3.${AWS::Region}.amazonaws.com
+        ALLOWED_ORIGINS: https://shogomorisawa.me,https://www.shogomorisawa.me,https://blog.shogomorisawa.me
+        TURNSTILE_EXPECTED_HOSTNAME: shogomorisawa.me,www.shogomorisawa.me,blog.shogomorisawa.me
+        SSM_PARAMETER_PREFIX: /portfolio-api/prod
+
+Resources:
+  ApiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref ApiDomainName
+      DomainValidationOptions:
+        - DomainName: !Ref ApiDomainName
+          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      DisableExecuteApiEndpoint: !If [ShouldCreateApiDnsRecord, true, false]
+      CorsConfiguration:
+        AllowCredentials: true
+        AllowHeaders:
+          - Content-Type
+          - X-CSRF-Token
+          - X-Request-Id
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowOrigins:
+          - https://shogomorisawa.me
+          - https://www.shogomorisawa.me
+          - https://blog.shogomorisawa.me
+        MaxAge: 600
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+      Domain:
+        DomainName: !Ref ApiDomainName
+        CertificateArn: !Ref ApiCertificate
+        Route53: !If
+          - ShouldCreateApiDnsRecord
+          - HostedZoneId: !Ref HostedZoneId
+            EvaluateTargetHealth: false
+          - !Ref AWS::NoValue
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ReservedConcurrentExecutions: 5
+      AutoPublishAlias: live
+      Events:
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: ANY
+      Policies:
+        - Statement:
+            - Sid: ReadApplicationParameters
+              Effect: Allow
+              Action:
+                - ssm:GetParameters
+              Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/portfolio-api/prod/*
+            - Sid: UploadArticleMedia
+              Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub arn:${AWS::Partition}:s3:::${ExistingMediaBucketName}/images/*
+            - Sid: NotifyAdministrator
+              Effect: Allow
+              Action:
+                - ses:SendEmail
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  ses:FromAddress: noreply@shogomorisawa.me
+    Metadata:
+      DockerContext: ..
+      Dockerfile: Dockerfile
+      DockerTag: php84-x86-64
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ApiFunction}
+      RetentionInDays: 30
+
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: portfolio-api-alerts
+      Subscription:
+        - Endpoint: !Ref NotificationEmail
+          Protocol: email
+
+  FunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: portfolio-api-function-errors
+      AlarmDescription: Lambda invocation failures
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  FunctionThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: portfolio-api-function-throttles
+      AlarmDescription: Lambda reserved concurrency was exhausted
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  ApiServerErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: portfolio-api-http-5xx
+      AlarmDescription: HTTP API returned server errors
+      Namespace: AWS/ApiGateway
+      MetricName: 5xx
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref HttpApi
+        - Name: Stage
+          Value: $default
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  SesFailureMetric:
+    Type: AWS::Logs::MetricFilter
+    DependsOn: ApiLogGroup
+    Properties:
+      LogGroupName: !Ref ApiLogGroup
+      FilterPattern: '"letter_notification_failed"'
+      MetricTransformations:
+        - MetricNamespace: PortfolioApi
+          MetricName: SesNotificationFailures
+          MetricValue: "1"
+
+  SesFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: portfolio-api-ses-notification-failures
+      AlarmDescription: A saved letter could not produce an SES notification
+      Namespace: PortfolioApi
+      MetricName: SesNotificationFailures
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  LoginFailureMetric:
+    Type: AWS::Logs::MetricFilter
+    DependsOn: ApiLogGroup
+    Properties:
+      LogGroupName: !Ref ApiLogGroup
+      FilterPattern: '"auth.login_failed"'
+      MetricTransformations:
+        - MetricNamespace: PortfolioApi
+          MetricName: AdministratorLoginFailures
+          MetricValue: "1"
+
+  LoginFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: portfolio-api-administrator-login-failures
+      AlarmDescription: Repeated administrator login failures
+      Namespace: PortfolioApi
+      MetricName: AdministratorLoginFailures
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  AccountBudget:
+    Type: AWS::Budgets::Budget
+    Condition: ShouldCreateBudget
+    Properties:
+      Budget:
+        BudgetLimit:
+          Amount: 5
+          Unit: USD
+        BudgetName: portfolio-account-monthly-5-usd
+        BudgetType: COST
+        TimeUnit: MONTHLY
+      NotificationsWithSubscribers:
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: FORECASTED
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - Address: !Ref NotificationEmail
+              SubscriptionType: EMAIL
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: ACTUAL
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - Address: !Ref NotificationEmail
+              SubscriptionType: EMAIL
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${ApiDomainName}
+  ExecuteApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
+  FunctionName:
+    Value: !Ref ApiFunction
+  AlertTopicArn:
+    Value: !Ref AlertTopic

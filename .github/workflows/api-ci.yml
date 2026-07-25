@@ -1,0 +1,36 @@
+name: API CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api-*.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api-*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: fileinfo, mbstring, pdo_pgsql
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: apps/api
+      - run: composer check
+      - run: composer audit --locked
+      - run: npx --yes @redocly/cli@2.20.0 lint openapi.yaml
+      - run: docker build --platform linux/amd64 -t portfolio-api-ci .

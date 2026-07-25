@@ -1,12 +1,9 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../config';
-
-const AUTH_TOKEN_KEY = 'coco_auth_token';
+import { adminApi, ApiError, restoreSession } from '../lib/api';
 
 type Letter = {
   id: number;
-  visitor_id: string;
   name: string;
   email: string | null;
   message: string;
@@ -14,6 +11,7 @@ type Letter = {
   replied_at: string | null;
   reply_read: boolean;
   created_at: string;
+  legacy: boolean;
 };
 
 export const Route = createFileRoute('/admin/letters')({
@@ -26,41 +24,28 @@ function AdminLettersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [openId, setOpenId] = useState<number | null>(null);
 
-  const loadLetters = (token: string) => {
+  const loadLetters = () => {
     setIsLoading(true);
-    fetch(`${API_BASE_URL}/get_letters.php`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (res.status === 401) {
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-          navigate({ to: '/admin/login' });
-          throw new Error('unauthorized');
-        }
-        return res.json();
-      })
+    adminApi<{ items: Letter[] }>('/admin/letters?limit=100')
       .then((data) => {
-        setLetters(Array.isArray(data?.letters) ? data.letters : []);
+        setLetters(data.items);
         setIsLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error instanceof ApiError && error.status === 401) {
+          navigate({ to: '/admin/login' });
+        }
         setIsLoading(false);
       });
   };
 
   useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
-      navigate({ to: '/admin/login' });
-      return;
-    }
-    loadLetters(token);
+    restoreSession()
+      .then(loadLetters)
+      .catch(() => navigate({ to: '/admin/login' }));
   }, [navigate]);
 
-  const handleReplied = () => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (token) loadLetters(token);
-  };
+  const handleChanged = () => loadLetters();
 
   if (isLoading) return null;
 
@@ -88,7 +73,7 @@ function AdminLettersPage() {
               letter={letter}
               isOpen={openId === letter.id}
               onToggle={() => setOpenId(openId === letter.id ? null : letter.id)}
-              onReplied={handleReplied}
+              onChanged={handleChanged}
             />
           ))
         )}
@@ -101,12 +86,12 @@ function LetterRow({
   letter,
   isOpen,
   onToggle,
-  onReplied,
+  onChanged,
 }: {
   letter: Letter;
   isOpen: boolean;
   onToggle: () => void;
-  onReplied: () => void;
+  onChanged: () => void;
 }) {
   const [reply, setReply] = useState(letter.reply ?? '');
   const [isSending, setIsSending] = useState(false);
@@ -116,30 +101,33 @@ function LetterRow({
     const trimmed = reply.trim();
     if (!trimmed || isSending) return;
 
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) return;
-
     setIsSending(true);
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/reply_letter.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ letter_id: letter.id, reply: trimmed }),
+      await adminApi<Letter>(`/admin/letters/${letter.id}/reply`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reply: trimmed }),
       });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(data?.error ?? '返信の送信に失敗しました');
-      }
-      onReplied();
+      onChanged();
     } catch (e) {
       setError(e instanceof Error ? e.message : '返信の送信に失敗しました');
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const deleteLetter = async () => {
+    if (!window.confirm('この手紙を削除してもよろしいですか？')) return;
+    setError(null);
+    try {
+      await adminApi<void>(`/admin/letters/${letter.id}`, {
+        method: 'DELETE',
+      });
+      onChanged();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '削除に失敗しました');
     }
   };
 
@@ -224,7 +212,14 @@ function LetterRow({
             {error && (
               <p className="text-sm font-bold text-[#FF5757]">{error}</p>
             )}
-            <div className="flex justify-end">
+            <div className="flex justify-between gap-3">
+              <button
+                type="button"
+                onClick={deleteLetter}
+                className="rounded-full border-4 border-[#4A4A4A] bg-[#FF5757] px-5 py-2 font-black text-white"
+              >
+                DELETE
+              </button>
               <button
                 type="button"
                 onClick={sendReply}

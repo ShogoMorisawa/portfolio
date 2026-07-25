@@ -28,9 +28,14 @@ yarn-error.log*
 # env files
 .env*
 *.local
+!.env.example
+!apps/**/.env.example
 
 # coverage
 coverage/
+.php-cs-fixer.cache
+.phpstan-cache/
+.phpunit.cache/
 
 # build output
 .next/
@@ -59,3 +64,4 @@ next-env.d.ts
 .codex/
 
 /apps/api/src/vendor/
+/apps/api/vendor/

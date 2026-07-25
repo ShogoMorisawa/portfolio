@@ -1,10 +1,9 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../config';
-
-const AUTH_TOKEN_KEY = 'coco_auth_token';
+import { adminApi, logout, restoreSession } from '../lib/api';
 
 type Article = {
+  id: number;
   slug: string;
   title: string;
   category: string;
@@ -22,26 +21,19 @@ function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!token) {
-      navigate({ to: '/admin/login' });
-      return;
-    }
-
-    fetch(`${API_BASE_URL}/get_articles.php`)
-      .then((res) => res.json())
+    restoreSession()
+      .then(() => adminApi<Article[]>('/admin/articles'))
       .then((data) => {
         setArticles(data);
         setIsLoading(false);
       })
       .catch(() => {
-        alert('記事一覧の取得に失敗しました');
-        setIsLoading(false);
+        navigate({ to: '/admin/login' });
       });
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+  const handleLogout = async () => {
+    await logout().catch(() => undefined);
     navigate({ to: '/admin/login' });
   };
 
@@ -89,7 +81,7 @@ function AdminDashboardPage() {
                 </p>
               </div>
               <a
-                href={`/admin/editor?slug=${encodeURIComponent(article.slug)}`}
+                href={`/admin/editor?id=${article.id}`}
                 className="shrink-0 rounded-full border-4 border-[#4A4A4A] bg-[#FFE36E] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2"
               >
                 EDIT

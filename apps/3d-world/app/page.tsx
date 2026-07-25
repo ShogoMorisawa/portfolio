@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Loader } from "@react-three/drei";
 import { PortfolioVisitNotifier } from "@/components/providers/PortfolioVisitNotifier";
 import World from "@/features/world/World";
@@ -8,8 +8,15 @@ import JoystickControls from "@/features/world/JoystickControls";
 import { IntroOverlay } from "@/features/world/IntroOverlay";
 import { InteractionPrompt } from "@/shared/InteractionPrompt";
 import { OverlayRoot } from "@/shared/OverlayRoot";
+import { LETTER_API_BASE_URL } from "@/lib/letterApi";
 
 export default function Home() {
+  useEffect(() => {
+    void fetch(`${LETTER_API_BASE_URL}/health/ready`, {
+      credentials: "include",
+    }).catch(() => undefined);
+  }, []);
+
   return (
     <main className="relative w-full h-dvh overflow-hidden bg-black">
       <Suspense fallback={null}>

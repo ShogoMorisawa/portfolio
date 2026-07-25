@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import FaceTongueLayout from '../components/FaceTongueLayout';
-import { articleCategories, isArticleCategory, type ArticleCategory } from '../data/articles';
-import { API_BASE_URL } from '../config';
+import { articleCategories, isArticleCategory, type Article, type ArticleCategory } from '../data/articles';
+import { ApiError, publicApi } from '../lib/api';
 
 type ArticleDetailSearch = {
   category?: ArticleCategory;
@@ -13,12 +13,12 @@ export const Route = createFileRoute('/articles/$slug')({
     return isArticleCategory(category) ? { category } : {};
   },
   loader: async ({ params }) => {
-    const res = await fetch(`${API_BASE_URL}/get_articles.php`);
-    if (!res.ok) throw new Error('データの取得に失敗しました');
-    const allArticles = await res.json();
-    const article = allArticles.find((article: any) => article.slug === params.slug);
-    if (!article) throw notFound();
-    return { article };
+    try {
+      return { article: await publicApi<Article>(`/articles/${params.slug}`) };
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) throw notFound();
+      throw error;
+    }
   },
   component: ArticleDetailPage,
 });

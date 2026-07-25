@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute, Link, useRouterState } from '@tanstack/react-router'
 import * as React from 'react'
 import appCss from '../styles.css?url'
+import { publicApi } from '../lib/api'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -40,6 +41,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const timeoutRef = React.useRef<number | null>(null)
 
   const toggleMenu = () => setIsMenuOpen((prev) => !prev)
+
+  React.useEffect(() => {
+    void publicApi('/articles').catch(() => undefined)
+  }, [])
 
   React.useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {

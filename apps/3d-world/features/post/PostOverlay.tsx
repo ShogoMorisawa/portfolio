@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { FaGithub, FaInstagram } from "react-icons/fa";
 import { useUIStore } from "@/shared/uiStore";
-import { getVisitorId } from "@/lib/visitorId";
+import { Turnstile } from "@/components/Turnstile";
 import {
   checkLetters,
   markLettersRead,
@@ -26,6 +26,8 @@ export default function PostOverlay() {
   const [isSending, setIsSending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isStampModalOpen, setIsStampModalOpen] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [website, setWebsite] = useState("");
 
   const handleClose = useCallback(() => {
     closePost();
@@ -41,22 +43,12 @@ export default function PostOverlay() {
     }
 
     let cancelled = false;
-    const visitorId = getVisitorId();
-    if (!visitorId) {
-      setView("form");
-      return;
-    }
-
-    checkLetters(visitorId)
+    checkLetters()
       .then((found) => {
         if (cancelled) return;
         if (found.length > 0) {
           setReplies(found);
           setView("reply");
-          void markLettersRead({
-            visitor_id: visitorId,
-            letter_ids: found.map((letter) => letter.id),
-          });
         } else {
           setView("form");
         }
@@ -70,6 +62,16 @@ export default function PostOverlay() {
       cancelled = true;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || view !== "reply" || replies.length === 0) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      void markLettersRead(replies.map((letter) => letter.id));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isOpen, replies, view]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -96,10 +98,11 @@ export default function PostOverlay() {
 
     try {
       await submitLetter({
-        visitor_id: getVisitorId(),
         name: name.trim(),
         email: email.trim() || undefined,
         message: message.trim(),
+        turnstileToken,
+        website,
       });
       setName("");
       setEmail("");
@@ -304,6 +307,16 @@ export default function PostOverlay() {
                 onSubmit={handleSubmit}
                 className="post-letter-form letter-form font-playfair flex-1 flex flex-col gap-4 sm:gap-5 min-h-0"
               >
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(event) => setWebsite(event.target.value)}
+                  className="absolute left-[-10000px] h-px w-px overflow-hidden"
+                  aria-hidden="true"
+                />
                 <div className="flex flex-col gap-0.5">
                   <label className="text-xs sm:text-sm text-[#4a3728] font-bold">
                     おなまえ
@@ -367,6 +380,11 @@ export default function PostOverlay() {
                 {submitError && (
                   <p className="text-sm text-red-600 text-center mt-1">{submitError}</p>
                 )}
+
+                <Turnstile
+                  action="letter_submit"
+                  onToken={setTurnstileToken}
+                />
 
                 <button
                   type="submit"

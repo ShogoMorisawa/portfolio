@@ -1,0 +1,12 @@
+parameters:
+    level: 8
+    paths:
+        - src/Article
+        - src/Auth
+        - src/Bootstrap
+        - src/Letter
+        - src/Media
+        - src/Shared
+        - tests
+    tmpDir: .phpstan-cache
+    treatPhpDocTypesAsCertain: false
