@@ -34,7 +34,7 @@ final readonly class Config
         $databaseUrl = self::env('DATABASE_URL');
 
         if ($databaseUrl !== '') {
-            [$dsn, $user, $password] = self::parseDatabaseUrl($databaseUrl);
+            [$dsn, $user, $password] = DatabaseUrl::parse($databaseUrl);
         } else {
             $host = self::env('DB_HOST', 'db');
             $name = self::env('DB_NAME', 'blog_db');
@@ -98,24 +98,4 @@ final readonly class Config
         return $value === false ? $default : trim($value);
     }
 
-    /**
-     * @return array{string, string, string}
-     */
-    private static function parseDatabaseUrl(string $url): array
-    {
-        $parts = parse_url($url);
-        if ($parts === false || !isset($parts['host'], $parts['path'], $parts['user'])) {
-            throw new RuntimeException('DATABASE_URL is invalid.');
-        }
-
-        $host = $parts['host'];
-        $port = (int) ($parts['port'] ?? 5432);
-        $database = ltrim($parts['path'], '/');
-        $user = rawurldecode($parts['user']);
-        $password = rawurldecode($parts['pass'] ?? '');
-        parse_str($parts['query'] ?? '', $query);
-        $sslMode = is_string($query['sslmode'] ?? null) ? $query['sslmode'] : 'require';
-
-        return ["pgsql:host={$host};port={$port};dbname={$database};sslmode={$sslMode}", $user, $password];
-    }
 }
