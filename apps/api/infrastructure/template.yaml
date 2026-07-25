@@ -81,14 +81,35 @@ Resources:
       DefaultRouteSettings:
         ThrottlingBurstLimit: 20
         ThrottlingRateLimit: 10
-      Domain:
-        DomainName: !Ref ApiDomainName
-        CertificateArn: !Ref ApiCertificate
-        Route53: !If
-          - ShouldCreateApiDnsRecord
-          - HostedZoneId: !Ref HostedZoneId
-            EvaluateTargetHealth: false
-          - !Ref AWS::NoValue
+
+  ApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Ref ApiDomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref ApiCertificate
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  ApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    DependsOn: HttpApiApiGatewayDefaultStage
+    Properties:
+      ApiId: !Ref HttpApi
+      DomainName: !Ref ApiDomain
+      Stage: $default
+
+  ApiDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: ShouldCreateApiDnsRecord
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref ApiDomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiDomain.RegionalDomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: !GetAtt ApiDomain.RegionalHostedZoneId
 
   ApiFunction:
     Type: AWS::Serverless::Function
