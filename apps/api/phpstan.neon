@@ -8,6 +8,7 @@ parameters:
         - src/Media
         - src/Shared
         - bin/create-admin.php
+        - docker/entrypoint.php
         - tests
     tmpDir: .phpstan-cache
     treatPhpDocTypesAsCertain: false

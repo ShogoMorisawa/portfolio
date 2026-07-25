@@ -9,6 +9,7 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-pdo_pgsql": "*",
+        "ext-posix": "*",
         "aws/aws-sdk-php": "^3.379",
         "firebase/php-jwt": "^7.0",
         "monolog/monolog": "^3.9",

@@ -16,7 +16,12 @@ $finder = Finder::create()
         __DIR__ . '/tests',
         __DIR__ . '/migrations',
     ])
-    ->append([__FILE__, __DIR__ . '/bin/create-admin.php', __DIR__ . '/public/index.php']);
+    ->append([
+        __FILE__,
+        __DIR__ . '/bin/create-admin.php',
+        __DIR__ . '/docker/entrypoint.php',
+        __DIR__ . '/public/index.php',
+    ]);
 
 return (new Config())
     ->setRiskyAllowed(true)
