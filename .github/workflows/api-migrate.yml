@@ -30,6 +30,7 @@ jobs:
       run:
         working-directory: apps/api
     steps:
+      - uses: actions/checkout@v4
       - name: Require explicit production safeguards
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
@@ -39,7 +40,6 @@ jobs:
           test "$CONFIRMATION" = "MIGRATE_PRODUCTION"
           test "$TESTED_ON_NEON_BRANCH" = "true"
           test "$RECOVERY_BRANCH_CREATED" = "true"
-      - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
