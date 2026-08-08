@@ -24,10 +24,6 @@ The blog runs at `http://localhost:3000` and expects the API at
 | `NEXT_PUBLIC_API_URL` | Browser | API base URL used by login and admin screens |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Browser | Cloudflare Turnstile public site key |
 
-The former `VITE_API_URL` and `VITE_TURNSTILE_SITE_KEY` names remain as temporary
-build-time fallbacks in `next.config.ts`. New deployments should use the Next.js
-names above.
-
 ## Verification
 
 ```sh
