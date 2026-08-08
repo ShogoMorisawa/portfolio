@@ -1,33 +1,31 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import { Turnstile } from '../components/Turnstile'
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError, login, restoreSession } from '../lib/api'
+import { Turnstile } from './Turnstile'
 
-export const Route = createFileRoute('/admin/login')({
-  component: LoginPage,
-})
-
-function LoginPage() {
+export default function AdminLogin() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [turnstileToken, setTurnstileToken] = useState('')
   const [website, setWebsite] = useState('')
-  const navigate = useNavigate()
+  const router = useRouter()
 
   useEffect(() => {
     restoreSession()
-      .then(() => navigate({ to: '/admin' }))
+      .then(() => router.replace('/admin'))
       .catch(() => undefined)
-  }, [navigate])
+  }, [router])
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLogin = async (event: FormEvent) => {
+    event.preventDefault()
     setError('')
 
     try {
       await login(username, password, turnstileToken, website)
-      navigate({ to: '/admin' })
+      router.push('/admin')
     } catch (caught) {
       setError(
         caught instanceof ApiError
@@ -66,7 +64,7 @@ function LoginPage() {
               type="text"
               placeholder="USERNAME"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(event) => setUsername(event.target.value)}
               className="w-full rounded-xl border-4 border-[#4A4A4A] px-4 py-3 text-xl font-bold outline-none focus:bg-[#FFE36E]"
               required
             />
@@ -77,7 +75,7 @@ function LoginPage() {
               type="password"
               placeholder="PASSWORD"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
               className="w-full rounded-xl border-4 border-[#4A4A4A] px-4 py-3 text-xl font-bold outline-none focus:bg-[#FFE36E]"
               required
             />

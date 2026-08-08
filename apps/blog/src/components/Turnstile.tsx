@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef } from 'react'
 
 declare global {
@@ -29,7 +31,7 @@ export function Turnstile({ action, onToken }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const sitekey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+    const sitekey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
     if (!sitekey) {
       onToken('')
       return

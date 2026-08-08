@@ -1,11 +1,10 @@
-import { Link } from '@tanstack/react-router';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { Article, ArticleCategory } from '../data/articles';
 import { articleCategories } from '../data/articles';
 
 type FaceTongueLayoutProps = {
   title: string;
-  intro: string;
   category?: ArticleCategory | 'all';
   showCategoryTabs?: boolean;
   children: ReactNode;
@@ -42,8 +41,7 @@ export default function FaceTongueLayout({
           {showCategoryTabs ? (
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <Link
-                to="/articles"
-                search={{ category: undefined }}
+                href="/articles"
                 className={`rounded-full border-4 border-[#4A4A4A] px-4 py-2 text-sm font-black tracking-[0.18em] text-[#4A4A4A] transition-transform hover:scale-105 hover:-rotate-2 ${
                   category === 'all' ? 'bg-[#FFE36E]' : 'bg-white'
                 }`}
@@ -53,8 +51,7 @@ export default function FaceTongueLayout({
               {articleCategories.map((item) => (
                 <Link
                   key={item.value}
-                  to="/articles"
-                  search={{ category: item.value }}
+                  href={`/articles?category=${item.value}`}
                   className={`rounded-full border-4 border-[#4A4A4A] px-4 py-2 text-sm font-black tracking-[0.18em] text-[#4A4A4A] transition-transform hover:scale-105 hover:-rotate-2 ${
                     category === item.value ? 'bg-[#7BE0D6]' : 'bg-white'
                   }`}

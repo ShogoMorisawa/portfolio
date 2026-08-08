@@ -1,9 +1,12 @@
-import { EditorContent, useEditor } from '@tiptap/react';
+'use client';
+
+import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { useEffect, useRef, useState } from 'react';
 import Link from '@tiptap/extension-link';
-import { useNavigate } from '@tanstack/react-router';
+import NextLink from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { Article } from '../data/articles';
 import { adminApi, ApiError, restoreSession } from '../lib/api';
 
@@ -36,7 +39,7 @@ const Menubar = ({
   editor,
   onAuthError,
 }: {
-  editor: any;
+  editor: Editor | null;
   onAuthError: (message: string) => void;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +77,7 @@ const Menubar = ({
 
   const setLink = () => {
     // 既にリンクが設定されている場合は、そのURLを初期値にする
-    const previousUrl = editor.getAttributes('link').href;
+    const previousUrl = editor.getAttributes('link').href as string | undefined;
     const url = window.prompt('リンク先のURLを入力してね👅', previousUrl);
 
     // キャンセルボタンが押されたら何もしない
@@ -86,6 +89,14 @@ const Menubar = ({
       return;
     }
 
+    try {
+      const parsed = new URL(url);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error();
+    } catch {
+      window.alert('http:// または https:// のURLを入力してください。');
+      return;
+    }
+
     // リンクを設定する
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
@@ -93,6 +104,7 @@ const Menubar = ({
   return (
     <div className="mb-6 flex flex-wrap gap-2 border-b-4 border-dashed border-[#4A4A4A] pb-4">
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
           editor.isActive('bold') ? 'bg-[#FFE36E]' : 'bg-white'
@@ -101,6 +113,7 @@ const Menubar = ({
         BOLD
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
           editor.isActive('heading', { level: 2 }) ? 'bg-[#7BE0D6]' : 'bg-white'
@@ -118,6 +131,7 @@ const Menubar = ({
       />
 
       <button
+        type="button"
         onClick={setLink}
         className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
           editor.isActive('link') ? 'bg-[#4A4A4A] text-white' : 'bg-white'
@@ -127,6 +141,7 @@ const Menubar = ({
       </button>
 
       <button
+        type="button"
         onClick={() => fileInputRef.current?.click()}
         className="rounded-full border-4 border-[#4A4A4A] bg-[#FF5757] px-4 py-1 text-sm font-black text-white transition-transform hover:-rotate-2"
       >
@@ -134,6 +149,7 @@ const Menubar = ({
       </button>
 
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         className={`rounded-full border-4 border-[#4A4A4A] px-4 py-1 text-sm font-black transition-transform hover:-rotate-2 ${
           editor.isActive('codeBlock') ? 'bg-[#4A4A4A] text-[#7BE0D6]' : 'bg-white'
@@ -146,7 +162,14 @@ const Menubar = ({
 };
 
 export default function AdminEditor() {
-  const [articleId, setArticleId] = useState<number | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedArticleId = Number(searchParams.get('id'));
+  const hasRequestedArticle =
+    Number.isInteger(requestedArticleId) && requestedArticleId > 0;
+  const [articleId, setArticleId] = useState<number | null>(
+    hasRequestedArticle ? requestedArticleId : null,
+  );
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [category, setCategory] = useState('tech');
@@ -154,10 +177,10 @@ export default function AdminEditor() {
   const [tags, setTags] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const navigate = useNavigate();
+  const [isEditMode, setIsEditMode] = useState(hasRequestedArticle);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Image.configure({
@@ -189,7 +212,7 @@ export default function AdminEditor() {
 
   const handleAuthError = (message: string) => {
     window.alert(message);
-    navigate({ to: '/admin/login' });
+    router.replace('/admin/login');
   };
 
   const handleDelete = async () => {
@@ -201,7 +224,7 @@ export default function AdminEditor() {
         method: 'DELETE',
       });
       alert('記事を削除しました');
-      navigate({ to: '/admin' });
+      router.push('/admin');
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         handleAuthError(error.message);
@@ -215,20 +238,14 @@ export default function AdminEditor() {
   useEffect(() => {
     restoreSession()
       .then(() => setIsCheckingAuth(false))
-      .catch(() => navigate({ to: '/admin/login' }));
-  }, [navigate]);
+      .catch(() => router.replace('/admin/login'));
+  }, [router]);
 
   useEffect(() => {
     if (!editor) return;
 
-    const searchParams = new URLSearchParams(window.location.search);
-    const targetId = Number(searchParams.get('id'));
-
-    if (Number.isInteger(targetId) && targetId > 0) {
-      setIsEditMode(true);
-      setArticleId(targetId);
-
-      adminApi<Article>(`/admin/articles/${targetId}`)
+    if (hasRequestedArticle) {
+      adminApi<Article>(`/admin/articles/${requestedArticleId}`)
         .then((article) => {
           setTitle(article.title);
           setSlug(article.slug);
@@ -240,12 +257,10 @@ export default function AdminEditor() {
         })
         .catch((error) => {
           alert(error instanceof Error ? error.message : '記事データの取得に失敗しました');
-          navigate({ to: '/admin/editor' });
+          router.replace('/admin/editor');
         });
-    } else {
-      setIsEditMode(false);
     }
-  }, [editor, navigate]);
+  }, [editor, hasRequestedArticle, requestedArticleId, router]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -284,7 +299,7 @@ export default function AdminEditor() {
       if (articleId === null) {
         setArticleId(saved.id);
         setIsEditMode(true);
-        window.history.replaceState(null, '', `/admin/editor?id=${saved.id}`);
+        router.replace(`/admin/editor?id=${saved.id}`);
       }
       alert('記事を保存しました！');
     } catch (error) {
@@ -304,12 +319,12 @@ export default function AdminEditor() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-20">
-      <a
+      <NextLink
         href="/admin"
         className="inline-block rounded-full border-4 border-[#4A4A4A] bg-white px-5 py-1 text-sm font-black transition-transform hover:-rotate-2"
       >
         ← ADMIN
-      </a>
+      </NextLink>
       {/* メタデータ入力エリア */}
       <div className="grid gap-6 rounded-[32px] border-8 border-[#4A4A4A] bg-white p-8">
         <input
@@ -330,7 +345,7 @@ export default function AdminEditor() {
           />
           <select
             value={category}
-            onChange={(e) => setCategory(e.target.value as any)}
+            onChange={(e) => setCategory(e.target.value)}
             className="border-b-2 border-[#4A4A4A] py-2 font-black outline-none"
           >
             <option value="tech">TECH</option>
@@ -356,6 +371,7 @@ export default function AdminEditor() {
       {/* 保存ボタン */}
       <div className="flex justify-center">
         <button
+          type="button"
           onClick={handleSave}
           className="rounded-full border-8 border-[#4A4A4A] bg-[#7BE0D6] px-12 py-4 text-2xl font-black tracking-widest text-[#4A4A4A] transition-all hover:-translate-y-2 hover:rotate-2 active:translate-y-0"
         >
@@ -364,6 +380,7 @@ export default function AdminEditor() {
         {
           isEditMode && (
             <button
+              type="button"
               onClick={handleDelete}
               className="rounded-full border-8 border-[#4A4A4A] bg-[#FF5757] px-12 py-4 text-2xl font-black tracking-widest text-[#4A4A4A] transition-all hover:-translate-y-2 hover:rotate-2 active:translate-y-0"
             >

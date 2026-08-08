@@ -8,6 +8,11 @@
   --bg-base: #fced35;
 }
 
+html {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   background-color: var(--bg-base);
